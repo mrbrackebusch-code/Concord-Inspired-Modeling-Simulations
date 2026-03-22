@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns:ns1="http://sozi.baierouge.fr"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    id="svg2"
+    sodipodi:docname="flame.svg"
+    viewBox="0 0 184.58 206.73"
+    version="1.1"
+    inkscape:version="0.47 r22583"
+  >
+  <sodipodi:namedview
+      id="base"
+      bordercolor="#666666"
+      inkscape:pageshadow="2"
+      inkscape:guide-bbox="true"
+      pagecolor="#ffffff"
+      inkscape:window-height="575"
+      inkscape:window-maximized="1"
+      inkscape:zoom="0.98994949"
+      inkscape:window-x="0"
+      showgrid="false"
+      borderopacity="1.0"
+      inkscape:current-layer="layer1"
+      inkscape:cx="226.17092"
+      inkscape:cy="71.879713"
+      showguides="true"
+      inkscape:window-y="3"
+      inkscape:window-width="1024"
+      inkscape:pageopacity="0.0"
+      inkscape:document-units="px"
+  />
+  <g
+      id="layer1"
+      inkscape:label="Layer 1"
+      inkscape:groupmode="layer"
+      transform="translate(-80.436 -464.71)"
+    >
+    <rect
+        id="rect2816"
+        style="stroke:#000000;stroke-width:.95319;fill:#2b0000"
+        height="205.76"
+        width="183.62"
+        y="465.2"
+        x="80.916"
+    />
+    <path
+        id="rect10258"
+        style="stroke:#000000;stroke-width:.95319;fill:#800000"
+        d="m135.19 465.19 37.531 140.03 37.531-140.03h-75.062zm37.531 140.03 91.812-24.594v-67.219l-91.812 91.812zl65.75 65.75h26.062v-41.156l-91.812-24.594zl-17.625 65.75h35.25l-17.625-65.75zl-91.812 24.594v41.156h26.062l65.75-65.75zl-91.812-91.812v67.219l91.812 24.594z"
+    />
+    <g
+        id="g3750"
+        style="stroke:#000000"
+        transform="translate(-85.624 29.286)"
+      >
+      <path
+          id="path2822-2"
+          sodipodi:nodetypes="cscsascsc"
+          style="stroke:#000000;fill:#ff6600"
+          d="m190.98 594.51c0 18.146 14.44 32.857 32.587 32.857 18.146 0 32.857-14.711 32.857-32.857 0-5.5322-1.3672-10.745-3.7822-15.319-1.7243-3.2659-4.8774-5.5731-6.4136-8.8878-2.3836-5.1433-4.09-10.566-4.09-16.507 0-10.949 5.355-20.646 13.663-27.094-31.48 1.2341-57.343 24.335-63.272 54.579-0.83901 4.2804-1.549 8.7038-1.549 13.23z"
+          transform="translate(34.643 -19.643)"
+      />
+      <path
+          id="path3625"
+          sodipodi:nodetypes="cccccc"
+          style="stroke:#000000;fill:#ffcc00"
+          d="m266.05 535.53c-15.241 9.5834-27.188 27.619-23.406 46 4.5311 11.198 21.994 14.125 28.781 3.4688 5.3052-6.7645 1.7755-19.889-3.6741-26.152-3.7667-8.3001-2.4458-14.488-1.3571-23.504l-0.34375 0.1875z"
+      />
+    </g
+    >
+    <rect
+        id="rect10264"
+        style="stroke:#000000;stroke-width:.95319;fill:#2b0000"
+        height="205.76"
+        width="183.62"
+        y="465.2"
+        x="80.916"
+    />
+    <path
+        id="path10266"
+        style="stroke:#000000;stroke-width:.95319;fill:#800000"
+        d="m135.19 465.19 37.531 140.03 37.531-140.03h-75.062zm37.531 140.03 91.812-24.594v-67.219l-91.812 91.812zl65.75 65.75h26.062v-41.156l-91.812-24.594zl-17.625 65.75h35.25l-17.625-65.75zl-91.812 24.594v41.156h26.062l65.75-65.75zl-91.812-91.812v67.219l91.812 24.594z"
+    />
+    <g
+        id="g10268"
+        style="stroke:#000000"
+        transform="translate(-85.624 29.286)"
+      >
+      <path
+          id="path10270"
+          sodipodi:nodetypes="cscsascsc"
+          d="m190.98 594.51c0 18.146 14.44 32.857 32.587 32.857 18.146 0 32.857-14.711 32.857-32.857 0-5.5322-1.3672-10.745-3.7822-15.319-1.7243-3.2659-4.8774-5.5731-6.4136-8.8878-2.3836-5.1433-4.09-10.566-4.09-16.507 0-10.949 5.355-20.646 13.663-27.094-31.48 1.2341-57.343 24.335-63.272 54.579-0.83901 4.2804-1.549 8.7038-1.549 13.23z"
+          style="stroke:#000000;fill:#ff6600"
+          transform="translate(34.643 -19.643)"
+      />
+      <path
+          id="path10272"
+          sodipodi:nodetypes="cccccc"
+          style="stroke:#000000;fill:#ffcc00"
+          d="m266.05 535.53c-15.241 9.5834-27.188 27.619-23.406 46 4.5311 11.198 21.994 14.125 28.781 3.4688 5.3052-6.7645 1.7755-19.889-3.6741-26.152-3.7667-8.3001-2.4458-14.488-1.3571-23.504l-0.34375 0.1875z"
+      />
+    </g
+    >
+  </g
+  >
+  <metadata
+    >
+    <rdf:RDF
+      >
+      <cc:Work
+        >
+        <dc:format
+          >image/svg+xml</dc:format
+        >
+        <dc:type
+            rdf:resource="http://purl.org/dc/dcmitype/StillImage"
+        />
+        <cc:license
+            rdf:resource="http://creativecommons.org/licenses/publicdomain/"
+        />
+        <dc:publisher
+          >
+          <cc:Agent
+              rdf:about="http://openclipart.org/"
+            >
+            <dc:title
+              >Openclipart</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:publisher
+        >
+        <dc:title
+          >flame</dc:title
+        >
+        <dc:date
+          >2011-02-24T01:29:02</dc:date
+        >
+        <dc:description
+        />
+        <dc:source
+          >https://openclipart.org/detail/122059/flame-by-dear_theophilus</dc:source
+        >
+        <dc:creator
+          >
+          <cc:Agent
+            >
+            <dc:title
+              >dear_theophilus</dc:title
+            >
+          </cc:Agent
+          >
+        </dc:creator
+        >
+        <dc:subject
+          >
+          <rdf:Bag
+            >
+            <rdf:li
+              >burn</rdf:li
+            >
+            <rdf:li
+              >candle</rdf:li
+            >
+            <rdf:li
+              >fire</rdf:li
+            >
+            <rdf:li
+              >flame</rdf:li
+            >
+            <rdf:li
+              >wick</rdf:li
+            >
+          </rdf:Bag
+          >
+        </dc:subject
+        >
+      </cc:Work
+      >
+      <cc:License
+          rdf:about="http://creativecommons.org/licenses/publicdomain/"
+        >
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Reproduction"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#Distribution"
+        />
+        <cc:permits
+            rdf:resource="http://creativecommons.org/ns#DerivativeWorks"
+        />
+      </cc:License
+      >
+    </rdf:RDF
+    >
+  </metadata
+  >
+</svg
+>

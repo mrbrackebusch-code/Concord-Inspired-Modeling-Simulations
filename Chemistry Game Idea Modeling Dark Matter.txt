@@ -1,0 +1,362 @@
+MODE: SIM_PROTOCOL
+
+Absolutely. Here is a clean summary of the concept so far.
+
+# Core vision
+
+This is **not** just a chemistry simulation and **not** just a game wrapper around schoolwork.
+
+The goal is a **playable model-based chemistry world** where:
+
+* students investigate phenomena
+* gather evidence
+* build and revise a scientific model
+* train an AI using that evidence
+* improve their suit and tools through better understanding
+* survive longer and stabilize more of a broken world
+
+So the curriculum, the model, the AI, the tools, and the game progression all become the **same system**.
+
+---
+
+# Story premise
+
+A crew has crash-landed on a planet saturated in an extreme dark-matter field.
+
+That field has distorted normal matter interactions so severely that the planet cannot naturally support life. Chemistry behaves abnormally, reactions are unstable, and reality is locally broken.
+
+The sci-fi plausibility hook is that this distortion is loosely inspired by the idea of a perturbation in something like the **fine-structure constant**. That is the “real science hook,” and from there the game takes a fictional leap.
+
+The player survives because their suit projects a **local reference field** that preserves normal chemistry around them for a limited time.
+
+The larger mission is to:
+
+* investigate distorted matter behavior
+* reconstruct a correct model of how matter should behave
+* teach that model to the suit AI
+* use that improved understanding to stabilize local regions
+* gradually restore reality
+
+## Emotional core
+
+**Reality is breaking. Your model is how you fix it.**
+
+---
+
+# What the game is actually about
+
+The player is not mainly collecting points or completing assignments.
+
+They are:
+
+* diagnosing instability in the world
+* gathering evidence from live phenomena
+* building and revising a model of matter
+* training the suit AI to interpret reality correctly
+* unlocking better survival and better tools
+* using that growing capability to repair the planet
+
+So the scientific model is not the end product after the fun.
+
+## The model is the center of the game.
+
+It is:
+
+* the class model
+* the player’s build
+* the suit AI’s world-model
+* the source of prediction
+* the reason the suit becomes more powerful
+
+---
+
+# The role of the AI
+
+The suit contains an AI that is useful but incomplete.
+
+It can:
+
+* scan
+* store samples
+* simulate
+* make predictions
+* assist with stabilization
+
+But because the planet is so distorted, the AI cannot be trusted to interpret reality correctly on its own.
+
+So the player must **train** it.
+
+That means students are not just learning chemistry. They are:
+
+* teaching the AI what counts as evidence
+* correcting its wrong assumptions
+* revising its world-model
+* improving its predictions
+* increasing its operational performance
+
+## Key fusion point
+
+The class model becomes the **AI’s evolving understanding of the universe**.
+
+So when students improve the model, they are also improving the AI.
+
+---
+
+# Why writing matters
+
+Writing is not an afterthought and not a school tax.
+
+Writing becomes the **control language for the AI**.
+
+Students write in order to:
+
+* label evidence
+* explain what an observation means
+* correct a mistaken interpretation
+* justify a model revision
+* tell the AI what to scan for next
+* turn raw observation into usable intelligence
+
+So writing has **double value**:
+
+## In the curriculum
+
+It is scientific explanation, argument from evidence, model revision, and precise communication.
+
+## In the game
+
+It makes the AI smarter, the suit stronger, and the tools more effective.
+
+## Design law
+
+**No writing without consequence.**
+
+If students write, something should change:
+
+* AI confidence
+* model state
+* prediction quality
+* tool behavior
+* suit performance
+* scan priorities
+
+---
+
+# Progression structure
+
+Everything is tied together.
+
+The player is simultaneously building:
+
+* scientific understanding
+* the class model
+* the AI’s world-model
+* suit survivability
+* tool access
+* field effectiveness
+* restored planetary stability
+
+## Core progression chain
+
+**evidence → explanation → model upgrade → AI upgrade → suit/tool upgrade → deeper challenge**
+
+That is the backbone.
+
+---
+
+# Why the model matters so much
+
+The model is not just knowledge.
+
+## The model compiles into capability.
+
+A better model means:
+
+* better predictions
+* better AI behavior
+* better suit performance
+* longer survival windows
+* new tools
+* stronger stabilization abilities
+* access to harder zones
+
+So the model is the player’s **persistent upgradeable build**.
+
+That is why it feels important.
+
+---
+
+# Tools
+
+Tools are not arbitrary unlocks.
+
+Each tool should exist because the AI now understands some chemistry idea well enough to construct and operate it.
+
+So tools become **materialized scientific understanding**.
+
+Examples of the pattern:
+
+* better particle identity understanding → species filter
+* better attraction understanding → cohesion/stabilization field
+* better energy-motion understanding → thermal pulse
+* better charge/polarity understanding → polarization tool
+* better conservation understanding → matter trace overlay
+
+So every tool has:
+
+* a story reason
+* a science reason
+* a progression reason
+
+---
+
+# Time and suit modes
+
+There is a live timer, but it is used carefully.
+
+The suit has different modes.
+
+## Externalized actions cost suit integrity
+
+These are live field actions:
+
+* scanning
+* steering
+* pulsing
+* trapping
+* stabilizing
+* capturing live samples
+
+## Internal actions do not cost suit integrity
+
+These are protected actions:
+
+* reading captured evidence
+* comparing samples
+* editing the model
+* writing to the AI
+* building arguments
+* analyzing
+
+So the player feels urgency in the field, but not punishment for reading level or careful thinking.
+
+## Design law
+
+**Urgency in the field, safety in analysis.**
+
+The fiction is that the suit can enter something like **Anchor Mode** or isolate samples into a protected chamber, so the game does not feel like an artificial pause menu.
+
+---
+
+# Gameplay feel
+
+The chemistry itself should feel entertaining.
+
+The fun should come from interacting with a world of matter in motion:
+
+* particles move
+* collide
+* cluster
+* separate
+* react
+* drift
+* settle
+* destabilize
+
+The player should feel like they are using a suit-tool interface to operate inside a living particle universe.
+
+Not generic platforming.
+Not mostly walking and talking.
+
+## Chemistry-native gameplay verbs
+
+The strongest recurring action families are:
+
+* **steer**
+* **pulse**
+* **capture**
+* **stabilize**
+
+Supporting families include:
+
+* shepherding
+* timing
+* evidence capture
+* filtering signal from noise
+* model debugging
+
+So the entertainment layer comes from controlling and interpreting **matter-in-motion**.
+
+---
+
+# The lesson-to-game relationship
+
+The curriculum is still the source of truth.
+
+The game is not replacing the chemistry lesson with something random.
+
+Instead, each lesson becomes:
+
+* a scientific investigation
+* a model revision opportunity
+* an AI training episode
+* a suit/tool progression step
+* a world-restoration mission
+
+So real experiments, real evidence, and real reasoning are still the core.
+
+The game just turns them into:
+
+* survival
+* calibration
+* capability
+* repair
+* progression
+
+---
+
+# What this solves
+
+This structure solves several problems at once.
+
+## 1. Why do the lesson?
+
+Because it improves the model.
+
+## 2. Why does the model matter?
+
+Because it powers the AI and the suit.
+
+## 3. Why write?
+
+Because writing teaches the AI and changes gameplay.
+
+## 4. Why gather evidence carefully?
+
+Because bad evidence produces bad AI behavior.
+
+## 5. Why revise?
+
+Because incorrect models fail in the field.
+
+## 6. Why progress through lessons?
+
+Because understanding literally becomes survival, tools, and world repair.
+
+Everything has value all the time.
+
+---
+
+# Best short-form summary
+
+This project is a **gameful chemistry curriculum** set on a dark-matter-saturated planet where normal matter interactions are broken.
+
+The player survives using a suit that projects a temporary normal-physics bubble. They investigate distorted chemistry, gather evidence, build and revise a scientific model, and use writing to train a fallible suit AI. As the AI’s world-model improves, the suit becomes more efficient, survival time increases, new tools unlock, and more of the planet can be stabilized.
+
+The model is not just something students submit. It is the persistent core of their progress: their understanding, their AI’s understanding, their powers, and their ability to repair reality.
+
+---
+
+# One-line project identity
+
+**A student trains a damaged scientific AI to rebuild the correct model of matter in a chemically broken world, and that growing model becomes the source of survival, tools, and planetary restoration.**

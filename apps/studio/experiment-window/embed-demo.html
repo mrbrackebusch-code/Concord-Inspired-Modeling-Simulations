@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Experiment Window Embed Demo</title>
+    <style>
+      :root {
+        --demo-bg: #10181c;
+        --demo-panel: rgba(241, 247, 243, 0.96);
+        --demo-panel-alt: rgba(228, 235, 231, 0.95);
+        --demo-ink: #132128;
+        --demo-accent: #236c5f;
+        --demo-line: rgba(19, 33, 40, 0.14);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top right, rgba(35, 108, 95, 0.18), transparent 24%),
+          linear-gradient(180deg, #172126 0%, var(--demo-bg) 100%);
+        color: var(--demo-ink);
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      .embed-demo {
+        width: min(1600px, calc(100% - 2rem));
+        margin: 0 auto;
+        padding: 1rem 0 1.5rem;
+      }
+
+      .embed-demo__toolbar,
+      .embed-demo__panel {
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: var(--demo-panel);
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+      }
+
+      .embed-demo__toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1rem;
+      }
+
+      .embed-demo__toolbar h1,
+      .embed-demo__panel h2 {
+        margin: 0;
+      }
+
+      .embed-demo__eyebrow {
+        margin: 0 0 0.4rem;
+        color: #4e626a;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .embed-demo__controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: end;
+      }
+
+      .embed-demo__controls label {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+        color: #4e626a;
+      }
+
+      .embed-demo__controls select,
+      .embed-demo__controls button {
+        border-radius: 12px;
+        border: 1px solid var(--demo-line);
+        padding: 0.7rem 0.85rem;
+        font: inherit;
+      }
+
+      .embed-demo__controls button {
+        background: #fefefe;
+        color: var(--demo-ink);
+        cursor: pointer;
+      }
+
+      .embed-demo__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr);
+        gap: 1rem;
+      }
+
+      .embed-demo__frame-wrap {
+        overflow: hidden;
+      }
+
+      .embed-demo__frame {
+        width: 100%;
+        min-height: 82vh;
+        border: 0;
+        background: #eaf2ea;
+      }
+
+      .embed-demo__panel {
+        padding: 1rem 1.15rem;
+        background: var(--demo-panel-alt);
+      }
+
+      .embed-demo__panel + .embed-demo__panel {
+        margin-top: 1rem;
+      }
+
+      .embed-demo__definition {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .embed-demo__definition li {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.55rem 0;
+        border-top: 1px solid var(--demo-line);
+      }
+
+      .embed-demo__definition li:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .embed-demo__log {
+        max-height: 28rem;
+        overflow: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .embed-demo__log li {
+        padding: 0.55rem 0 0.65rem;
+        border-top: 1px solid var(--demo-line);
+      }
+
+      .embed-demo__log li:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+
+      .embed-demo__log code,
+      .embed-demo__raw {
+        display: block;
+        margin-top: 0.35rem;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: Consolas, "Courier New", monospace;
+        font-size: 0.83rem;
+        line-height: 1.4;
+      }
+
+      @media (max-width: 1180px) {
+        .embed-demo__grid {
+          grid-template-columns: 1fr;
+        }
+
+        .embed-demo__frame {
+          min-height: 68vh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="embed-demo">
+      <header class="embed-demo__toolbar">
+        <div>
+          <p class="embed-demo__eyebrow">Parent Host Harness</p>
+          <h1>Experiment Window Embed Demo</h1>
+        </div>
+
+        <div class="embed-demo__controls">
+          <label>
+            Experiment
+            <select id="embed-experiment-selector"></select>
+          </label>
+          <button type="button" id="reload-frame-button">Reload View</button>
+          <button type="button" id="request-state-button">Request State</button>
+        </div>
+      </header>
+
+      <section class="embed-demo__grid">
+        <div class="embed-demo__panel embed-demo__frame-wrap">
+          <p class="embed-demo__eyebrow">Embedded View</p>
+          <iframe
+            class="embed-demo__frame"
+            id="experiment-embed-frame"
+            title="Embedded experiment window"
+            loading="eager"></iframe>
+        </div>
+
+        <div>
+          <section class="embed-demo__panel">
+            <p class="embed-demo__eyebrow">Last Known State</p>
+            <h2>Bridge Summary</h2>
+            <ul class="embed-demo__definition" id="embed-state-summary">
+              <li><span>Status</span><strong>Waiting for child shell</strong></li>
+            </ul>
+          </section>
+
+          <section class="embed-demo__panel">
+            <p class="embed-demo__eyebrow">Bridge Messages</p>
+            <h2>Parent Event Log</h2>
+            <ul class="embed-demo__log" id="embed-message-log"></ul>
+          </section>
+
+          <section class="embed-demo__panel">
+            <p class="embed-demo__eyebrow">Latest Payload</p>
+            <h2>Raw Message</h2>
+            <code class="embed-demo__raw" id="embed-raw-message">Awaiting child message...</code>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="/packages/lab-host/runtime/experiment-window-registry.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      (function() {
+        var frame = document.getElementById("experiment-embed-frame");
+        var selector = document.getElementById("embed-experiment-selector");
+        var messageLog = document.getElementById("embed-message-log");
+        var summary = document.getElementById("embed-state-summary");
+        var raw = document.getElementById("embed-raw-message");
+        var sessionId = "embed-demo-session";
+        var currentExperimentId = null;
+
+        function renderSummary(state) {
+          var evidence = state && state.evidence ? state.evidence : {};
+          var status = state && state.status ? state.status : {};
+          var procedure = state && state.procedure ? state.procedure : [];
+
+          summary.innerHTML = [
+            "<li><span>Experiment</span><strong>" + (state && state.experiment ? state.experiment.title : "--") + "</strong></li>",
+            "<li><span>Shell mode</span><strong>" + (state && state.shellMode ? state.shellMode : "--") + "</strong></li>",
+            "<li><span>Interactive status</span><strong>" + (status.interactive || "--") + "</strong></li>",
+            "<li><span>Model</span><strong>" + (status.model || "--") + "</strong></li>",
+            "<li><span>Initial mass</span><strong>" + (evidence.initialMass || "--") + "</strong></li>",
+            "<li><span>Final mass</span><strong>" + (evidence.finalMass || "--") + "</strong></li>",
+            "<li><span>Delta mass</span><strong>" + (evidence.deltaMass || "--") + "</strong></li>",
+            "<li><span>Procedure steps</span><strong>" + procedure.length + "</strong></li>"
+          ].join("");
+        }
+
+        function logMessage(message) {
+          var entry = document.createElement("li");
+          entry.innerHTML =
+            "<strong>" + message.type + "</strong>" +
+            "<code>" + JSON.stringify(message.payload || {}, null, 2) + "</code>";
+
+          messageLog.insertBefore(entry, messageLog.firstChild);
+
+          while (messageLog.childNodes.length > 12) {
+            messageLog.removeChild(messageLog.lastChild);
+          }
+        }
+
+        function loadExperiment(experimentId) {
+          currentExperimentId = experimentId;
+          frame.src = window.RainbowLabHostRegistry.buildLaunchUrl(experimentId, {
+            mode: "embed",
+            parentOrigin: window.location.origin,
+            sessionId: sessionId
+          });
+        }
+
+        selector.innerHTML = window.RainbowLabHostRegistry.list().map(function(experiment) {
+          return "<option value=\"" + experiment.id + "\">" + experiment.title + "</option>";
+        }).join("");
+
+        selector.addEventListener("change", function(event) {
+          loadExperiment(event.target.value);
+        });
+
+        document.getElementById("reload-frame-button").addEventListener("click", function() {
+          loadExperiment(currentExperimentId);
+        });
+
+        document.getElementById("request-state-button").addEventListener("click", function() {
+          if (!frame.contentWindow) {
+            return;
+          }
+
+          frame.contentWindow.postMessage({
+            source: "rainbow-game-host",
+            type: "rainbow.labHost.requestState",
+            payload: {}
+          }, window.location.origin);
+        });
+
+        window.addEventListener("message", function(event) {
+          var message = event.data;
+
+          if (event.origin !== window.location.origin || !message || message.source !== "rainbow-lab-host") {
+            return;
+          }
+
+          raw.textContent = JSON.stringify(message, null, 2);
+          logMessage(message);
+
+          if (message.type === "rainbow.labHost.ready" || message.type === "rainbow.labHost.state") {
+            renderSummary(message.payload && message.payload.state ? message.payload.state : null);
+          }
+        });
+
+        selector.value = "unit-01/lesson-01/mass-change/precipitate";
+        loadExperiment(selector.value);
+      }());
+    </script>
+  </body>
+</html>

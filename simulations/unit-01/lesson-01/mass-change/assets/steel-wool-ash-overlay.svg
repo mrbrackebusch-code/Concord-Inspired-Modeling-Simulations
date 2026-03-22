@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="92" height="58" viewBox="0 0 92 58">
+  <defs>
+    <clipPath id="ashClip">
+      <path d="M11 34 C8 23 13 13 27 10 C45 5 67 8 79 14 C86 18 88 30 83 38 C77 47 58 51 33 50 C18 49 12 44 11 34 Z"/>
+    </clipPath>
+    <linearGradient id="ashFade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dfe3e5" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#687073" stop-opacity="0.48"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#ashClip)">
+    <path d="M13 35 C23 44 41 47 57 44 C67 42 75 38 82 31 L82 50 L10 50 Z" fill="url(#ashFade)" opacity="0.7"/>
+    <ellipse cx="29" cy="37" rx="8" ry="5" fill="#737b7f" fill-opacity="0.38"/>
+    <ellipse cx="49" cy="34" rx="11" ry="6" fill="#5f676a" fill-opacity="0.32"/>
+    <ellipse cx="65" cy="39" rx="9" ry="5" fill="#7a8285" fill-opacity="0.28"/>
+    <path d="M18 43 C32 45 48 45 64 42" fill="none" stroke="#dde3e5" stroke-opacity="0.28" stroke-width="1.1" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,40 @@
+COPYING / LICENSING NOTICE
+
+This repository contains:
+  (A) original source code, and
+  (B) third-party art/assets.
+
+A) CODE
+The license for ORIGINAL CODE in this repository is in the top-level file:
+
+  LICENSE
+
+B) THIRD-PARTY ART / ASSETS
+Third-party art/assets are NOT covered by the code license. Copyright remains with the
+original creators. This repository redistributes those assets under the licenses stated
+by their authors/sources, and attribution or provenance is recorded in:
+
+  licensing/
+  docs/architecture/third-party-asset-attribution.md
+  per-simulation or per-feature asset manifests
+
+Approved donor repository for game-side art:
+
+  C:\my-heroengine-phaser
+
+Important rule:
+Art imported from the donor repository must carry forward its upstream provenance.
+Do not relabel donor art as project-authored just because it was copied from another
+local repository. Preserve the original license chain and attribution requirements.
+
+Primary provenance sources for donor-repo imports:
+  - C:\my-heroengine-phaser\licensing\README.md
+  - C:\my-heroengine-phaser\licensing\CREDITSLPCBaseAssets.TXT
+  - C:\my-heroengine-phaser\licensing\spriteAuthors.md
+  - C:\my-heroengine-phaser\licensing\tilesetAuthors.md
+  - C:\my-heroengine-phaser\licensing\CREDITSFromLPCSpritesheetGenerator.csv
+  - C:\my-heroengine-phaser\licensing\MonsterCreditsLicensing.txt
+
+Working project assumption:
+The donor repository's art is an approved source pool for this project. Use it when it
+solves the visual need, then document the imported files correctly.

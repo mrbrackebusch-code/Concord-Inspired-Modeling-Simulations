@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Experiment Window</title>
+    <script src="/vendor/lab/dist/vendor/modernizr/modernizr.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      if (!Modernizr.svg) { window.location = "/vendor/lab/dist/browser-upgrade.html"; }
+    </script>
+    <script src="/vendor/lab/dist/vendor/d3/d3.js" type="text/javascript"></script>
+    <script src="/vendor/lab/dist/vendor/jquery/jquery.min.js" type="text/javascript"></script>
+    <script src="/vendor/lab/dist/vendor/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+    <script src="/vendor/lab/dist/vendor/jquery-ui-touch-punch/jquery.ui.touch-punch.min.js" type="text/javascript"></script>
+    <script src="/vendor/lab/dist/vendor/jquery-context-menu/jquery.contextMenu.js" type="text/javascript"></script>
+    <script src="/vendor/lab/dist/vendor/jquery-selectBoxIt/jquery.selectBoxIt.min.js" type="text/javascript"></script>
+    <link href="/vendor/lab/dist/vendor/jquery-ui/jquery-ui.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/lab/dist/vendor/jquery-context-menu/jquery.contextMenu.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/lab/dist/vendor/jquery-selectBoxIt/jquery.selectBoxIt.css" rel="stylesheet" type="text/css">
+    <link href="/vendor/lab/dist/embeddable.css" rel="stylesheet" type="text/css">
+    <link href="/packages/lab-host/runtime/experiment-window-shell.css" rel="stylesheet" type="text/css">
+  </head>
+  <body class="rainbow-experiment-window">
+    <main class="window-page">
+      <header class="window-toolbar">
+        <div class="window-toolbar__meta">
+          <p class="window-toolbar__eyebrow" id="experiment-suite">Experiment Window</p>
+          <div class="window-toolbar__title-row">
+            <h1 id="experiment-title">Loading experiment...</h1>
+            <span class="window-stage-tag" id="experiment-stage-label">Stage label pending</span>
+          </div>
+        </div>
+        <div class="window-toolbar__controls">
+          <label>
+            Experiment window
+            <select id="experiment-selector" aria-label="Experiment selector"></select>
+          </label>
+          <a href="/apps/studio/interactives/unit-01/lesson-01/mass-change/index.html">Back to Mass &amp; Change menu</a>
+          <a id="raw-interactive-link" href="/apps/studio/interactives/unit-01/lesson-01/mass-change/index.html">Open raw interactive</a>
+        </div>
+      </header>
+
+      <section class="window-grid">
+        <div class="window-column window-column--context">
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Briefing Panel</p>
+            <h2>Operator Context</h2>
+            <p id="briefing-copy">Loading briefing...</p>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Object Tray</p>
+            <h2>Relevant Apparatus</h2>
+            <ul id="object-tray-list"></ul>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Procedure Rail</p>
+            <h2>Ordered Steps</h2>
+            <ol class="procedure-list" id="procedure-list"></ol>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Interaction Grammar</p>
+            <h2>Shared Verbs</h2>
+            <ul id="interaction-grammar-list"></ul>
+          </section>
+        </div>
+
+        <div class="window-column window-column--stage">
+          <section class="window-stage">
+            <div class="window-stage__header">
+              <div>
+                <p class="window-panel__eyebrow">Main Apparatus Stage</p>
+                <h2>Live Experiment Area</h2>
+              </div>
+              <p class="window-stage__status" id="interactive-stage-status">Preparing runtime...</p>
+            </div>
+            <div id="interactive-container" tabindex="0"></div>
+            <p class="window-shell-note" id="shell-note"></p>
+          </section>
+        </div>
+
+        <div class="window-column window-column--status">
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Instrument / Readout Panel</p>
+            <h2>Host Status</h2>
+            <ul class="window-definition-list" id="instrument-status-list"></ul>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Evidence Tray</p>
+            <h2>Current Evidence Values</h2>
+            <ul class="window-definition-list" id="evidence-values-list"></ul>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Future Evidence Contract</p>
+            <h2>Planned Outputs</h2>
+            <ul id="evidence-schema-list"></ul>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Future Event Contract</p>
+            <h2>Planned Hooks</h2>
+            <ul id="event-contract-list"></ul>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Procedural Integrity</p>
+            <h2>Mistake Flags</h2>
+            <ul id="mistake-flags-list"></ul>
+          </section>
+
+          <section class="window-panel">
+            <p class="window-panel__eyebrow">Host Event Stream</p>
+            <h2>Visible Events</h2>
+            <ul class="event-log" id="event-log"></ul>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="/vendor/lab/dist/lab/lab.js" type="text/javascript"></script>
+    <script src="/packages/lab-host/runtime/experiment-window-registry.js" type="text/javascript"></script>
+    <script src="/packages/lab-host/runtime/experiment-window-shell.js" type="text/javascript"></script>
+  </body>
+</html>

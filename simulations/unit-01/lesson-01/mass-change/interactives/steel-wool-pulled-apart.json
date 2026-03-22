@@ -1,0 +1,280 @@
+{
+  "title": "Steel wool pulled apart",
+  "publicationStatus": "draft",
+  "subtitle": "Pull part of the sample away from the scale, put it back, then record each run.",
+  "about": "Direct-manipulation draft using Concord's draggable-object pattern instead of scene switching.",
+  "parameters": [
+    {
+      "name": "steelPieceOnScale",
+      "initialValue": 1
+    },
+    {
+      "name": "recordedRuns",
+      "initialValue": 0
+    },
+    {
+      "name": "procedureState0",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState1",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState2",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState3",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState4",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "currentMassDisplay",
+      "initialValue": "--"
+    },
+    {
+      "name": "initialMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "finalMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "deltaMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "measurementStable",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "boundaryStatus",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "beforeSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "afterSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "activeMistakeFlags",
+      "initialValue": ""
+    },
+    {
+      "name": "procedureCompletionState",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "lastEventType",
+      "initialValue": "boot"
+    },
+    {
+      "name": "lastEventDetail",
+      "initialValue": "Awaiting first event"
+    },
+    {
+      "name": "eventSequence",
+      "initialValue": 0
+    }
+  ],
+  "models": [
+    {
+      "type": "md2d",
+      "id": "steel-live",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/steel-live.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "var steelCurrentScaleAsset = 'balance-scale-4-82-g.svg';",
+        "var steelPendingScaleAsset = null;",
+        "var steelPendingScaleTime = null;",
+        "function steelSetScaleAsset(asset) {",
+        "  steelCurrentScaleAsset = asset;",
+        "  set('imageMapping', { 'balance-scale-dynamic.svg': asset });",
+        "}",
+        "function steelIsOnScale() {",
+        "  var piece = getAtomProperties(0);",
+        "  return piece.x >= 2.76 && piece.x <= 3.42 && piece.y >= 2.24 && piece.y <= 2.9;",
+        "}",
+        "function steelRefreshReadout() {",
+        "  var onScale = steelIsOnScale();",
+        "  var desiredAsset = onScale ? 'balance-scale-4-82-g.svg' : 'balance-scale-3-91-g.svg';",
+        "  var settling = false;",
+        "  set('steelPieceOnScale', onScale ? 1 : 0);",
+        "  setTextBoxProperties(3, { text: onScale ? 'Whole sample on tray' : 'Part of sample off tray' });",
+        "  if (desiredAsset !== steelCurrentScaleAsset && desiredAsset !== steelPendingScaleAsset) {",
+        "    steelPendingScaleAsset = desiredAsset;",
+        "    steelPendingScaleTime = get('time') + 8;",
+        "    steelSetScaleAsset('balance-scale-loading.svg');",
+        "  }",
+        "  if (steelPendingScaleAsset && steelPendingScaleTime !== null && get('time') >= steelPendingScaleTime) {",
+        "    steelSetScaleAsset(steelPendingScaleAsset);",
+        "    steelPendingScaleAsset = null;",
+        "    steelPendingScaleTime = null;",
+        "  }",
+        "  settling = steelPendingScaleAsset !== null;",
+        "  set('currentMassDisplay', settling ? 'Settling...' : (onScale ? '4.82 g' : '3.91 g'));",
+        "  set('measurementStable', settling ? 'Settling' : 'Stable');",
+        "  set('boundaryStatus', onScale ? 'Whole sample on tray' : 'Part of sample outside tray');",
+        "  if (onScale) {",
+        "    set('procedureState0', 'completed::Whole sample on the tray');",
+        "    set('procedureState1', 'completed::Starting mass visible: 4.82 g');",
+        "    set('procedureState2', 'active::Pull part of the sample away');",
+        "    set('procedureState3', get('recordedRuns') > 0 ? 'completed::Returned to the tray before recording' : 'planned::Return the full sample to the tray');",
+        "    set('procedureState4', get('recordedRuns') > 0 ? 'completed::Recorded runs: ' + get('recordedRuns') : 'planned::Record the run after returning it');",
+        "    if (get('activeMistakeFlags') === 'fragmentLost') {",
+        "      set('activeMistakeFlags', '');",
+        "    }",
+        "  } else {",
+        "    set('procedureState0', 'warning::Part of the sample is off the tray');",
+        "    set('procedureState1', 'completed::Starting mass visible: 4.82 g');",
+        "    set('procedureState2', 'completed::Part of the sample moved away');",
+        "    set('procedureState3', 'active::Return the full sample to the tray');",
+        "    set('procedureState4', 'warning::Recording now will show less mass');",
+        "  }",
+        "}",
+        "setComponentDisabled('steel-record-1-button', false);",
+        "setComponentDisabled('steel-record-2-button', true);",
+        "setComponentDisabled('steel-record-3-button', true);",
+        "steelSetScaleAsset('balance-scale-4-82-g.svg');",
+        "set('recordedRuns', 0);",
+        "set('initialMass', '4.82 g');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('beforeSnapshotId', 'steel-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Run ready');",
+        "set('lastEventType', 'objectPlaced');",
+        "set('lastEventDetail', 'Steel wool sample ready on tray');",
+        "set('eventSequence', 1);",
+        "setTextBoxProperties(5, { text: 'Run 1: --' });",
+        "setTextBoxProperties(6, { text: 'Run 2: --' });",
+        "setTextBoxProperties(7, { text: 'Run 3: --' });",
+        "steelRefreshReadout();",
+        "callEvery(5, function () {",
+        "  steelRefreshReadout();",
+        "});",
+        "start();"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "steel-note",
+      "text": "Drag the star to pull a piece away from the tray. Put it back on the tray before recording the run."
+    },
+    {
+      "type": "button",
+      "id": "steel-record-1-button",
+      "text": "Record run 1",
+      "action": [
+        "setTextBoxProperties(5, { text: 'Run 1: ' + (get('steelPieceOnScale') ? '4.82 g' : '3.91 g') });",
+        "set('finalMass', get('steelPieceOnScale') ? '4.82 g' : '3.91 g');",
+        "set('deltaMass', get('steelPieceOnScale') ? '0.00 g' : '-0.91 g');",
+        "set('afterSnapshotId', get('steelPieceOnScale') ? 'steel-run-1' : 'steel-run-1-off-tray');",
+        "set('recordedRuns', 1);",
+        "set('activeMistakeFlags', get('steelPieceOnScale') ? '' : 'fragmentLost');",
+        "set('procedureCompletionState', get('steelPieceOnScale') ? 'Run 1 recorded' : 'Run 1 recorded with missing sample');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Run 1 recorded at ' + (get('steelPieceOnScale') ? '4.82 g' : '3.91 g'));",
+        "set('eventSequence', 2);",
+        "setComponentDisabled('steel-record-1-button', true);",
+        "setComponentDisabled('steel-record-2-button', false);",
+        "setComponentDisabled('steel-record-3-button', true);"
+      ]
+    },
+    {
+      "type": "button",
+      "id": "steel-record-2-button",
+      "text": "Record run 2",
+      "action": [
+        "setTextBoxProperties(6, { text: 'Run 2: ' + (get('steelPieceOnScale') ? '4.79 g' : '3.88 g') });",
+        "set('finalMass', get('steelPieceOnScale') ? '4.79 g' : '3.88 g');",
+        "set('deltaMass', get('steelPieceOnScale') ? '-0.03 g' : '-0.94 g');",
+        "set('afterSnapshotId', get('steelPieceOnScale') ? 'steel-run-2' : 'steel-run-2-off-tray');",
+        "set('recordedRuns', 2);",
+        "set('activeMistakeFlags', get('steelPieceOnScale') ? '' : 'fragmentLost');",
+        "set('procedureCompletionState', get('steelPieceOnScale') ? 'Run 2 recorded' : 'Run 2 recorded with missing sample');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Run 2 recorded at ' + (get('steelPieceOnScale') ? '4.79 g' : '3.88 g'));",
+        "set('eventSequence', 3);",
+        "setComponentDisabled('steel-record-1-button', true);",
+        "setComponentDisabled('steel-record-2-button', true);",
+        "setComponentDisabled('steel-record-3-button', false);"
+      ],
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "steel-record-3-button",
+      "text": "Record run 3",
+      "action": [
+        "setTextBoxProperties(7, { text: 'Run 3: ' + (get('steelPieceOnScale') ? '4.73 g' : '3.82 g') });",
+        "set('finalMass', get('steelPieceOnScale') ? '4.73 g' : '3.82 g');",
+        "set('deltaMass', get('steelPieceOnScale') ? '-0.09 g' : '-1.00 g');",
+        "set('afterSnapshotId', get('steelPieceOnScale') ? 'steel-run-3' : 'steel-run-3-off-tray');",
+        "set('recordedRuns', 3);",
+        "set('activeMistakeFlags', get('steelPieceOnScale') ? '' : 'fragmentLost');",
+        "set('procedureCompletionState', get('steelPieceOnScale') ? 'Three runs recorded' : 'Three runs recorded with missing sample');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Run 3 recorded at ' + (get('steelPieceOnScale') ? '4.73 g' : '3.82 g'));",
+        "set('eventSequence', 4);",
+        "setComponentDisabled('steel-record-1-button', true);",
+        "setComponentDisabled('steel-record-2-button', true);",
+        "setComponentDisabled('steel-record-3-button', true);"
+      ],
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "steel-reset-button",
+      "text": "Reset",
+      "action": "loadModel('steel-live');"
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "steel-note"
+      ],
+      [
+        "steel-record-1-button"
+      ],
+      [
+        "steel-record-2-button"
+      ],
+      [
+        "steel-record-3-button"
+      ],
+      [
+        "steel-reset-button"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}

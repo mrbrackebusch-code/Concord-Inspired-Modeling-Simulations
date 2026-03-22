@@ -1,0 +1,334 @@
+{
+  "title": "Precipitate",
+  "publicationStatus": "draft",
+  "subtitle": "Weigh it, run the pour, then weigh it again.",
+  "about": "This interactive now treats the pour as an action instead of a manual state jump.",
+  "parameters": [
+    {
+      "name": "procedureState0",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState1",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState2",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState3",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState4",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "currentMassDisplay",
+      "initialValue": "--"
+    },
+    {
+      "name": "initialMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "finalMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "deltaMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "measurementStable",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "boundaryStatus",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "beforeSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "afterSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "activeMistakeFlags",
+      "initialValue": ""
+    },
+    {
+      "name": "procedureCompletionState",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "lastEventType",
+      "initialValue": "boot"
+    },
+    {
+      "name": "lastEventDetail",
+      "initialValue": "Awaiting first event"
+    },
+    {
+      "name": "eventSequence",
+      "initialValue": 0
+    }
+  ],
+  "models": [
+    {
+      "type": "md2d",
+      "id": "precipitate-ready-step",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/precipitate-ready.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "setComponentDisabled('precipitate-before-button', false);",
+        "setComponentDisabled('precipitate-pour-button', true);",
+        "setComponentDisabled('precipitate-after-button', true);",
+        "setComponentDisabled('precipitate-reset-button', true);",
+        "set('procedureState0', 'completed::Vials prepared on tray');",
+        "set('procedureState1', 'active::Record the initial mass');",
+        "set('procedureState2', 'locked::Pour unlocks after weighing');",
+        "set('procedureState3', 'planned::Wait for the new solid to form');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('initialMass', '--');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Waiting for first weighing');",
+        "set('boundaryStatus', 'Capped vials prepared');",
+        "set('beforeSnapshotId', 'precipitate-ready');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Setup ready');",
+        "set('lastEventType', 'objectPlaced');",
+        "set('lastEventDetail', 'Precipitate setup prepared');",
+        "set('eventSequence', 1);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "precipitate-before-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/precipitate-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "setComponentDisabled('precipitate-before-button', true);",
+        "setComponentDisabled('precipitate-pour-button', false);",
+        "setComponentDisabled('precipitate-after-button', true);",
+        "setComponentDisabled('precipitate-reset-button', false);",
+        "set('procedureState0', 'completed::Vials prepared on tray');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'active::Pour one vial into the other');",
+        "set('procedureState3', 'planned::Wait for the new solid to form');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '41.26 g');",
+        "set('initialMass', '41.26 g');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'No spill detected');",
+        "set('beforeSnapshotId', 'precipitate-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Initial evidence recorded');",
+        "set('lastEventType', 'massRecordedBefore');",
+        "set('lastEventDetail', 'Initial mass 41.26 g');",
+        "set('eventSequence', 2);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "precipitate-pour-live",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/precipitate-pour.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "setComponentDisabled('precipitate-before-button', true);",
+        "setComponentDisabled('precipitate-pour-button', true);",
+        "setComponentDisabled('precipitate-after-button', true);",
+        "setComponentDisabled('precipitate-reset-button', true);",
+        "set('procedureState0', 'completed::Vials prepared on tray');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Transfer started');",
+        "set('procedureState3', 'active::Precipitate forming in the receiver');",
+        "set('procedureState4', 'locked::Final measurement unlocks after the run');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Transfer in progress');",
+        "set('afterSnapshotId', 'precipitate-pour-live');",
+        "set('procedureCompletionState', 'Run in progress');",
+        "set('lastEventType', 'runStarted');",
+        "set('lastEventDetail', 'Pour started');",
+        "set('eventSequence', 3);",
+        "callAt(180, function () {",
+        "  loadModel('precipitate-after-ready');",
+        "});",
+        "onStart(function () {",
+        "  setComponentDisabled('precipitate-before-button', true);",
+        "  setComponentDisabled('precipitate-pour-button', true);",
+        "  setComponentDisabled('precipitate-after-button', true);",
+        "  setComponentDisabled('precipitate-reset-button', true);",
+        "});"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "precipitate-after-ready",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/precipitate-after-ready.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "setComponentDisabled('precipitate-before-button', true);",
+        "setComponentDisabled('precipitate-pour-button', true);",
+        "setComponentDisabled('precipitate-after-button', false);",
+        "setComponentDisabled('precipitate-reset-button', false);",
+        "set('procedureState0', 'completed::Vials prepared on tray');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Solutions transferred');",
+        "set('procedureState3', 'completed::New solid formed');",
+        "set('procedureState4', 'active::Record the final mass');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Waiting for final weighing');",
+        "set('boundaryStatus', 'No spill detected');",
+        "set('afterSnapshotId', 'precipitate-after-ready');",
+        "set('procedureCompletionState', 'Awaiting final measurement');",
+        "set('lastEventType', 'runCompleted');",
+        "set('lastEventDetail', 'Precipitate formed');",
+        "set('eventSequence', 4);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "precipitate-after-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/precipitate-after.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "setComponentDisabled('precipitate-before-button', true);",
+        "setComponentDisabled('precipitate-pour-button', true);",
+        "setComponentDisabled('precipitate-after-button', true);",
+        "setComponentDisabled('precipitate-reset-button', false);",
+        "set('procedureState0', 'completed::Vials prepared on tray');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Solutions transferred');",
+        "set('procedureState3', 'completed::New solid formed');",
+        "set('procedureState4', 'completed::Final mass recorded');",
+        "set('currentMassDisplay', '41.26 g');",
+        "set('finalMass', '41.26 g');",
+        "set('deltaMass', '0.00 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'No spill detected');",
+        "set('afterSnapshotId', 'precipitate-after');",
+        "set('procedureCompletionState', 'Evidence locked');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Final mass 41.26 g');",
+        "set('eventSequence', 5);"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "precipitate-note",
+      "text": "Use the actual sequence: weigh before, pour, then weigh after."
+    },
+    {
+      "type": "button",
+      "id": "precipitate-before-button",
+      "text": "Weigh (before)",
+      "action": "loadModel('precipitate-before-measured');"
+    },
+    {
+      "type": "button",
+      "id": "precipitate-pour-button",
+      "text": "Pour",
+      "action": [
+        "setComponentDisabled('precipitate-before-button', true);",
+        "setComponentDisabled('precipitate-pour-button', true);",
+        "setComponentDisabled('precipitate-after-button', true);",
+        "setComponentDisabled('precipitate-reset-button', true);",
+        "loadModel('precipitate-pour-live', function () {",
+        "  start();",
+        "});"
+      ],
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "precipitate-after-button",
+      "text": "Weigh (after)",
+      "action": "loadModel('precipitate-after-measured');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "precipitate-reset-button",
+      "text": "Reset",
+      "action": "loadModel('precipitate-ready-step');",
+      "disabled": true
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "precipitate-note"
+      ],
+      [
+        "precipitate-before-button"
+      ],
+      [
+        "precipitate-pour-button"
+      ],
+      [
+        "precipitate-after-button"
+      ],
+      [
+        "precipitate-reset-button"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}

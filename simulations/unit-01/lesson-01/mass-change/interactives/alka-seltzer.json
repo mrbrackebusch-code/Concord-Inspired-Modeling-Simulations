@@ -1,0 +1,355 @@
+{
+  "title": "Alka-Seltzer",
+  "publicationStatus": "draft",
+  "subtitle": "Weigh the setup, run the loosely capped reaction, then weigh it again.",
+  "about": "Procedure-based draft centered on the vented Lesson 1 case where gas escapes and the final measured mass is lower.",
+  "parameters": [
+    {
+      "name": "procedureState0",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState1",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState2",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState3",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState4",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "currentMassDisplay",
+      "initialValue": "--"
+    },
+    {
+      "name": "initialMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "finalMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "deltaMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "measurementStable",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "boundaryStatus",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "beforeSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "afterSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "activeMistakeFlags",
+      "initialValue": ""
+    },
+    {
+      "name": "procedureCompletionState",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "lastEventType",
+      "initialValue": "boot"
+    },
+    {
+      "name": "lastEventDetail",
+      "initialValue": "Awaiting first event"
+    },
+    {
+      "name": "eventSequence",
+      "initialValue": 0
+    }
+  ],
+  "models": [
+    {
+      "type": "md2d",
+      "id": "alka-ready-step",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/alka-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('alka-before-button', false);",
+        "setComponentDisabled('alka-run-button', true);",
+        "setComponentDisabled('alka-after-button', true);",
+        "setComponentDisabled('alka-reset-button', true);",
+        "set('procedureState0', 'completed::Vial, water, cap, and tablet prepared');",
+        "set('procedureState1', 'active::Record the initial mass');",
+        "set('procedureState2', 'locked::Reaction unlocks after weighing');",
+        "set('procedureState3', 'planned::Observe the bubbles and gas escape');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '26.40 g');",
+        "set('initialMass', '--');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Loose cap ready for reaction');",
+        "set('beforeSnapshotId', 'alka-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Setup ready');",
+        "set('lastEventType', 'objectPlaced');",
+        "set('lastEventDetail', 'Alka-Seltzer setup prepared');",
+        "set('eventSequence', 1);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "alka-before-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/alka-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('alka-before-button', true);",
+        "setComponentDisabled('alka-run-button', false);",
+        "setComponentDisabled('alka-after-button', true);",
+        "setComponentDisabled('alka-reset-button', false);",
+        "set('procedureState0', 'completed::Vial, water, cap, and tablet prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'active::Add the tablet and start the reaction');",
+        "set('procedureState3', 'planned::Observe the bubbles and gas escape');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '26.40 g');",
+        "set('initialMass', '26.40 g');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Loose cap ready for reaction');",
+        "set('beforeSnapshotId', 'alka-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Initial evidence recorded');",
+        "set('lastEventType', 'massRecordedBefore');",
+        "set('lastEventDetail', 'Initial mass 26.40 g');",
+        "set('eventSequence', 2);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "alka-run-live-1",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/alka-vented-live-1.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('alka-before-button', true);",
+        "setComponentDisabled('alka-run-button', true);",
+        "setComponentDisabled('alka-after-button', true);",
+        "setComponentDisabled('alka-reset-button', true);",
+        "set('procedureState0', 'completed::Vial, water, cap, and tablet prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Tablet added to the water');",
+        "set('procedureState3', 'active::Bubbles are forming in the loose-capped setup');",
+        "set('procedureState4', 'locked::Final weighing unlocks after the run');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Gas forming in a loose-capped setup');",
+        "set('afterSnapshotId', 'alka-run-live-1');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Reaction in progress');",
+        "set('lastEventType', 'reactionStarted');",
+        "set('lastEventDetail', 'Tablet reaction started');",
+        "set('eventSequence', 3);",
+        "start();",
+        "callAt(140, function () { loadModel('alka-run-live-2'); });"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "alka-run-live-2",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/alka-vented-live-2.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('alka-before-button', true);",
+        "setComponentDisabled('alka-run-button', true);",
+        "setComponentDisabled('alka-after-button', true);",
+        "setComponentDisabled('alka-reset-button', true);",
+        "set('procedureState0', 'completed::Vial, water, cap, and tablet prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Tablet added to the water');",
+        "set('procedureState3', 'active::Gas is escaping from the loose cap');",
+        "set('procedureState4', 'locked::Final weighing unlocks after the run');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Gas is leaving the system');",
+        "set('afterSnapshotId', 'alka-run-live-2');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Reaction continuing');",
+        "set('lastEventType', 'gasEscaped');",
+        "set('lastEventDetail', 'Gas escaped from the loose cap');",
+        "set('eventSequence', 4);",
+        "start();",
+        "callAt(140, function () { loadModel('alka-after-ready'); });"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "alka-after-ready",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/alka-vented.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('alka-before-button', true);",
+        "setComponentDisabled('alka-run-button', true);",
+        "setComponentDisabled('alka-after-button', false);",
+        "setComponentDisabled('alka-reset-button', false);",
+        "set('procedureState0', 'completed::Vial, water, cap, and tablet prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Reaction completed in the loose-capped vial');",
+        "set('procedureState3', 'completed::Gas escaped while bubbling was visible');",
+        "set('procedureState4', 'active::Record the final mass');",
+        "set('currentMassDisplay', '26.12 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Gas escaped from the system');",
+        "set('afterSnapshotId', 'alka-after-ready');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Awaiting final measurement');",
+        "set('lastEventType', 'runCompleted');",
+        "set('lastEventDetail', 'Vented reaction finished');",
+        "set('eventSequence', 5);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "alka-after-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/alka-vented.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('alka-before-button', true);",
+        "setComponentDisabled('alka-run-button', true);",
+        "setComponentDisabled('alka-after-button', true);",
+        "setComponentDisabled('alka-reset-button', false);",
+        "set('procedureState0', 'completed::Vial, water, cap, and tablet prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Reaction completed in the loose-capped vial');",
+        "set('procedureState3', 'completed::Gas escaped while bubbling was visible');",
+        "set('procedureState4', 'completed::Final mass recorded');",
+        "set('currentMassDisplay', '26.12 g');",
+        "set('finalMass', '26.12 g');",
+        "set('deltaMass', '-0.28 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Gas escaped from the system');",
+        "set('afterSnapshotId', 'alka-after');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Evidence locked');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Final mass 26.12 g');",
+        "set('eventSequence', 6);"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "alka-note",
+      "text": "Weigh the setup, run the loosely capped reaction, then record the final mass after gas escapes."
+    },
+    {
+      "type": "button",
+      "id": "alka-before-button",
+      "text": "Weigh (before)",
+      "action": "loadModel('alka-before-measured');"
+    },
+    {
+      "type": "button",
+      "id": "alka-run-button",
+      "text": "Run reaction",
+      "action": "loadModel('alka-run-live-1');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "alka-after-button",
+      "text": "Weigh (after)",
+      "action": "loadModel('alka-after-measured');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "alka-reset-button",
+      "text": "Reset",
+      "action": "loadModel('alka-ready-step');",
+      "disabled": true
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "alka-note"
+      ],
+      [
+        "alka-before-button"
+      ],
+      [
+        "alka-run-button"
+      ],
+      [
+        "alka-after-button"
+      ],
+      [
+        "alka-reset-button"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}

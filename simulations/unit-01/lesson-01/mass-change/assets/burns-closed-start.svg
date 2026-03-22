@@ -1,0 +1,36 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="88" height="142" viewBox="0 0 88 142">
+  <defs>
+    <clipPath id="jarInterior">
+      <path d="M20 22h48v86c0 8-6 14-14 14H34c-8 0-14-6-14-14V22Z"/>
+    </clipPath>
+    <clipPath id="wad">
+      <path d="M25 82c0-8 5-14 13-17 3-8 12-13 22-13 7 0 15 3 19 7 8 0 14 6 14 14 0 7-5 12-11 15-4 6-12 9-21 9-9 0-17-3-22-8-9-1-14-4-14-7Z"/>
+    </clipPath>
+    <linearGradient id="outerFlame" x1="0" y1="1" x2="0.5" y2="0">
+      <stop offset="0" stop-color="#f39a3b"/>
+      <stop offset="1" stop-color="#ffef9b"/>
+    </linearGradient>
+    <linearGradient id="innerFlame" x1="0" y1="1" x2="0.5" y2="0">
+      <stop offset="0" stop-color="#f5d468"/>
+      <stop offset="1" stop-color="#fff7d0"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#jarInterior)">
+    <path d="M44 113c8-7 12-14 12-22 0-8-4-14-9-20 1 8-3 12-6 16-3-4-6-8-5-15-5 7-5 13-5 19 0 9 5 16 13 22Z" fill="url(#outerFlame)" opacity="0.78"/>
+    <path d="M44 104c5-4 7-8 7-13 0-5-2-9-5-13 0 5-2 7-4 10-2-3-4-6-4-10-3 4-3 8-3 12 0 6 3 10 9 14Z" fill="url(#innerFlame)" opacity="0.88"/>
+    <path d="M25 82c0-8 5-14 13-17 3-8 12-13 22-13 7 0 15 3 19 7 8 0 14 6 14 14 0 7-5 12-11 15-4 6-12 9-21 9-9 0-17-3-22-8-9-1-14-4-14-7Z" fill="#aab3b9" opacity="0.15"/>
+    <path d="M25 82c0-8 5-14 13-17 3-8 12-13 22-13 7 0 15 3 19 7 8 0 14 6 14 14 0 7-5 12-11 15-4 6-12 9-21 9-9 0-17-3-22-8-9-1-14-4-14-7Z" fill="none" stroke="#8d979e" stroke-width="1.1" opacity="0.44"/>
+    <g clip-path="url(#wad)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g stroke="#5d676f" stroke-width="1.1" opacity="0.78">
+        <path d="M19 80c11-14 22-19 33-16 11 3 21 11 29 23"/>
+        <path d="M23 91c10-9 20-13 32-12 11 2 20 6 28 14"/>
+        <path d="M29 58c8 10 15 17 24 23 8 6 16 11 23 21"/>
+        <path d="M42 52c0 12 4 22 11 30 7 8 11 15 10 24"/>
+      </g>
+    </g>
+    <ellipse cx="44" cy="112" rx="18" ry="5" fill="rgba(111,91,76,0.12)"/>
+  </g>
+  <rect x="24" y="8" width="40" height="12" rx="4" fill="#637882"/>
+  <path d="M18 20h52v92c0 8-6 14-14 14H32c-8 0-14-6-14-14V20Z" fill="none" stroke="#6f8593" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M26 34h36" fill="none" stroke="#d8eef9" stroke-opacity="0.62" stroke-width="2"/>
+</svg>

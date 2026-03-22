@@ -1,0 +1,360 @@
+{
+  "title": "Ice to water",
+  "publicationStatus": "draft",
+  "subtitle": "Weigh the setup, let the melting run, then weigh it again.",
+  "about": "Time-driven melt sequence with explicit before and after weighing so the host can read a full run contract.",
+  "parameters": [
+    {
+      "name": "iceClockSeconds",
+      "initialValue": 0
+    },
+    {
+      "name": "procedureState0",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState1",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState2",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState3",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState4",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "currentMassDisplay",
+      "initialValue": "--"
+    },
+    {
+      "name": "initialMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "finalMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "deltaMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "measurementStable",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "boundaryStatus",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "beforeSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "afterSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "activeMistakeFlags",
+      "initialValue": ""
+    },
+    {
+      "name": "procedureCompletionState",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "lastEventType",
+      "initialValue": "boot"
+    },
+    {
+      "name": "lastEventDetail",
+      "initialValue": "Awaiting first event"
+    },
+    {
+      "name": "eventSequence",
+      "initialValue": 0
+    }
+  ],
+  "models": [
+    {
+      "type": "md2d",
+      "id": "ice-ready-step",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/ice-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "set('iceClockSeconds', 0);",
+        "setComponentDisabled('ice-before-button', false);",
+        "setComponentDisabled('ice-melt-button', true);",
+        "setComponentDisabled('ice-after-button', true);",
+        "setComponentDisabled('ice-reset-button', true);",
+        "set('procedureState0', 'completed::Ice sample placed in the container');",
+        "set('procedureState1', 'active::Record the initial mass');",
+        "set('procedureState2', 'locked::Melting unlocks after weighing');",
+        "set('procedureState3', 'planned::Wait for the melting to finish');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '18.42 g');",
+        "set('initialMass', '--');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed melt setup intact');",
+        "set('beforeSnapshotId', 'ice-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Setup ready');",
+        "set('lastEventType', 'objectPlaced');",
+        "set('lastEventDetail', 'Ice melt setup prepared');",
+        "set('eventSequence', 1);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "ice-before-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/ice-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "set('iceClockSeconds', 0);",
+        "setComponentDisabled('ice-before-button', true);",
+        "setComponentDisabled('ice-melt-button', false);",
+        "setComponentDisabled('ice-after-button', true);",
+        "setComponentDisabled('ice-reset-button', false);",
+        "set('procedureState0', 'completed::Ice sample placed in the container');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'active::Start the melt');",
+        "set('procedureState3', 'planned::Wait for the melting to finish');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '18.42 g');",
+        "set('initialMass', '18.42 g');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed melt setup intact');",
+        "set('beforeSnapshotId', 'ice-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Initial evidence recorded');",
+        "set('lastEventType', 'massRecordedBefore');",
+        "set('lastEventDetail', 'Initial mass 18.42 g');",
+        "set('eventSequence', 2);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "ice-melting-live",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/ice-melting.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "set('iceClockSeconds', 0);",
+        "setComponentDisabled('ice-before-button', true);",
+        "setComponentDisabled('ice-melt-button', true);",
+        "setComponentDisabled('ice-after-button', true);",
+        "setComponentDisabled('ice-reset-button', true);",
+        "set('procedureState0', 'completed::Ice sample placed in the container');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Melting started');",
+        "set('procedureState3', 'active::Melting is underway');",
+        "set('procedureState4', 'locked::Final weighing unlocks after the melt');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Closed melt in progress');",
+        "set('afterSnapshotId', 'ice-melting-live');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Melting in progress');",
+        "set('lastEventType', 'runStarted');",
+        "set('lastEventDetail', 'Melting started');",
+        "set('eventSequence', 3);",
+        "callEvery(50, function () {",
+        "  set('iceClockSeconds', Math.min(8, Math.floor(get('time') / 50)));",
+        "});",
+        "start();",
+        "callAt(225, function () {",
+        "  set('iceClockSeconds', 8);",
+        "  loadModel('ice-after-ready');",
+        "});"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "ice-after-ready",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/ice-after.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "set('iceClockSeconds', 8);",
+        "setComponentDisabled('ice-before-button', true);",
+        "setComponentDisabled('ice-melt-button', true);",
+        "setComponentDisabled('ice-after-button', false);",
+        "setComponentDisabled('ice-reset-button', false);",
+        "set('procedureState0', 'completed::Ice sample placed in the container');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Melting completed');",
+        "set('procedureState3', 'completed::Liquid water remains in the container');",
+        "set('procedureState4', 'active::Record the final mass');",
+        "set('currentMassDisplay', '18.42 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed melt setup intact');",
+        "set('afterSnapshotId', 'ice-after-ready');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Awaiting final measurement');",
+        "set('lastEventType', 'runCompleted');",
+        "set('lastEventDetail', 'Melting finished');",
+        "set('eventSequence', 4);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "ice-after-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/ice-after.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "set('iceClockSeconds', 8);",
+        "setComponentDisabled('ice-before-button', true);",
+        "setComponentDisabled('ice-melt-button', true);",
+        "setComponentDisabled('ice-after-button', true);",
+        "setComponentDisabled('ice-reset-button', false);",
+        "set('procedureState0', 'completed::Ice sample placed in the container');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Melting completed');",
+        "set('procedureState3', 'completed::Liquid water remains in the container');",
+        "set('procedureState4', 'completed::Final mass recorded');",
+        "set('currentMassDisplay', '18.42 g');",
+        "set('finalMass', '18.42 g');",
+        "set('deltaMass', '0.00 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed melt setup intact');",
+        "set('afterSnapshotId', 'ice-after');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Evidence locked');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Final mass 18.42 g');",
+        "set('eventSequence', 5);"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "ice-note",
+      "text": "Weigh the setup, let the melting run, then record the final mass."
+    },
+    {
+      "type": "text",
+      "id": "ice-clock-label",
+      "text": "Clock"
+    },
+    {
+      "type": "numericOutput",
+      "id": "ice-clock-output",
+      "property": "iceClockSeconds",
+      "units": "s",
+      "width": "5em"
+    },
+    {
+      "type": "button",
+      "id": "ice-before-button",
+      "text": "Weigh (before)",
+      "action": "loadModel('ice-before-measured');"
+    },
+    {
+      "type": "button",
+      "id": "ice-melt-button",
+      "text": "Start melt",
+      "action": "loadModel('ice-melting-live');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "ice-after-button",
+      "text": "Weigh (after)",
+      "action": "loadModel('ice-after-measured');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "ice-reset-button",
+      "text": "Reset",
+      "action": [
+        "set('iceClockSeconds', 0);",
+        "loadModel('ice-ready-step');"
+      ],
+      "disabled": true
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "ice-note"
+      ],
+      [
+        "ice-clock-label",
+        "ice-clock-output"
+      ],
+      [
+        "ice-before-button"
+      ],
+      [
+        "ice-melt-button"
+      ],
+      [
+        "ice-after-button"
+      ],
+      [
+        "ice-reset-button"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}

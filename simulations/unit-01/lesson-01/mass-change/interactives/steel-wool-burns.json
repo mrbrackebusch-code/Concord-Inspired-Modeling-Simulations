@@ -1,0 +1,361 @@
+{
+  "title": "Steel wool burns",
+  "publicationStatus": "draft",
+  "subtitle": "Start the burn and watch the visible change and measured mass unfold over time.",
+  "about": "Active proof-of-concept for the open-pan steel wool burn. This route replaces the earlier open/closed comparison draft.",
+  "parameters": [
+    {
+      "name": "procedureState0",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState1",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState2",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState3",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState4",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "currentMassDisplay",
+      "initialValue": "--"
+    },
+    {
+      "name": "initialMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "finalMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "deltaMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "measurementStable",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "boundaryStatus",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "beforeSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "afterSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "activeMistakeFlags",
+      "initialValue": ""
+    },
+    {
+      "name": "procedureCompletionState",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "lastEventType",
+      "initialValue": "boot"
+    },
+    {
+      "name": "lastEventDetail",
+      "initialValue": "Awaiting first event"
+    },
+    {
+      "name": "eventSequence",
+      "initialValue": 0
+    }
+  ],
+  "models": [
+    {
+      "type": "md2d",
+      "id": "burns-ready-step",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/burns-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('burns-before-button', false);",
+        "setComponentDisabled('burns-start-button', true);",
+        "setComponentDisabled('burns-after-button', true);",
+        "setComponentDisabled('burns-reset-button', true);",
+        "set('procedureState0', 'completed::Steel wool placed on the pan');",
+        "set('procedureState1', 'active::Record the initial mass');",
+        "set('procedureState2', 'locked::Heating unlocks after weighing');",
+        "set('procedureState3', 'planned::Watch the burn finish');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '0.92 g');",
+        "set('initialMass', '--');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Open setup on the pan');",
+        "set('beforeSnapshotId', 'burns-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Setup ready');",
+        "set('lastEventType', 'objectPlaced');",
+        "set('lastEventDetail', 'Steel wool sample ready on the pan');",
+        "set('eventSequence', 1);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "burns-before-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/burns-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('burns-before-button', true);",
+        "setComponentDisabled('burns-start-button', false);",
+        "setComponentDisabled('burns-after-button', true);",
+        "setComponentDisabled('burns-reset-button', false);",
+        "set('procedureState0', 'completed::Steel wool placed on the pan');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'active::Start heating the sample');",
+        "set('procedureState3', 'planned::Watch the burn finish');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '0.92 g');",
+        "set('initialMass', '0.92 g');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Open setup on the pan');",
+        "set('beforeSnapshotId', 'burns-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Initial evidence recorded');",
+        "set('lastEventType', 'massRecordedBefore');",
+        "set('lastEventDetail', 'Initial mass 0.92 g');",
+        "set('eventSequence', 2);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "burns-open-live-1",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/burns-open-live-1.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "setComponentDisabled('burns-before-button', true);",
+        "setComponentDisabled('burns-start-button', true);",
+        "setComponentDisabled('burns-after-button', true);",
+        "setComponentDisabled('burns-reset-button', true);",
+        "set('procedureState0', 'completed::Steel wool placed on the pan');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Heating started');",
+        "set('procedureState3', 'active::Burning is underway');",
+        "set('procedureState4', 'locked::Final weighing unlocks after the burn');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Open system while heating');",
+        "set('afterSnapshotId', 'burns-open-live-1');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Heating in progress');",
+        "set('lastEventType', 'heatingStarted');",
+        "set('lastEventDetail', 'Burn started on open pan');",
+        "set('eventSequence', 3);",
+        "start();",
+        "callAt(140, function () { loadModel('burns-open-live-2'); });"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "burns-open-live-2",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/burns-open-live-2.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "setComponentDisabled('burns-before-button', true);",
+        "setComponentDisabled('burns-start-button', true);",
+        "setComponentDisabled('burns-after-button', true);",
+        "setComponentDisabled('burns-reset-button', true);",
+        "set('procedureState0', 'completed::Steel wool placed on the pan');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Heating started');",
+        "set('procedureState3', 'active::Residue is developing on the pan');",
+        "set('procedureState4', 'locked::Final weighing unlocks after the burn');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Open system during burn');",
+        "set('afterSnapshotId', 'burns-open-live-2');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Burn continuing');",
+        "set('lastEventType', 'matterEntered');",
+        "set('lastEventDetail', 'Burning continues in open air');",
+        "set('eventSequence', 4);",
+        "start();",
+        "callAt(140, function () { loadModel('burns-open-ready'); });"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "burns-open-ready",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/burns-open.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('burns-before-button', true);",
+        "setComponentDisabled('burns-start-button', true);",
+        "setComponentDisabled('burns-after-button', false);",
+        "setComponentDisabled('burns-reset-button', false);",
+        "set('procedureState0', 'completed::Steel wool placed on the pan');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Heating completed');",
+        "set('procedureState3', 'completed::Residue left on the pan');",
+        "set('procedureState4', 'active::Record the final mass');",
+        "set('currentMassDisplay', '0.96 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Open setup after burn');",
+        "set('afterSnapshotId', 'burns-open-ready');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Awaiting final measurement');",
+        "set('lastEventType', 'runCompleted');",
+        "set('lastEventDetail', 'Burn finished and residue remained on the pan');",
+        "set('eventSequence', 5);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "burns-open-after",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/burns-open.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false,
+        "showClock": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('burns-before-button', true);",
+        "setComponentDisabled('burns-start-button', true);",
+        "setComponentDisabled('burns-after-button', true);",
+        "setComponentDisabled('burns-reset-button', false);",
+        "set('procedureState0', 'completed::Steel wool placed on the pan');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Heating completed');",
+        "set('procedureState3', 'completed::Residue left on the pan');",
+        "set('procedureState4', 'completed::Final mass recorded');",
+        "set('currentMassDisplay', '0.96 g');",
+        "set('finalMass', '0.96 g');",
+        "set('deltaMass', '+0.04 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Open setup after burn');",
+        "set('afterSnapshotId', 'burns-open-after');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Evidence locked');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Final mass 0.96 g');",
+        "set('eventSequence', 6);"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "burns-note",
+      "text": "Weigh the steel wool, start the burn, then record the final mass after the visible change finishes."
+    },
+    {
+      "type": "button",
+      "id": "burns-before-button",
+      "text": "Weigh (before)",
+      "action": "loadModel('burns-before-measured');"
+    },
+    {
+      "type": "button",
+      "id": "burns-start-button",
+      "text": "Start burning",
+      "action": "loadModel('burns-open-live-1');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "burns-after-button",
+      "text": "Weigh (after)",
+      "action": "loadModel('burns-open-after');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "burns-reset-button",
+      "text": "Reset",
+      "action": "loadModel('burns-ready-step');",
+      "disabled": true
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "burns-note"
+      ],
+      [
+        "burns-before-button"
+      ],
+      [
+        "burns-start-button"
+      ],
+      [
+        "burns-after-button"
+      ],
+      [
+        "burns-reset-button"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}

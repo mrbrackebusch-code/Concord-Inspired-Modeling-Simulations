@@ -1,0 +1,156 @@
+{
+  "title": "Steel wool pulled apart",
+  "publicationStatus": "draft",
+  "subtitle": "Reference interaction pattern for a repeatable run-history case.",
+  "about": "This interactive preserves the run-history behavior needed for the steel wool investigation.",
+  "models": [
+    {
+      "type": "md2d",
+      "id": "steel-before",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/steel-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('steel-before-button', true);",
+        "setComponentDisabled('steel-run1-button', false);",
+        "setComponentDisabled('steel-run2-button', true);",
+        "setComponentDisabled('steel-run3-button', true);",
+        "setComponentDisabled('steel-reset-button', true);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "steel-run-1",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/steel-run-1.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('steel-before-button', false);",
+        "setComponentDisabled('steel-run1-button', true);",
+        "setComponentDisabled('steel-run2-button', false);",
+        "setComponentDisabled('steel-run3-button', true);",
+        "setComponentDisabled('steel-reset-button', false);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "steel-run-2",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/steel-run-2.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('steel-before-button', false);",
+        "setComponentDisabled('steel-run1-button', false);",
+        "setComponentDisabled('steel-run2-button', true);",
+        "setComponentDisabled('steel-run3-button', false);",
+        "setComponentDisabled('steel-reset-button', false);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "steel-run-3",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/steel-run-3.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('steel-before-button', false);",
+        "setComponentDisabled('steel-run1-button', false);",
+        "setComponentDisabled('steel-run2-button', false);",
+        "setComponentDisabled('steel-run3-button', true);",
+        "setComponentDisabled('steel-reset-button', false);"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "steel-note",
+      "text": "Run the setup multiple times and compare the measured mass results."
+    },
+    {
+      "type": "button",
+      "id": "steel-before-button",
+      "text": "Before",
+      "action": "loadModel('steel-before');"
+    },
+    {
+      "type": "button",
+      "id": "steel-run1-button",
+      "text": "Run 1",
+      "action": "loadModel('steel-run-1');"
+    },
+    {
+      "type": "button",
+      "id": "steel-run2-button",
+      "text": "Run 2",
+      "action": "loadModel('steel-run-2');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "steel-run3-button",
+      "text": "Run 3",
+      "action": "loadModel('steel-run-3');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "steel-reset-button",
+      "text": "Reset",
+      "action": "loadModel('steel-before');",
+      "disabled": true
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "steel-note"
+      ],
+      [
+        "steel-before-button"
+      ],
+      [
+        "steel-run1-button"
+      ],
+      [
+        "steel-run2-button"
+      ],
+      [
+        "steel-run3-button"
+      ],
+      [
+        "steel-reset-button"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="72" viewBox="130 545 120 110">
+  <defs>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="170%">
+      <feGaussianBlur stdDeviation="3.8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <radialGradient id="emberHalo" cx="50%" cy="68%" r="48%">
+      <stop offset="0" stop-color="#ffd485" stop-opacity="0.72"/>
+      <stop offset="1" stop-color="#ff8d22" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="189" cy="622" rx="32" ry="16" fill="url(#emberHalo)">
+    <animate attributeName="opacity" values="0.3;0.58;0.32;0.46;0.3" dur="1.2s" repeatCount="indefinite"/>
+  </ellipse>
+  <g opacity="0.74" filter="url(#softGlow)">
+    <animateTransform attributeName="transform" type="translate" values="0 4;0 0;0 5;0 2;0 4" dur="1.05s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.74;0.86;0.66;0.74" dur="0.92s" repeatCount="indefinite"/>
+    <g transform="translate(-85.624 29.286)">
+      <path d="m190.98 594.51c0 18.146 14.44 32.857 32.587 32.857 18.146 0 32.857-14.711 32.857-32.857 0-5.5322-1.3672-10.745-3.7822-15.319-1.7243-3.2659-4.8774-5.5731-6.4136-8.8878-2.3836-5.1433-4.09-10.566-4.09-16.507 0-10.949 5.355-20.646 13.663-27.094-31.48 1.2341-57.343 24.335-63.272 54.579-0.83901 4.2804-1.549 8.7038-1.549 13.23z" transform="translate(34.643 -19.643)" fill="#ff6a00" stroke="#972700" stroke-width="2.4" stroke-linejoin="round"/>
+      <path d="m266.05 535.53c-15.241 9.5834-27.188 27.619-23.406 46 4.5311 11.198 21.994 14.125 28.781 3.4688 5.3052-6.7645 1.7755-19.889-3.6741-26.152-3.7667-8.3001-2.4458-14.488-1.3571-23.504l-0.34375 0.1875z" fill="#ffcc00" stroke="#bb6d00" stroke-width="2.1" stroke-linejoin="round"/>
+    </g>
+  </g>
+</svg>

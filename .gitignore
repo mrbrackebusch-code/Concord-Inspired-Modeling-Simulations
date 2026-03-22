@@ -1,0 +1,16 @@
+.DS_Store
+Thumbs.db
+node_modules/
+dist/
+build/
+.tmp/
+.captures/
+.tmp-chrome-profile*/
+.tmp-headless-log.txt
+.tmp-steel-dom.html
+headless-test.png
+ice-to-water-direct-shot.png
+*.log
+.tmp-server-*.txt
+context/Chemistry Modeling Consolidated/
+context/Unit1_Lesson1_SimHandoffPack_v1/

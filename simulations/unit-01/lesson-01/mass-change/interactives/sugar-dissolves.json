@@ -1,0 +1,355 @@
+{
+  "title": "Sugar dissolves",
+  "publicationStatus": "draft",
+  "subtitle": "Weigh the setup, let the sugar dissolve, then weigh it again.",
+  "about": "Procedure-based draft that treats the dissolving run as a single evidence-producing sequence instead of a pure state comparison.",
+  "parameters": [
+    {
+      "name": "procedureState0",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState1",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState2",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState3",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "procedureState4",
+      "initialValue": "planned::Awaiting simulation contract"
+    },
+    {
+      "name": "currentMassDisplay",
+      "initialValue": "--"
+    },
+    {
+      "name": "initialMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "finalMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "deltaMass",
+      "initialValue": "--"
+    },
+    {
+      "name": "measurementStable",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "boundaryStatus",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "beforeSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "afterSnapshotId",
+      "initialValue": "--"
+    },
+    {
+      "name": "activeMistakeFlags",
+      "initialValue": ""
+    },
+    {
+      "name": "procedureCompletionState",
+      "initialValue": "Awaiting bridge"
+    },
+    {
+      "name": "lastEventType",
+      "initialValue": "boot"
+    },
+    {
+      "name": "lastEventDetail",
+      "initialValue": "Awaiting first event"
+    },
+    {
+      "name": "eventSequence",
+      "initialValue": 0
+    }
+  ],
+  "models": [
+    {
+      "type": "md2d",
+      "id": "sugar-ready-step",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/sugar-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('sugar-before-button', false);",
+        "setComponentDisabled('sugar-run-button', true);",
+        "setComponentDisabled('sugar-after-button', true);",
+        "setComponentDisabled('sugar-reset-button', true);",
+        "set('procedureState0', 'completed::Vial, water, cap, and sugar prepared');",
+        "set('procedureState1', 'active::Record the initial mass');",
+        "set('procedureState2', 'locked::Transfer and dissolving unlock after weighing');",
+        "set('procedureState3', 'planned::Let the sugar dissolve');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '33.18 g');",
+        "set('initialMass', '--');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed setup intact');",
+        "set('beforeSnapshotId', 'sugar-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Setup ready');",
+        "set('lastEventType', 'objectPlaced');",
+        "set('lastEventDetail', 'Sugar dissolving setup prepared');",
+        "set('eventSequence', 1);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "sugar-before-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/sugar-before.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('sugar-before-button', true);",
+        "setComponentDisabled('sugar-run-button', false);",
+        "setComponentDisabled('sugar-after-button', true);",
+        "setComponentDisabled('sugar-reset-button', false);",
+        "set('procedureState0', 'completed::Vial, water, cap, and sugar prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'active::Transfer the sugar and begin swirling');",
+        "set('procedureState3', 'planned::Let the sugar dissolve');",
+        "set('procedureState4', 'planned::Record the final mass');",
+        "set('currentMassDisplay', '33.18 g');",
+        "set('initialMass', '33.18 g');",
+        "set('finalMass', '--');",
+        "set('deltaMass', '--');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed setup intact');",
+        "set('beforeSnapshotId', 'sugar-before');",
+        "set('afterSnapshotId', '--');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Initial evidence recorded');",
+        "set('lastEventType', 'massRecordedBefore');",
+        "set('lastEventDetail', 'Initial mass 33.18 g');",
+        "set('eventSequence', 2);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "sugar-run-live-1",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/sugar-stirred-live-1.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('sugar-before-button', true);",
+        "setComponentDisabled('sugar-run-button', true);",
+        "setComponentDisabled('sugar-after-button', true);",
+        "setComponentDisabled('sugar-reset-button', true);",
+        "set('procedureState0', 'completed::Vial, water, cap, and sugar prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Sugar transferred into the vial');",
+        "set('procedureState3', 'active::Swirling and dissolving in progress');",
+        "set('procedureState4', 'locked::Final weighing unlocks after the run');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Closed setup during dissolving');",
+        "set('afterSnapshotId', 'sugar-run-live-1');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Dissolving in progress');",
+        "set('lastEventType', 'runStarted');",
+        "set('lastEventDetail', 'Sugar transfer and swirling started');",
+        "set('eventSequence', 3);",
+        "start();",
+        "callAt(140, function () { loadModel('sugar-run-live-2'); });"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "sugar-run-live-2",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/sugar-stirred-live-2.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "setComponentDisabled('sugar-before-button', true);",
+        "setComponentDisabled('sugar-run-button', true);",
+        "setComponentDisabled('sugar-after-button', true);",
+        "setComponentDisabled('sugar-reset-button', true);",
+        "set('procedureState0', 'completed::Vial, water, cap, and sugar prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Sugar transferred into the vial');",
+        "set('procedureState3', 'active::Sugar is dispersing through the liquid');",
+        "set('procedureState4', 'locked::Final weighing unlocks after the run');",
+        "set('currentMassDisplay', 'Off scale');",
+        "set('measurementStable', 'Not on scale');",
+        "set('boundaryStatus', 'Closed setup during dissolving');",
+        "set('afterSnapshotId', 'sugar-run-live-2');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Dissolving continuing');",
+        "set('lastEventType', 'runCompleted');",
+        "set('lastEventDetail', 'Sugar has dissolved through the liquid');",
+        "set('eventSequence', 4);",
+        "start();",
+        "callAt(140, function () { loadModel('sugar-after-ready'); });"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "sugar-after-ready",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/sugar-stirred.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('sugar-before-button', true);",
+        "setComponentDisabled('sugar-run-button', true);",
+        "setComponentDisabled('sugar-after-button', false);",
+        "setComponentDisabled('sugar-reset-button', false);",
+        "set('procedureState0', 'completed::Vial, water, cap, and sugar prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Sugar transferred into the vial');",
+        "set('procedureState3', 'completed::Sugar dissolved in the liquid');",
+        "set('procedureState4', 'active::Record the final mass');",
+        "set('currentMassDisplay', '33.18 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed setup intact');",
+        "set('afterSnapshotId', 'sugar-after-ready');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Awaiting final measurement');",
+        "set('lastEventType', 'snapshotCaptured');",
+        "set('lastEventDetail', 'Dissolved solution ready for final weighing');",
+        "set('eventSequence', 5);"
+      ]
+    },
+    {
+      "type": "md2d",
+      "id": "sugar-after-measured",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/states/sugar-stirred.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      },
+      "onLoad": [
+        "stop();",
+        "setComponentDisabled('sugar-before-button', true);",
+        "setComponentDisabled('sugar-run-button', true);",
+        "setComponentDisabled('sugar-after-button', true);",
+        "setComponentDisabled('sugar-reset-button', false);",
+        "set('procedureState0', 'completed::Vial, water, cap, and sugar prepared');",
+        "set('procedureState1', 'completed::Initial mass recorded');",
+        "set('procedureState2', 'completed::Sugar transferred into the vial');",
+        "set('procedureState3', 'completed::Sugar dissolved in the liquid');",
+        "set('procedureState4', 'completed::Final mass recorded');",
+        "set('currentMassDisplay', '33.18 g');",
+        "set('finalMass', '33.18 g');",
+        "set('deltaMass', '0.00 g');",
+        "set('measurementStable', 'Stable');",
+        "set('boundaryStatus', 'Closed setup intact');",
+        "set('afterSnapshotId', 'sugar-after');",
+        "set('activeMistakeFlags', '');",
+        "set('procedureCompletionState', 'Evidence locked');",
+        "set('lastEventType', 'massRecordedAfter');",
+        "set('lastEventDetail', 'Final mass 33.18 g');",
+        "set('eventSequence', 6);"
+      ]
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "sugar-note",
+      "text": "Weigh the setup, let the sugar dissolve, then record the final mass."
+    },
+    {
+      "type": "button",
+      "id": "sugar-before-button",
+      "text": "Weigh (before)",
+      "action": "loadModel('sugar-before-measured');"
+    },
+    {
+      "type": "button",
+      "id": "sugar-run-button",
+      "text": "Dissolve",
+      "action": "loadModel('sugar-run-live-1');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "sugar-after-button",
+      "text": "Weigh (after)",
+      "action": "loadModel('sugar-after-measured');",
+      "disabled": true
+    },
+    {
+      "type": "button",
+      "id": "sugar-reset-button",
+      "text": "Reset",
+      "action": "loadModel('sugar-ready-step');",
+      "disabled": true
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "sugar-note"
+      ],
+      [
+        "sugar-before-button"
+      ],
+      [
+        "sugar-run-button"
+      ],
+      [
+        "sugar-after-button"
+      ],
+      [
+        "sugar-reset-button"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}

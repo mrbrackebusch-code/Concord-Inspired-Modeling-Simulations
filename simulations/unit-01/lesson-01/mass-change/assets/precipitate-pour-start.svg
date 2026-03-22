@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="106" height="148" viewBox="0 0 106 148">
+  <defs>
+    
+      <clipPath id="leftTubeInterior">
+        <path d="M18 26H34V112C34 122 29 128 26 128C23 128 18 122 18 112Z"/>
+      </clipPath>
+      <clipPath id="rightTubeInterior">
+        <path d="M68 26H84V112C84 122 79 128 76 128C73 128 68 122 68 112Z"/>
+      </clipPath>
+      <clipPath id="tiltedTubeInterior">
+        <path d="M-8 -44H8V42C8 52 3 58 0 58C-3 58-8 52-8 42Z"/>
+      </clipPath>
+      
+    
+  </defs>
+  <ellipse cx="53" cy="136" rx="28" ry="6" fill="#a8b8c3" fill-opacity="0.12"/>
+  
+    <g clip-path="url(#rightTubeInterior)">
+      <rect x="68" y="86" width="16" height="32" rx="4" fill="#f4f7df" opacity="0.4"/>
+    </g>
+    <rect x="66" y="9" width="20" height="8" rx="3" fill="#5e7680"/>
+    <g transform="translate(64 10) scale(0.65)" opacity="0.98">
+  <g
+      transform="translate(-48.289 -828.67)"
+    >
+    <g
+        transform="translate(5.9768 2.2988)"
+      >
+      <g
+          transform="translate(.31250 -.48648)"
+        >
+        <path
+            style="stroke:#000000;stroke-width:0.8;fill:none"
+            d="m82.276 832.86-1.8674 2.6121m-37.683-2.6138 1.8674 2.6122m37.648-2.9885c0 2.6075-8.846 4.7212-19.758 4.7212s-19.758-2.1138-19.758-4.7212c0-2.6075 8.846-4.7212 19.758-4.7212s19.758 2.1138 19.758 4.7212zm-1.6953 2.7318v168.02s0.72584 23.58-18.043 23.73c-18.769 0.1492-18.043-23.73-18.043-23.73v-168.02m36.243-2.7318c0 1.6816-8.1572 3.0449-18.22 3.0449-10.062 0-18.22-1.3632-18.22-3.0449 0-1.6816 8.1572-3.0448 18.22-3.0448 10.062 0 18.22 1.3632 18.22 3.0448z"
+        />
+        <g
+            transform="translate(-1.3793 .45976)"
+          >
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 858.52c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 874.36c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 890.2c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 906.04c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 921.88c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 937.71c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 953.55c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 969.39c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 985.23c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+        </g
+        >
+      </g
+      >
+    </g
+    >
+  </g
+  >
+  </g>
+
+    <g transform="translate(54 58) rotate(-14)">
+      <g clip-path="url(#tiltedTubeInterior)">
+        <path d="M-8 4H8V41C8 51 3 57 0 57C-3 57-8 51-8 41Z" fill="#ffe3a0" opacity="0.88"/>
+        <ellipse cx="0" cy="4" rx="7.2" ry="2.5" fill="#fff2c8" opacity="0.42"/>
+      </g>
+      <rect x="-10" y="-57" width="20" height="8" rx="3" fill="#5e7680"/>
+      <g transform="translate(-20.6 -58.2) scale(0.65)" opacity="0.98">
+  <g
+      transform="translate(-48.289 -828.67)"
+    >
+    <g
+        transform="translate(5.9768 2.2988)"
+      >
+      <g
+          transform="translate(.31250 -.48648)"
+        >
+        <path
+            style="stroke:#000000;stroke-width:0.8;fill:none"
+            d="m82.276 832.86-1.8674 2.6121m-37.683-2.6138 1.8674 2.6122m37.648-2.9885c0 2.6075-8.846 4.7212-19.758 4.7212s-19.758-2.1138-19.758-4.7212c0-2.6075 8.846-4.7212 19.758-4.7212s19.758 2.1138 19.758 4.7212zm-1.6953 2.7318v168.02s0.72584 23.58-18.043 23.73c-18.769 0.1492-18.043-23.73-18.043-23.73v-168.02m36.243-2.7318c0 1.6816-8.1572 3.0449-18.22 3.0449-10.062 0-18.22-1.3632-18.22-3.0449 0-1.6816 8.1572-3.0448 18.22-3.0448 10.062 0 18.22 1.3632 18.22 3.0448z"
+        />
+        <g
+            transform="translate(-1.3793 .45976)"
+          >
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 858.52c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 874.36c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 890.2c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 906.04c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 921.88c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 937.71c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 953.55c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 969.39c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+          <path
+              style="stroke:#000000;stroke-width:.5;fill:none"
+              d="m48.102 985.23c2.5024 1.2162 11.216 2.1001 14.138 1.7816"
+          />
+        </g
+        >
+      </g
+      >
+    </g
+    >
+  </g
+  >
+  </g>
+
+    </g>
+  
+</svg>

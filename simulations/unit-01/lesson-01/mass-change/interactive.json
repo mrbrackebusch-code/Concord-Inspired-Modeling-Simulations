@@ -1,0 +1,155 @@
+{
+  "title": "Mass & Change Evidence Suite",
+  "publicationStatus": "public",
+  "subtitle": "Lesson 1 observable-level investigation scenes. SVG-first objects, native Lab shell, no particle view yet.",
+  "about": "This suite stays at the visible evidence level on purpose. It uses Concord Lab as the interactive shell, a shared balance/readout motif, and SVG object art so the first lesson can stay macroscopic.",
+  "models": [
+    {
+      "type": "md2d",
+      "id": "overview",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/model.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      }
+    },
+    {
+      "type": "md2d",
+      "id": "steel-wool-pulled-apart",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/models/steel-wool-pulled-apart.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      }
+    },
+    {
+      "type": "md2d",
+      "id": "ice-to-water",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/models/ice-to-water.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      }
+    },
+    {
+      "type": "md2d",
+      "id": "precipitate",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/models/precipitate.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      }
+    },
+    {
+      "type": "md2d",
+      "id": "steel-wool-burns",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/models/steel-wool-burns.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      }
+    },
+    {
+      "type": "md2d",
+      "id": "sugar-dissolves",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/models/sugar-dissolves.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      }
+    },
+    {
+      "type": "md2d",
+      "id": "alka-seltzer",
+      "url": "../../../simulations/unit-01/lesson-01/mass-change/models/alka-seltzer.json",
+      "viewOptions": {
+        "controlButtons": "",
+        "enableAtomTooltips": false,
+        "gridLines": false,
+        "xunits": false,
+        "yunits": false
+      }
+    }
+  ],
+  "components": [
+    {
+      "type": "text",
+      "id": "suite-note",
+      "text": "Switch among the six Lesson 1 investigations. The objects are SVG-first and macroscopic on purpose."
+    },
+    {
+      "type": "radio",
+      "id": "investigation-selector",
+      "label": "Investigation",
+      "options": [
+        {
+          "text": "Overview",
+          "loadModel": "overview",
+          "selected": true
+        },
+        {
+          "text": "Steel wool pulled apart",
+          "loadModel": "steel-wool-pulled-apart"
+        },
+        {
+          "text": "Ice to water",
+          "loadModel": "ice-to-water"
+        },
+        {
+          "text": "Precipitate",
+          "loadModel": "precipitate"
+        },
+        {
+          "text": "Steel wool burns",
+          "loadModel": "steel-wool-burns"
+        },
+        {
+          "text": "Sugar dissolves",
+          "loadModel": "sugar-dissolves"
+        },
+        {
+          "text": "Alka-Seltzer",
+          "loadModel": "alka-seltzer"
+        }
+      ]
+    }
+  ],
+  "layout": {
+    "left": [
+      [
+        "suite-note"
+      ],
+      [
+        "investigation-selector"
+      ]
+    ]
+  },
+  "template": [
+    {
+      "id": "left",
+      "top": "3em",
+      "right": "model.left",
+      "padding-right": "0.75em",
+      "align": "right",
+      "width": "14em"
+    }
+  ]
+}
