@@ -7,89 +7,78 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="game-shell">
-      <section class="play-column">
-        <section class="command-bar">
-          <div class="command-bar__main">
-            <div class="command-copy">
-              <p class="eyebrow">Game Proof Of Concept</p>
-              <h1>Ship Experiment Platforms</h1>
-              <p class="lede">
-                Drive the ship across the gray platforms. Falling into the void resets the run.
-                Crossing an outlined zone opens one of the six Lesson 1 experiment views.
-              </p>
-            </div>
+    <main class="app-shell">
+      <header class="top-bar">
+        <h1>Ship Experiment Platforms</h1>
+        <p><strong>Move</strong> with arrow keys</p>
+        <p><strong>Use</strong> space to stop</p>
+      </header>
 
-            <div class="command-rules">
-              <p class="controls"><strong>Move:</strong> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</p>
-              <p class="controls"><strong>Brake:</strong> <kbd>Space</kbd></p>
+      <section class="game-shell">
+        <section class="play-column">
+          <section class="canvas-frame">
+            <canvas id="game-canvas" width="896" height="576" aria-label="Ship experiment proof of concept"></canvas>
+            <div id="status-pill" class="status-pill">Loading assets...</div>
+          </section>
+        </section>
+
+        <aside id="experiment-window" class="experiment-window" aria-live="polite">
+          <div class="experiment-window__header">
+            <div>
+              <p class="eyebrow">Experiment View</p>
+              <h2 id="experiment-title">Standby Window</h2>
             </div>
+            <button id="close-overlay" class="close-button" type="button">Collapse Window</button>
           </div>
-        </section>
+          <div class="experiment-window__body">
+            <div id="experiment-placeholder" class="experiment-placeholder">
+              Cross one of the outlined platform zones to load that Lesson 1 experiment inside this window.
+            </div>
+            <iframe
+              id="experiment-frame"
+              class="experiment-frame"
+              title="Experiment view"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            ></iframe>
+          </div>
+          <section class="experiment-hud">
+            <div class="capture-toolbar">
+              <div class="capture-toolbar__copy">
+                <p class="eyebrow">Capture</p>
+                <h3 id="capture-active-title">No active zone</h3>
+                <p id="capture-active-copy" class="capture-copy">
+                  Cross a zone to arm capture, then use the temporary capture button after a run.
+                </p>
+              </div>
+              <button id="capture-evidence" class="capture-button" type="button">Capture Evidence</button>
+            </div>
 
-        <section class="canvas-frame">
-          <canvas id="game-canvas" width="896" height="576" aria-label="Ship experiment proof of concept"></canvas>
-          <div id="status-pill" class="status-pill">Loading assets...</div>
-        </section>
+            <div class="capture-readouts">
+              <article class="readout-card">
+                <span>Before</span>
+                <strong id="capture-before">--</strong>
+              </article>
+              <article class="readout-card">
+                <span>After</span>
+                <strong id="capture-after">--</strong>
+              </article>
+              <article class="readout-card">
+                <span>Delta</span>
+                <strong id="capture-delta">--</strong>
+              </article>
+              <article class="readout-card">
+                <span>Captures</span>
+                <strong id="capture-count">0</strong>
+              </article>
+            </div>
+
+            <div class="zone-hud">
+              <div id="zone-capture-list" class="zone-capture-list"></div>
+            </div>
+          </section>
+        </aside>
       </section>
-
-      <aside id="experiment-window" class="experiment-window" aria-live="polite">
-        <div class="experiment-window__header">
-          <div>
-            <p class="eyebrow">Experiment View</p>
-            <h2 id="experiment-title">Standby Window</h2>
-          </div>
-          <button id="close-overlay" class="close-button" type="button">Collapse Window</button>
-        </div>
-        <div class="experiment-window__body">
-          <div id="experiment-placeholder" class="experiment-placeholder">
-            Cross one of the outlined platform zones to load that Lesson 1 experiment inside this window.
-          </div>
-          <iframe
-            id="experiment-frame"
-            class="experiment-frame"
-            title="Experiment view"
-            loading="lazy"
-            referrerpolicy="no-referrer"
-          ></iframe>
-        </div>
-        <section class="experiment-hud">
-          <div class="capture-toolbar">
-            <div class="capture-toolbar__copy">
-              <p class="eyebrow">Evidence Capture</p>
-              <h3 id="capture-active-title">No active zone</h3>
-              <p id="capture-active-copy" class="capture-copy">
-                Cross a zone to arm capture, then use the temporary capture button after a run.
-              </p>
-            </div>
-            <button id="capture-evidence" class="capture-button" type="button">Capture Evidence</button>
-          </div>
-
-          <div class="capture-readouts">
-            <article class="readout-card">
-              <span>Before</span>
-              <strong id="capture-before">--</strong>
-            </article>
-            <article class="readout-card">
-              <span>After</span>
-              <strong id="capture-after">--</strong>
-            </article>
-            <article class="readout-card">
-              <span>Delta</span>
-              <strong id="capture-delta">--</strong>
-            </article>
-            <article class="readout-card">
-              <span>Captures</span>
-              <strong id="capture-count">0</strong>
-            </article>
-          </div>
-
-          <div class="zone-hud">
-            <p class="eyebrow">Experiment Zones</p>
-            <div id="zone-capture-list" class="zone-capture-list"></div>
-          </div>
-        </section>
-      </aside>
     </main>
 
     <script type="module" src="game.js"></script>

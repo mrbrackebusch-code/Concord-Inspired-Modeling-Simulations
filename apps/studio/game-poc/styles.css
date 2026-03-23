@@ -14,32 +14,42 @@
   box-sizing: border-box;
 }
 
+html,
+body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
+  overflow: hidden;
   background:
     radial-gradient(circle at top left, rgba(18, 184, 255, 0.18), transparent 24%),
     radial-gradient(circle at top right, rgba(109, 227, 255, 0.14), transparent 20%),
     linear-gradient(180deg, #0d1626 0%, #08101a 100%);
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
+  overscroll-behavior: none;
 }
 
-.game-shell {
-  width: min(1780px, calc(100% - 2rem));
+.app-shell {
+  width: min(1800px, calc(100% - 1rem));
+  height: 100vh;
   margin: 0 auto;
-  min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(540px, 620px);
-  gap: 1rem;
+  grid-template-rows: auto 1fr;
+  gap: 0.75rem;
   align-items: stretch;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
+  overflow: hidden;
 }
 
-.play-column,
-.command-bar,
+.top-bar,
 .canvas-frame,
-.experiment-window {
+.experiment-window,
+.zone-hud,
+.capture-toolbar,
+.readout-card {
   border: 1px solid var(--panel-line);
   border-radius: 24px;
   background: var(--panel);
@@ -47,46 +57,54 @@ body {
   backdrop-filter: blur(12px);
 }
 
+.top-bar {
+  min-height: 0;
+  padding: 0.55rem 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  overflow: hidden;
+}
+
+.top-bar h1,
+.top-bar p {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.top-bar h1 {
+  font-size: 1.05rem;
+  flex: 1 1 auto;
+}
+
+.top-bar p {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.top-bar strong {
+  color: var(--ink);
+}
+
+.game-shell {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(420px, 1fr);
+  gap: 0.75rem;
+  overflow: hidden;
+}
+
 .play-column {
   min-width: 0;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 1rem;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.command-bar {
-  padding: 1rem 1.2rem;
-  display: grid;
-  gap: 0.9rem;
-}
-
-.command-bar__main {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: start;
-}
-
-.command-copy {
-  max-width: 42rem;
-}
-
-.command-rules {
-  min-width: 15rem;
-  display: grid;
-  gap: 0.45rem;
+  min-height: 0;
 }
 
 .eyebrow {
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.18rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.14em;
-  font-size: 0.73rem;
+  font-size: 0.66rem;
 }
 
 h1,
@@ -102,27 +120,12 @@ h1 {
 }
 
 h2 {
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 h3 {
-  font-size: 1.15rem;
+  font-size: 1rem;
   line-height: 1.1;
-}
-
-.lede,
-.controls {
-  margin: 0;
-  line-height: 1.45;
-}
-
-.lede {
-  margin-top: 0.55rem;
-  max-width: 44rem;
-}
-
-.controls {
-  font-size: 0.95rem;
 }
 
 kbd {
@@ -141,19 +144,18 @@ kbd {
 }
 
 .canvas-frame {
-  min-width: 0;
   min-height: 0;
-  padding: 1rem;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 0.9rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.65rem;
+  position: relative;
+  overflow: hidden;
 }
 
 #game-canvas {
   display: block;
   width: 100%;
-  height: auto;
-  max-height: calc(100vh - 250px);
+  height: 100%;
   aspect-ratio: 14 / 9;
   margin: 0 auto;
   border-radius: 18px;
@@ -162,24 +164,26 @@ kbd {
 }
 
 .status-pill {
-  max-width: 100%;
-  padding: 0.5rem 0.8rem;
+  position: absolute;
+  left: 1.1rem;
+  right: 1.1rem;
+  bottom: 1rem;
+  padding: 0.42rem 0.72rem;
   border: 1px solid rgba(109, 227, 255, 0.26);
   border-radius: 999px;
   background: rgba(7, 15, 24, 0.8);
   color: var(--ink);
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   line-height: 1.25;
+  pointer-events: none;
 }
 
 .experiment-window {
-  min-height: calc(100vh - 2rem);
-  padding: 1rem;
-  position: sticky;
-  top: 1rem;
+  min-height: 0;
+  padding: 0.65rem;
   display: grid;
-  grid-template-rows: auto minmax(300px, 0.5fr) minmax(360px, 0.5fr);
-  gap: 0.9rem;
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.65rem;
   overflow: hidden;
 }
 
@@ -187,7 +191,8 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
+  padding: 0 0.2rem;
 }
 
 .experiment-window__body {
@@ -201,8 +206,9 @@ kbd {
   border-radius: 999px;
   background: rgba(8, 18, 28, 0.96);
   color: var(--ink);
-  padding: 0.65rem 0.95rem;
+  padding: 0.42rem 0.78rem;
   font: inherit;
+  font-size: 0.84rem;
   cursor: pointer;
 }
 
@@ -222,12 +228,12 @@ kbd {
 .experiment-placeholder {
   display: grid;
   place-items: center;
-  padding: 1.2rem;
+  padding: 1rem;
   background:
     radial-gradient(circle at top, rgba(109, 227, 255, 0.1), transparent 55%),
     rgba(6, 16, 26, 0.92);
   color: var(--muted);
-  line-height: 1.55;
+  line-height: 1.4;
   text-align: center;
 }
 
@@ -248,41 +254,41 @@ kbd {
   min-height: 0;
   display: grid;
   grid-template-rows: auto auto 1fr;
-  gap: 0.65rem;
+  gap: 0.5rem;
+  overflow: hidden;
 }
 
 .capture-toolbar {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   align-items: end;
-  padding: 0.75rem 0.9rem;
-  border: 1px solid rgba(109, 227, 255, 0.18);
+  padding: 0.6rem 0.75rem;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.045);
 }
 
 .capture-toolbar__copy {
   display: grid;
-  gap: 0.28rem;
+  gap: 0.16rem;
 }
 
 .capture-copy {
   margin: 0;
   color: var(--muted);
-  font-size: 0.86rem;
-  line-height: 1.3;
+  font-size: 0.76rem;
+  line-height: 1.2;
 }
 
 .capture-button {
   align-self: center;
-  min-width: 10.5rem;
+  min-width: 8.8rem;
   border: 1px solid rgba(109, 227, 255, 0.34);
   border-radius: 999px;
   background: linear-gradient(180deg, rgba(11, 36, 54, 0.96), rgba(7, 21, 32, 0.96));
   color: var(--ink);
-  padding: 0.72rem 1rem;
+  padding: 0.58rem 0.9rem;
   font: inherit;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform 120ms ease, border-color 120ms ease, opacity 120ms ease;
@@ -301,60 +307,56 @@ kbd {
 .capture-readouts {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.55rem;
+  gap: 0.45rem;
 }
 
 .readout-card {
   display: grid;
-  gap: 0.32rem;
-  padding: 0.7rem 0.78rem;
-  border: 1px solid rgba(109, 227, 255, 0.14);
+  gap: 0.18rem;
+  padding: 0.58rem 0.62rem;
+  border: 1px solid rgba(109, 227, 255, 0.12);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.04);
 }
 
 .readout-card span {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .readout-card strong {
-  font-size: 1.1rem;
+  font-size: 1rem;
   letter-spacing: 0.02em;
 }
 
 .zone-hud {
   min-height: 0;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 0.55rem;
-  padding: 0.75rem 0.9rem 0.85rem;
-  border: 1px solid rgba(109, 227, 255, 0.16);
+  padding: 0.58rem;
   border-radius: 18px;
   background:
     radial-gradient(circle at top left, rgba(109, 227, 255, 0.08), transparent 44%),
     rgba(255, 255, 255, 0.035);
+  overflow: hidden;
 }
 
 .zone-capture-list {
-  min-height: 0;
+  height: 100%;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
-  overflow: auto;
-  align-content: start;
-  padding-right: 0.2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+  overflow: hidden;
 }
 
 .zone-capture-card {
   display: grid;
-  gap: 0.32rem;
-  padding: 0.58rem 0.64rem 0.64rem;
+  gap: 0.2rem;
+  padding: 0.48rem 0.56rem 0.54rem;
   border: 1px solid rgba(109, 227, 255, 0.12);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.04);
+  min-height: 0;
 }
 
 .zone-capture-card.is-active {
@@ -370,18 +372,18 @@ kbd {
 .zone-capture-card__top {
   display: flex;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem;
   align-items: start;
 }
 
 .zone-capture-card__top strong {
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   line-height: 1.2;
 }
 
 .zone-capture-card__label {
   color: var(--accent);
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -389,40 +391,53 @@ kbd {
 .zone-capture-card__state {
   margin: 0;
   color: var(--muted);
-  font-size: 0.78rem;
-  line-height: 1.25;
-  min-height: 1.6rem;
+  font-size: 0.7rem;
+  line-height: 1.15;
+  min-height: 1.35rem;
 }
 
 .zone-capture-card__stats {
   display: flex;
   justify-content: space-between;
-  gap: 0.65rem;
+  gap: 0.4rem;
   color: var(--muted);
-  font-size: 0.74rem;
-  flex-wrap: wrap;
+  font-size: 0.66rem;
+  flex-wrap: nowrap;
 }
 
 .zone-capture-card__stats strong {
   color: var(--ink);
-  font-size: 0.84rem;
+  font-size: 0.72rem;
 }
 
 @media (max-width: 1340px) {
-  .game-shell {
-    grid-template-columns: minmax(0, 1fr) minmax(460px, 540px);
+  .top-bar {
+    gap: 0.75rem;
   }
 
-  .zone-capture-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .top-bar h1 {
+    font-size: 0.98rem;
+  }
+
+  .game-shell {
+    grid-template-columns: minmax(0, 1.8fr) minmax(390px, 1fr);
   }
 }
 
 @media (max-width: 1100px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
   .game-shell {
     grid-template-columns: 1fr;
-    width: min(980px, calc(100% - 1rem));
-    padding: 0.5rem 0 1rem;
+    overflow: visible;
   }
 
   .play-column {
@@ -431,22 +446,21 @@ kbd {
 
   .experiment-window {
     order: 2;
-    position: static;
     min-height: 55vh;
   }
 
-  .command-bar__main {
-    flex-direction: column;
-  }
-
-  .command-rules {
-    min-width: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .top-bar {
+    flex-wrap: wrap;
   }
 
   .capture-readouts,
   .zone-capture-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .zone-capture-list {
+    grid-template-rows: auto;
+    height: auto;
   }
 
   #game-canvas {
@@ -455,20 +469,17 @@ kbd {
 }
 
 @media (max-width: 720px) {
-  .command-rules,
   .capture-readouts,
   .zone-capture-list {
     grid-template-columns: 1fr;
   }
 
-  .game-shell {
-    width: calc(100% - 0.75rem);
+  .zone-capture-list {
+    grid-template-rows: auto;
   }
 
-  .command-bar,
-  .canvas-frame,
-  .experiment-window {
-    padding: 0.85rem;
+  .app-shell {
+    width: calc(100% - 0.5rem);
   }
 
   .capture-toolbar {
@@ -478,5 +489,11 @@ kbd {
 
   .capture-button {
     width: 100%;
+  }
+
+  .status-pill {
+    left: 0.85rem;
+    right: 0.85rem;
+    bottom: 0.8rem;
   }
 }
