@@ -20,36 +20,42 @@ const EXPERIMENTS = [
     id: "unit-01/lesson-01/mass-change/ice-to-water",
     title: "Ice to water",
     label: "ICE",
+    interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/ice-to-water.json",
     zone: { x: 2, y: 2, w: 3, h: 2 }
   },
   {
     id: "unit-01/lesson-01/mass-change/precipitate",
     title: "Precipitate",
     label: "PRECIP",
+    interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/precipitate.json",
     zone: { x: 11, y: 1, w: 4, h: 2 }
   },
   {
     id: "unit-01/lesson-01/mass-change/steel-wool-pulled-apart",
     title: "Steel wool pulled apart",
     label: "STEEL PULL",
+    interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/steel-wool-pulled-apart.json",
     zone: { x: 21, y: 2, w: 4, h: 2 }
   },
   {
     id: "unit-01/lesson-01/mass-change/sugar-dissolves",
     title: "Sugar dissolves",
     label: "SUGAR",
+    interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/sugar-dissolves.json",
     zone: { x: 2, y: 13, w: 4, h: 2 }
   },
   {
     id: "unit-01/lesson-01/mass-change/steel-wool-burns",
     title: "Steel wool burns",
     label: "STEEL BURN",
+    interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/steel-wool-burns.json",
     zone: { x: 11, y: 14, w: 4, h: 2 }
   },
   {
     id: "unit-01/lesson-01/mass-change/alka-seltzer",
     title: "Alka-Seltzer",
     label: "ALKA",
+    interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/alka-seltzer.json",
     zone: { x: 21, y: 13, w: 4, h: 2 }
   }
 ];
@@ -106,7 +112,8 @@ const state = {
     pilotSheet: null,
     ship: null
   },
-  animationMap: null
+  animationMap: null,
+  platformLayer: null
 };
 
 const loadState = Promise.all([
@@ -125,6 +132,7 @@ const loadState = Promise.all([
   state.images.ship = ship;
   state.animationMap = animationMap;
   stars = buildStarfield();
+  state.platformLayer = buildPlatformLayer();
   assetsReady = true;
   statusPill.textContent = "Cross an outlined zone to open its experiment view.";
 
@@ -153,6 +161,11 @@ document.addEventListener("keyup", (event) => {
 });
 
 closeOverlayButton.addEventListener("click", closeOverlay);
+overlayFrame.addEventListener("load", () => {
+  if (overlayOpen) {
+    statusPill.textContent = `${overlayTitle.textContent} ready in the experiment window.`;
+  }
+});
 
 let previousTime = performance.now();
 requestAnimationFrame(frame);
@@ -187,8 +200,8 @@ function update(dtMs) {
   const input = getInputVector();
   const brakeHeld = keys.has(" ");
   const dt = dtMs / 1000;
-  const accel = brakeHeld ? 400 : 780;
-  const maxSpeed = brakeHeld ? 120 : 235;
+  const accel = brakeHeld ? 520 : 1100;
+  const maxSpeed = brakeHeld ? 160 : 320;
   const drag = brakeHeld ? 0.82 : 0.93;
 
   if (input.mag > 0) {
@@ -300,6 +313,14 @@ function drawBackground(cycle) {
 }
 
 function drawPlatforms() {
+  ctx.drawImage(state.platformLayer, 0, 0);
+}
+
+function buildPlatformLayer() {
+  const layer = document.createElement("canvas");
+  layer.width = CANVAS_WIDTH;
+  layer.height = CANVAS_HEIGHT;
+  const layerCtx = layer.getContext("2d");
   const sheet = state.images.platformSheet;
   const frameSize = sheet.width / SHOP_PLATFORM_TEMPLATE_SIZE;
 
@@ -313,14 +334,16 @@ function drawPlatforms() {
       const sx = frame.col * frameSize;
       const sy = frame.row * frameSize;
 
-      ctx.save();
-      ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
-      ctx.shadowBlur = 10;
-      ctx.shadowOffsetY = 3;
-      ctx.drawImage(sheet, sx, sy, frameSize, frameSize, px, py, TILE_SIZE, TILE_SIZE);
-      ctx.restore();
+      layerCtx.save();
+      layerCtx.shadowColor = "rgba(0, 0, 0, 0.22)";
+      layerCtx.shadowBlur = 10;
+      layerCtx.shadowOffsetY = 3;
+      layerCtx.drawImage(sheet, sx, sy, frameSize, frameSize, px, py, TILE_SIZE, TILE_SIZE);
+      layerCtx.restore();
     }
   }
+
+  return layer;
 }
 
 function resolvePlatformFrameRef(row, col) {
@@ -480,7 +503,8 @@ function openExperiment(experiment) {
   overlayOpen = true;
   experimentWindow.classList.add("is-active");
   overlayTitle.textContent = experiment.title;
-  const url = `../experiment-window/index.html?experiment=${encodeURIComponent(experiment.id)}&mode=embed&parentOrigin=${encodeURIComponent(window.location.origin)}`;
+  statusPill.textContent = `Loading ${experiment.title} into the experiment window...`;
+  const url = `/vendor/lab/dist/embeddable.html#${experiment.interactiveUrl}`;
   overlayFrame.src = url;
 }
 
