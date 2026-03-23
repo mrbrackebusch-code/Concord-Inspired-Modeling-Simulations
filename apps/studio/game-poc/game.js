@@ -133,10 +133,10 @@ const TERRAIN_FAMILIES = {
     cornerNE: { row: 16, col: 3 },
     cornerSE: { row: 14, col: 3 },
     cornerSW: { row: 14, col: 5 },
-    innerNW: { row: 13, col: 5 },
-    innerNE: { row: 13, col: 4 },
-    innerSE: { row: 12, col: 4 },
-    innerSW: { row: 12, col: 5 },
+    innerNW: { row: 12, col: 4 },
+    innerNE: { row: 12, col: 5 },
+    innerSE: { row: 13, col: 5 },
+    innerSW: { row: 13, col: 4 },
     decor: []
   }
 };
