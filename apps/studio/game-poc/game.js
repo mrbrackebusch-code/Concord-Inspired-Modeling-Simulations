@@ -9,10 +9,47 @@ const ROCK_MASK_ALPHA_THRESHOLD = 16;
 const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
+const ARM_MODES = ["stowed", "ready", "capture"];
 const MAX_HULL = 100;
 const TERRAIN_THEME = {
   ground: "sand",
   water: "sandWater"
+};
+const ARM_PART_SOURCES = {
+  baseMount: "../../../assets/Mechanical Tentacle Arm/base_mount_large.png",
+  socketCup: "../../../assets/Mechanical Tentacle Arm/socket_cup.png",
+  connector: "../../../assets/Mechanical Tentacle Arm/connector_link.png",
+  jointPlain: "../../../assets/Mechanical Tentacle Arm/tapered_joint_plain.png",
+  jointStriped: "../../../assets/Mechanical Tentacle Arm/tapered_joint_striped.png",
+  clawOpen: "../../../assets/Mechanical Tentacle Arm/claw_open.png",
+  clawClosed: "../../../assets/Mechanical Tentacle Arm/claw_closed.png"
+};
+const ARM_SCALE = {
+  baseMount: 0.12,
+  socketCup: 0.11,
+  connector: 0.13,
+  joint: 0.13,
+  claw: 0.11
+};
+const ARM_POSES = {
+  stowed: {
+    angles: [1.12, 1.72, 2.2, 2.62],
+    clawAngle: 2.8,
+    clawState: "closed",
+    wiggle: [0.04, 0.05, 0.04, 0.03]
+  },
+  ready: {
+    angles: [0.82, 0.58, 0.34, 0.18],
+    clawAngle: 0.12,
+    clawState: "open",
+    wiggle: [0.03, 0.04, 0.03, 0.02]
+  },
+  capture: {
+    angles: [0.68, 0.42, 0.22, 0.06],
+    clawAngle: 0.01,
+    clawState: "closed",
+    wiggle: [0.015, 0.02, 0.018, 0.012]
+  }
 };
 
 const TERRAIN_FAMILIES = {
@@ -228,7 +265,8 @@ const state = {
     rockSheet: null,
     rockAuraSheet: null,
     pilotSheet: null,
-    ship: null
+    ship: null,
+    armParts: null
   },
   animationMap: null,
   backgroundLayer: null,
@@ -250,18 +288,20 @@ const loadState = Promise.all([
   loadImage("../../../assets/game-poc/tiles/rocks_aura_r0.png"),
   loadImage("../../../assets/game-poc/heroes/DefaultHero.png"),
   loadImage("../../../assets/spaceship/spaceship.png"),
+  loadNamedImages(ARM_PART_SOURCES),
   fetch("../../../assets/game-poc/heroes/anim_map.json").then((res) => {
     if (!res.ok) {
       throw new Error(`Animation map request failed with status ${res.status}.`);
     }
     return res.json();
   })
-]).then(([terrainSheet, rockSheet, rockAuraSheet, pilotSheet, ship, animationMap]) => {
+]).then(([terrainSheet, rockSheet, rockAuraSheet, pilotSheet, ship, armParts, animationMap]) => {
   state.images.terrainSheet = terrainSheet;
   state.images.rockSheet = rockSheet;
   state.images.rockAuraSheet = rockAuraSheet;
   state.images.pilotSheet = pilotSheet;
   state.images.ship = ship;
+  state.images.armParts = armParts;
   state.animationMap = animationMap;
   state.backgroundLayer = buildBackgroundLayer();
   state.groundLayer = buildTerrainLayer(groundGrid, TERRAIN_THEME.ground);
@@ -966,42 +1006,34 @@ function buildShipFrameCache() {
   const shipImage = state.images.ship;
   const shipWidth = shipImage.width * SHIP_SCALE;
   const shipHeight = shipImage.height * SHIP_SCALE;
-  const paddingX = 18;
+  const paddingX = 34;
   const paddingTop = 10;
-  const paddingBottom = 28;
+  const paddingBottom = 46;
   const frameWidth = Math.ceil(shipWidth + paddingX * 2);
   const frameHeight = Math.ceil(shipHeight + paddingTop + paddingBottom);
   const anchorX = frameWidth / 2;
   const anchorY = paddingTop + shipHeight / 2;
 
   const cache = {
-    idle: Object.create(null),
-    thrust: Object.create(null),
     anchorX,
     anchorY
   };
 
-  for (const direction of SHIP_DIRECTIONS) {
-    const animationDef = state.animationMap.animations[`thrust${direction}`];
-    const frameCols = animationDef.cols;
-    cache.idle[direction] = renderShipFrame({
-      direction,
-      pilotFrame: frameCols[0],
-      flameOffset: null,
-      frameWidth,
-      frameHeight,
-      anchorX,
-      anchorY,
-      shipWidth,
-      shipHeight
-    });
+  for (const armMode of ARM_MODES) {
+    cache[armMode] = {
+      idle: Object.create(null),
+      thrust: Object.create(null)
+    };
 
-    cache.thrust[direction] = frameCols.map((pilotFrame, index) => {
-      const flameOffset = Math.sin((index / frameCols.length) * Math.PI * 2) * 4;
-      return renderShipFrame({
+    for (const direction of SHIP_DIRECTIONS) {
+      const animationDef = state.animationMap.animations[`thrust${direction}`];
+      const frameCols = animationDef.cols;
+      cache[armMode].idle[direction] = renderShipFrame({
         direction,
-        pilotFrame,
-        flameOffset,
+        pilotFrame: frameCols[0],
+        flameOffset: null,
+        armMode,
+        armMotionPhase: 0,
         frameWidth,
         frameHeight,
         anchorX,
@@ -1009,7 +1041,24 @@ function buildShipFrameCache() {
         shipWidth,
         shipHeight
       });
-    });
+
+      cache[armMode].thrust[direction] = frameCols.map((pilotFrame, index) => {
+        const flameOffset = Math.sin((index / frameCols.length) * Math.PI * 2) * 4;
+        return renderShipFrame({
+          direction,
+          pilotFrame,
+          flameOffset,
+          armMode,
+          armMotionPhase: (index / frameCols.length) * Math.PI * 2,
+          frameWidth,
+          frameHeight,
+          anchorX,
+          anchorY,
+          shipWidth,
+          shipHeight
+        });
+      });
+    }
   }
 
   return cache;
@@ -1019,6 +1068,8 @@ function renderShipFrame({
   direction,
   pilotFrame,
   flameOffset,
+  armMode,
+  armMotionPhase,
   frameWidth,
   frameHeight,
   anchorX,
@@ -1044,6 +1095,7 @@ function renderShipFrame({
   }
 
   frameCtx.drawImage(state.images.ship, -shipWidth / 2, -shipHeight / 2, shipWidth, shipHeight);
+  drawTentacleArm(frameCtx, shipWidth, shipHeight, armMode, armMotionPhase);
   drawPilotInCockpit(frameCtx, shipWidth, shipHeight, direction, pilotFrame);
   drawCanopyGlass(frameCtx, shipWidth, shipHeight);
   frameCtx.restore();
@@ -1056,13 +1108,97 @@ function renderShipFrame({
 }
 
 function getShipFrame() {
+  const armMode = getArmMode();
   const direction = angleToDirection(player.angle);
   if (!player.thrusting) {
-    return state.shipFrameCache.idle[direction];
+    return state.shipFrameCache[armMode].idle[direction];
   }
-  const frames = state.shipFrameCache.thrust[direction];
+  const frames = state.shipFrameCache[armMode].thrust[direction];
   const frameIndex = Math.floor(visualTimeMs / SHIP_FRAME_MS) % frames.length;
   return frames[frameIndex];
+}
+
+function getArmMode() {
+  if (overlayOpen) {
+    return "capture";
+  }
+  if (activeZone) {
+    return "ready";
+  }
+  return "stowed";
+}
+
+function drawTentacleArm(targetCtx, shipWidth, shipHeight, armMode, armMotionPhase) {
+  const armParts = state.images.armParts;
+  if (!armParts) {
+    return;
+  }
+
+  const pose = ARM_POSES[armMode] || ARM_POSES.stowed;
+  const mountSocket = {
+    x: shipWidth * 0.24,
+    y: shipHeight * 0.07
+  };
+  const baseWidth = armParts.baseMount.width * ARM_SCALE.baseMount;
+  const baseHeight = armParts.baseMount.height * ARM_SCALE.baseMount;
+
+  targetCtx.save();
+  targetCtx.imageSmoothingEnabled = false;
+  targetCtx.globalAlpha = 0.94;
+  targetCtx.drawImage(
+    armParts.baseMount,
+    mountSocket.x - baseWidth * 0.82,
+    mountSocket.y - baseHeight * 0.48,
+    baseWidth,
+    baseHeight
+  );
+
+  let cursor = drawArmVerticalPiece(targetCtx, armParts.socketCup, mountSocket.x + 2, mountSocket.y + 3, pose.angles[0] - 0.1, ARM_SCALE.socketCup, 0.34);
+
+  pose.angles.forEach((baseAngle, index) => {
+    const wiggle = Math.sin(armMotionPhase + index * 0.85) * pose.wiggle[index];
+    const angle = baseAngle + wiggle;
+    cursor = drawArmVerticalPiece(targetCtx, armParts.connector, cursor.x, cursor.y, angle, ARM_SCALE.connector, 0.34);
+    const vertebra = index % 2 === 0 ? armParts.jointPlain : armParts.jointStriped;
+    cursor = drawArmVerticalPiece(targetCtx, vertebra, cursor.x, cursor.y, angle, ARM_SCALE.joint, 0.41);
+  });
+
+  const clawImage = pose.clawState === "open" ? armParts.clawOpen : armParts.clawClosed;
+  drawArmHorizontalPiece(
+    targetCtx,
+    clawImage,
+    cursor.x,
+    cursor.y,
+    pose.clawAngle + Math.sin(armMotionPhase + 1.1) * 0.025,
+    ARM_SCALE.claw
+  );
+  targetCtx.restore();
+}
+
+function drawArmVerticalPiece(targetCtx, image, x, y, angle, scale, advanceFactor) {
+  const width = image.width * scale;
+  const height = image.height * scale;
+  targetCtx.save();
+  targetCtx.translate(x, y);
+  targetCtx.rotate(angle - Math.PI / 2);
+  targetCtx.drawImage(image, -width / 2, 0, width, height);
+  targetCtx.restore();
+
+  const advance = height * advanceFactor;
+  return {
+    x: x + Math.cos(angle) * advance,
+    y: y + Math.sin(angle) * advance
+  };
+}
+
+function drawArmHorizontalPiece(targetCtx, image, x, y, angle, scale) {
+  const width = image.width * scale;
+  const height = image.height * scale;
+  targetCtx.save();
+  targetCtx.translate(x, y);
+  targetCtx.rotate(angle);
+  targetCtx.drawImage(image, 0, -height / 2, width, height);
+  targetCtx.restore();
 }
 
 function drawDirectionalThruster(targetCtx, shipWidth, shipHeight, thrusterAlpha, angle, flameOffset) {
@@ -1727,6 +1863,14 @@ function loadImage(src) {
     image.onerror = reject;
     image.src = src;
   });
+}
+
+function loadNamedImages(sourceMap) {
+  return Promise.all(
+    Object.entries(sourceMap).map(([key, src]) =>
+      loadImage(src).then((image) => [key, image])
+    )
+  ).then((entries) => Object.fromEntries(entries));
 }
 
 loadState.catch((error) => {

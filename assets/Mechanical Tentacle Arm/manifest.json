@@ -1,0 +1,154 @@
+[
+  {
+    "name": "base_mount_large",
+    "source_box": [
+      40,
+      40,
+      470,
+      470
+    ],
+    "tight_bbox": [
+      16,
+      16,
+      416,
+      416
+    ],
+    "size": [
+      400,
+      400
+    ]
+  },
+  {
+    "name": "connector_link",
+    "source_box": [
+      525,
+      0,
+      625,
+      260
+    ],
+    "tight_bbox": [
+      11,
+      12,
+      87,
+      252
+    ],
+    "size": [
+      76,
+      240
+    ]
+  },
+  {
+    "name": "block_joint",
+    "source_box": [
+      700,
+      30,
+      880,
+      230
+    ],
+    "tight_bbox": [
+      0,
+      2,
+      168,
+      200
+    ],
+    "size": [
+      168,
+      198
+    ]
+  },
+  {
+    "name": "tapered_joint_striped",
+    "source_box": [
+      525,
+      275,
+      705,
+      525
+    ],
+    "tight_bbox": [
+      7,
+      5,
+      180,
+      241
+    ],
+    "size": [
+      173,
+      236
+    ]
+  },
+  {
+    "name": "tapered_joint_plain",
+    "source_box": [
+      780,
+      275,
+      995,
+      505
+    ],
+    "tight_bbox": [
+      16,
+      21,
+      204,
+      230
+    ],
+    "size": [
+      188,
+      209
+    ]
+  },
+  {
+    "name": "socket_cup",
+    "source_box": [
+      45,
+      635,
+      220,
+      870
+    ],
+    "tight_bbox": [
+      11,
+      9,
+      155,
+      235
+    ],
+    "size": [
+      144,
+      226
+    ]
+  },
+  {
+    "name": "claw_open",
+    "source_box": [
+      255,
+      640,
+      650,
+      1024
+    ],
+    "tight_bbox": [
+      25,
+      8,
+      369,
+      340
+    ],
+    "size": [
+      344,
+      332
+    ]
+  },
+  {
+    "name": "claw_closed",
+    "source_box": [
+      660,
+      670,
+      995,
+      945
+    ],
+    "tight_bbox": [
+      12,
+      26,
+      320,
+      246
+    ],
+    "size": [
+      308,
+      220
+    ]
+  }
+]
