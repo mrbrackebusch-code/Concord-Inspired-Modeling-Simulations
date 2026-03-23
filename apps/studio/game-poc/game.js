@@ -9,7 +9,14 @@ const ROCK_MASK_ALPHA_THRESHOLD = 16;
 const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
-const ARM_MODES = ["stowed", "ready", "capture"];
+const ARM_HEAD_SPEED = 180;
+const ARM_MAX_REACH = 132;
+const ARM_SEGMENT_SPACING = 15;
+const ARM_SEGMENT_COUNT = 8;
+const ARM_HISTORY_STEP = 6;
+const ARM_EXTEND_SPEED = 4.8;
+const ARM_HEAD_RADIUS = 9;
+const ARM_LATCH_RADIUS = 18;
 const MAX_HULL = 100;
 const TERRAIN_THEME = {
   ground: "sand",
@@ -23,6 +30,19 @@ const ARM_PART_SOURCES = {
   jointStriped: "../../../assets/Mechanical Tentacle Arm/tapered_joint_striped.png",
   clawOpen: "../../../assets/Mechanical Tentacle Arm/claw_open.png",
   clawClosed: "../../../assets/Mechanical Tentacle Arm/claw_closed.png"
+};
+const EXPERIMENT_ART_SOURCES = {
+  stationIce: "../../../simulations/unit-01/lesson-01/mass-change/assets/beaker-ice-before.svg",
+  stationPrecipitate: "../../../simulations/unit-01/lesson-01/mass-change/assets/precipitate-before.svg",
+  stationSteelPull: "../../../simulations/unit-01/lesson-01/mass-change/assets/steel-wool-compact.svg",
+  stationSugar: "../../../simulations/unit-01/lesson-01/mass-change/assets/beaker-sugar-before.svg",
+  stationBurn: "../../../simulations/unit-01/lesson-01/mass-change/assets/steel-wool-burnable.svg",
+  stationAlka: "../../../simulations/unit-01/lesson-01/mass-change/assets/beaker-alka-before.svg",
+  iceCube: "../../../simulations/unit-01/lesson-01/mass-change/assets/ice-cube.svg",
+  steelWool: "../../../simulations/unit-01/lesson-01/mass-change/assets/steel-wool-compact.svg",
+  steelWoolBurnable: "../../../simulations/unit-01/lesson-01/mass-change/assets/steel-wool-burnable.svg",
+  alkaTablet: "../../../simulations/unit-01/lesson-01/mass-change/assets/alka-tablet.svg",
+  beakerOutline: "../../../simulations/unit-01/lesson-01/mass-change/assets/beaker-outline.svg"
 };
 const ARM_SCALE = {
   baseMount: 0.12,
@@ -157,42 +177,69 @@ const EXPERIMENTS = [
     title: "Ice to water",
     label: "ICE",
     interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/ice-to-water.json",
-    zone: { x: 2, y: 2, w: 3, h: 2 }
+    zone: { x: 2, y: 2, w: 3, h: 2 },
+    previewKey: "stationIce",
+    requirements: [
+      { key: "ice-sample", kind: "ice", name: "Ice sample", formula: "H2O(s)", start: { x: 3.6, y: 6.4 } }
+    ]
   },
   {
     id: "unit-01/lesson-01/mass-change/precipitate",
     title: "Precipitate",
     label: "PRECIP",
     interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/precipitate.json",
-    zone: { x: 11, y: 1, w: 4, h: 2 }
+    zone: { x: 11, y: 1, w: 4, h: 2 },
+    previewKey: "stationPrecipitate",
+    requirements: [
+      { key: "silver-nitrate", kind: "solution", name: "Silver nitrate", formula: "AgNO3(aq)", tint: "#90d4ff", start: { x: 10.6, y: 4.3 } },
+      { key: "sodium-chloride", kind: "solution", name: "Sodium chloride", formula: "NaCl(aq)", tint: "#ffc980", start: { x: 15.7, y: 3.7 } }
+    ]
   },
   {
     id: "unit-01/lesson-01/mass-change/steel-wool-pulled-apart",
     title: "Steel wool pulled apart",
     label: "STEEL PULL",
     interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/steel-wool-pulled-apart.json",
-    zone: { x: 21, y: 2, w: 4, h: 2 }
+    zone: { x: 21, y: 2, w: 4, h: 2 },
+    previewKey: "stationSteelPull",
+    requirements: [
+      { key: "steel-wool", kind: "steel", name: "Steel wool", formula: "Fe(s)", start: { x: 24.3, y: 5.7 } }
+    ]
   },
   {
     id: "unit-01/lesson-01/mass-change/sugar-dissolves",
     title: "Sugar dissolves",
     label: "SUGAR",
     interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/sugar-dissolves.json",
-    zone: { x: 2, y: 13, w: 4, h: 2 }
+    zone: { x: 2, y: 13, w: 4, h: 2 },
+    previewKey: "stationSugar",
+    requirements: [
+      { key: "water-beaker", kind: "water", name: "Water", formula: "H2O(l)", tint: "#7fd4ff", start: { x: 1.8, y: 11.7 } },
+      { key: "sucrose", kind: "sugar", name: "Sucrose", formula: "C12H22O11(s)", tint: "#fff0c4", start: { x: 6.2, y: 11.4 } }
+    ]
   },
   {
     id: "unit-01/lesson-01/mass-change/steel-wool-burns",
     title: "Steel wool burns",
     label: "STEEL BURN",
     interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/steel-wool-burns.json",
-    zone: { x: 11, y: 14, w: 4, h: 2 }
+    zone: { x: 11, y: 14, w: 4, h: 2 },
+    previewKey: "stationBurn",
+    requirements: [
+      { key: "burn-steel", kind: "steel-burn", name: "Steel wool", formula: "Fe(s)", start: { x: 14.6, y: 12.6 } }
+    ]
   },
   {
     id: "unit-01/lesson-01/mass-change/alka-seltzer",
     title: "Alka-Seltzer",
     label: "ALKA",
     interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/alka-seltzer.json",
-    zone: { x: 21, y: 13, w: 4, h: 2 }
+    zone: { x: 21, y: 13, w: 4, h: 2 },
+    previewKey: "stationAlka",
+    requirements: [
+      { key: "alka-water", kind: "water", name: "Water", formula: "H2O(l)", tint: "#79cff8", start: { x: 24.2, y: 11.8 } },
+      { key: "alka-tablet", kind: "tablet", name: "Tablet", formula: "NaHCO3 + citric acid", start: { x: 25.4, y: 15.1 } }
+    ]
   }
 ];
 
@@ -245,6 +292,7 @@ let frameHandle = 0;
 let previousTime = 0;
 let worldDirty = true;
 let actorDirty = true;
+let spaceHeld = false;
 
 const player = {
   x: spawnPoint.x,
@@ -258,6 +306,17 @@ const player = {
   lastSafeX: spawnPoint.x,
   lastSafeY: spawnPoint.y
 };
+const arm = {
+  deployed: false,
+  extension: 0,
+  headLocalX: 18,
+  headLocalY: 0,
+  pathLocal: [],
+  carryingId: null,
+  headWorldX: spawnPoint.x,
+  headWorldY: spawnPoint.y,
+  aimAngle: 0
+};
 
 const state = {
   images: {
@@ -266,7 +325,8 @@ const state = {
     rockAuraSheet: null,
     pilotSheet: null,
     ship: null,
-    armParts: null
+    armParts: null,
+    experimentArt: null
   },
   animationMap: null,
   backgroundLayer: null,
@@ -277,6 +337,7 @@ const state = {
   rockMasks: [],
   worldLayer: null,
   shipFrameCache: null,
+  experimentObjects: [],
   captures: createCaptureState()
 };
 
@@ -289,20 +350,23 @@ const loadState = Promise.all([
   loadImage("../../../assets/game-poc/heroes/DefaultHero.png"),
   loadImage("../../../assets/spaceship/spaceship.png"),
   loadNamedImages(ARM_PART_SOURCES),
+  loadNamedImages(EXPERIMENT_ART_SOURCES),
   fetch("../../../assets/game-poc/heroes/anim_map.json").then((res) => {
     if (!res.ok) {
       throw new Error(`Animation map request failed with status ${res.status}.`);
     }
     return res.json();
   })
-]).then(([terrainSheet, rockSheet, rockAuraSheet, pilotSheet, ship, armParts, animationMap]) => {
+]).then(([terrainSheet, rockSheet, rockAuraSheet, pilotSheet, ship, armParts, experimentArt, animationMap]) => {
   state.images.terrainSheet = terrainSheet;
   state.images.rockSheet = rockSheet;
   state.images.rockAuraSheet = rockAuraSheet;
   state.images.pilotSheet = pilotSheet;
   state.images.ship = ship;
   state.images.armParts = armParts;
+  state.images.experimentArt = experimentArt;
   state.animationMap = animationMap;
+  state.experimentObjects = buildExperimentObjects();
   state.backgroundLayer = buildBackgroundLayer();
   state.groundLayer = buildTerrainLayer(groundGrid, TERRAIN_THEME.ground);
   state.waterLayer = buildTerrainLayer(waterGrid, TERRAIN_THEME.water);
@@ -310,9 +374,10 @@ const loadState = Promise.all([
   state.rockLayer = buildRockLayer();
   state.rockMasks = buildRockMasks();
   state.worldLayer = buildWorldLayer();
+  resetArmState(true);
   state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
-  setStatus("Cross an outlined zone to open its experiment view.");
+  setStatus("Arrow keys fly the ship. Space deploys the arm. WASD moves the arm head.");
   renderCaptureHud();
   updateHullHud();
   updateFieldHud({ tier: "clear" });
@@ -323,7 +388,6 @@ const loadState = Promise.all([
     const initialExperiment = findExperimentByIdentifier(startupExperimentId);
     if (initialExperiment) {
       openExperiment(initialExperiment);
-      rearmZoneId = initialExperiment.id;
       activeZone = initialExperiment;
       hudFocusExperimentId = initialExperiment.id;
       renderCaptureHud();
@@ -336,7 +400,14 @@ document.addEventListener("keydown", (event) => {
   if (overlayOpen && event.key === "Escape") {
     closeOverlay();
   }
-  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) {
+  if (event.key === " " && !event.repeat) {
+    spaceHeld = true;
+    toggleArmDeployment();
+  }
+  if (event.key === "Enter" && !event.repeat) {
+    tryStartExperimentFromField();
+  }
+  if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " ", "Enter", "w", "a", "s", "d", "W", "A", "S", "D"].includes(event.key)) {
     event.preventDefault();
   }
   requestFrame();
@@ -344,6 +415,9 @@ document.addEventListener("keydown", (event) => {
 
 document.addEventListener("keyup", (event) => {
   keys.delete(event.key.toLowerCase());
+  if (event.key === " ") {
+    spaceHeld = false;
+  }
   requestFrame();
 });
 
@@ -397,6 +471,8 @@ function update(dtMs) {
   const priorY = player.y;
   const priorAngle = player.angle;
   const priorZoneId = activeZone?.id || null;
+  const priorArmHeadX = arm.headWorldX;
+  const priorArmHeadY = arm.headWorldY;
   let changed = false;
 
   if (!player.alive) {
@@ -410,12 +486,11 @@ function update(dtMs) {
 
   impactCooldownMs = Math.max(0, impactCooldownMs - dtMs);
 
-  const input = getInputVector();
-  const brakeHeld = keys.has(" ");
+  const input = getShipInputVector();
   const dt = dtMs / 1000;
-  const baseAccel = brakeHeld ? 520 : 1100;
-  const baseMaxSpeed = brakeHeld ? 160 : 320;
-  const baseDrag = brakeHeld ? 0.82 : 0.93;
+  const baseAccel = 920;
+  const baseMaxSpeed = 292;
+  const baseDrag = 0.92;
   const anomalyInfluence = sampleAnomalyInfluence(player.x, player.y);
   const accel = baseAccel * anomalyInfluence.inputScale;
   const maxSpeed = baseMaxSpeed * anomalyInfluence.maxSpeedScale;
@@ -433,16 +508,12 @@ function update(dtMs) {
     player.vy *= Math.pow(drag, dtMs / 16.67);
   }
 
-  if (brakeHeld) {
-    player.vx *= 0.95;
-    player.vy *= 0.95;
-  }
-
   player.vx += anomalyInfluence.pullX * dt;
   player.vy += anomalyInfluence.pullY * dt;
 
   const speed = Math.hypot(player.vx, player.vy);
-  if (input.mag > 0 || speed > MOTION_EPSILON) {
+  const armChanged = updateArm(dtMs);
+  if (input.mag > 0 || speed > MOTION_EPSILON || armChanged) {
     visualTimeMs += dtMs;
   }
   if (speed > maxSpeed) {
@@ -474,15 +545,7 @@ function update(dtMs) {
     return;
   }
 
-  if (!activeZone && postMoveInfluence.warningLevel > 0.38) {
-    setStatus("Localized dark-sector pull rising. Keep clear of the dense core.");
-  } else if (postMoveInfluence.warningLevel > 0.14 && !overlayOpen && !activeZone) {
-    setStatus("Dust and stones are drifting wrong here. Controls feel unstable.");
-  } else {
-    setExplorationStatus();
-  }
-
-  const nextZone = getZoneAtPoint(player.x, player.y);
+  const nextZone = getFocusedExperiment();
   if ((nextZone?.id || null) !== (activeZone?.id || null)) {
     activeZone = nextZone;
     if (activeZone) {
@@ -493,14 +556,14 @@ function update(dtMs) {
     activeZone = nextZone;
   }
 
-  if (activeZone && rearmZoneId === activeZone.id) {
-    setStatus(`${activeZone.title} is armed again once you leave and re-enter the box.`);
-  } else if (activeZone) {
-    setStatus(`Opening ${activeZone.title}...`);
-    openExperiment(activeZone);
-    rearmZoneId = activeZone.id;
+  if (!overlayOpen && !activeZone && postMoveInfluence.warningLevel > 0.38) {
+    setStatus("Localized dark-sector pull rising. Keep clear of the dense core.");
+  } else if (!overlayOpen && !activeZone && postMoveInfluence.warningLevel > 0.14) {
+    setStatus("Dust and stones are drifting wrong here. Controls feel unstable.");
+  } else if (!overlayOpen && activeZone) {
+    setStatus(describeExperimentStation(activeZone));
   } else {
-    rearmZoneId = null;
+    setExplorationStatus();
   }
 
   changed =
@@ -509,6 +572,9 @@ function update(dtMs) {
     Math.abs(player.x - priorX) > 0.01 ||
     Math.abs(player.y - priorY) > 0.01 ||
     Math.abs(player.angle - priorAngle) > 0.001 ||
+    Math.abs(arm.headWorldX - priorArmHeadX) > 0.01 ||
+    Math.abs(arm.headWorldY - priorArmHeadY) > 0.01 ||
+    armChanged ||
     priorZoneId !== (activeZone?.id || null);
 
   if (changed) {
@@ -526,8 +592,10 @@ function renderWorldLayer() {
 function renderActorLayer() {
   actorDirty = false;
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawExperimentObjects();
   drawActiveExperimentZone();
   drawPlayer();
+  drawArm();
 
   if (!player.alive) {
     drawDeathOverlay();
@@ -578,7 +646,7 @@ function buildWorldLayer() {
   layerCtx.drawImage(state.waterLayer, 0, 0);
   layerCtx.drawImage(state.anomalyLayer, 0, 0);
   layerCtx.drawImage(state.rockLayer, 0, 0);
-  drawExperimentZonesBase(layerCtx);
+  drawExperimentStationsBase(layerCtx);
   return layer;
 }
 
@@ -956,25 +1024,45 @@ function mixSeed(row, col, salt) {
   return (((row + 1) * 73856093) ^ ((col + 1) * 19349663) ^ salt) >>> 0;
 }
 
-function drawExperimentZonesBase(layerCtx) {
+function drawExperimentStationsBase(layerCtx) {
   layerCtx.save();
-  layerCtx.lineWidth = 2;
-  layerCtx.font = "bold 12px Georgia";
-  layerCtx.textAlign = "center";
-  layerCtx.textBaseline = "middle";
 
   for (const experiment of EXPERIMENTS) {
     const { x, y, w, h } = experiment.zone;
     const px = x * TILE_SIZE;
     const py = y * TILE_SIZE;
-    layerCtx.strokeStyle = "rgba(109, 227, 255, 0.46)";
-    layerCtx.strokeRect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4);
+    const padWidth = w * TILE_SIZE;
+    const padHeight = h * TILE_SIZE;
+    const preview = state.images.experimentArt?.[experiment.previewKey];
 
-    layerCtx.fillStyle = "rgba(109, 227, 255, 0.1)";
-    layerCtx.fillRect(px + 4, py + 4, w * TILE_SIZE - 8, h * TILE_SIZE - 8);
+    layerCtx.fillStyle = "rgba(14, 24, 31, 0.58)";
+    layerCtx.fillRect(px + 4, py + 4, padWidth - 8, padHeight - 8);
+    layerCtx.strokeStyle = "rgba(126, 197, 213, 0.52)";
+    layerCtx.lineWidth = 2;
+    layerCtx.strokeRect(px + 3, py + 3, padWidth - 6, padHeight - 6);
 
-    layerCtx.fillStyle = "#d5f7ff";
-    layerCtx.fillText(experiment.label, px + (w * TILE_SIZE) / 2, py + (h * TILE_SIZE) / 2);
+    if (preview) {
+      const previewScale = Math.min((padWidth - 18) / preview.width, (padHeight - 18) / preview.height);
+      const drawWidth = preview.width * previewScale;
+      const drawHeight = preview.height * previewScale;
+      layerCtx.globalAlpha = 0.9;
+      layerCtx.drawImage(
+        preview,
+        px + (padWidth - drawWidth) / 2,
+        py + (padHeight - drawHeight) / 2 + 3,
+        drawWidth,
+        drawHeight
+      );
+      layerCtx.globalAlpha = 1;
+    }
+
+    layerCtx.fillStyle = "rgba(10, 16, 22, 0.72)";
+    layerCtx.fillRect(px + 6, py + 6, padWidth - 12, 16);
+    layerCtx.fillStyle = "#d7f7ff";
+    layerCtx.font = "bold 11px Georgia";
+    layerCtx.textAlign = "center";
+    layerCtx.textBaseline = "middle";
+    layerCtx.fillText(experiment.label, px + padWidth / 2, py + 14);
   }
 
   layerCtx.restore();
@@ -988,12 +1076,22 @@ function drawActiveExperimentZone() {
   const { x, y, w, h } = activeZone.zone;
   const px = x * TILE_SIZE;
   const py = y * TILE_SIZE;
+  const ready = isExperimentReady(activeZone);
   ctx.save();
   ctx.lineWidth = 2;
-  ctx.strokeStyle = "rgba(255, 248, 185, 0.82)";
+  ctx.strokeStyle = ready ? "rgba(175, 255, 178, 0.88)" : "rgba(255, 236, 160, 0.88)";
   ctx.strokeRect(px + 2, py + 2, w * TILE_SIZE - 4, h * TILE_SIZE - 4);
-  ctx.fillStyle = "rgba(255, 248, 185, 0.12)";
+  ctx.fillStyle = ready ? "rgba(120, 255, 152, 0.12)" : "rgba(255, 241, 168, 0.12)";
   ctx.fillRect(px + 4, py + 4, w * TILE_SIZE - 8, h * TILE_SIZE - 8);
+
+  const progress = getDeliveredCount(activeZone);
+  ctx.fillStyle = "rgba(10, 16, 22, 0.78)";
+  ctx.fillRect(px + 6, py + (h * TILE_SIZE) - 22, w * TILE_SIZE - 12, 14);
+  ctx.fillStyle = ready ? "#b7ffd0" : "#fff0bf";
+  ctx.font = "10px Georgia";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(ready ? "Press Enter to begin" : `Placed ${progress}/${activeZone.requirements.length}`, px + (w * TILE_SIZE) / 2, py + (h * TILE_SIZE) - 15);
   ctx.restore();
 }
 
@@ -1006,34 +1104,42 @@ function buildShipFrameCache() {
   const shipImage = state.images.ship;
   const shipWidth = shipImage.width * SHIP_SCALE;
   const shipHeight = shipImage.height * SHIP_SCALE;
-  const paddingX = 34;
+  const paddingX = 18;
   const paddingTop = 10;
-  const paddingBottom = 46;
+  const paddingBottom = 28;
   const frameWidth = Math.ceil(shipWidth + paddingX * 2);
   const frameHeight = Math.ceil(shipHeight + paddingTop + paddingBottom);
   const anchorX = frameWidth / 2;
   const anchorY = paddingTop + shipHeight / 2;
 
   const cache = {
+    idle: Object.create(null),
+    thrust: Object.create(null),
     anchorX,
     anchorY
   };
 
-  for (const armMode of ARM_MODES) {
-    cache[armMode] = {
-      idle: Object.create(null),
-      thrust: Object.create(null)
-    };
+  for (const direction of SHIP_DIRECTIONS) {
+    const animationDef = state.animationMap.animations[`thrust${direction}`];
+    const frameCols = animationDef.cols;
+    cache.idle[direction] = renderShipFrame({
+      direction,
+      pilotFrame: frameCols[0],
+      flameOffset: null,
+      frameWidth,
+      frameHeight,
+      anchorX,
+      anchorY,
+      shipWidth,
+      shipHeight
+    });
 
-    for (const direction of SHIP_DIRECTIONS) {
-      const animationDef = state.animationMap.animations[`thrust${direction}`];
-      const frameCols = animationDef.cols;
-      cache[armMode].idle[direction] = renderShipFrame({
+    cache.thrust[direction] = frameCols.map((pilotFrame, index) => {
+      const flameOffset = Math.sin((index / frameCols.length) * Math.PI * 2) * 4;
+      return renderShipFrame({
         direction,
-        pilotFrame: frameCols[0],
-        flameOffset: null,
-        armMode,
-        armMotionPhase: 0,
+        pilotFrame,
+        flameOffset,
         frameWidth,
         frameHeight,
         anchorX,
@@ -1041,24 +1147,7 @@ function buildShipFrameCache() {
         shipWidth,
         shipHeight
       });
-
-      cache[armMode].thrust[direction] = frameCols.map((pilotFrame, index) => {
-        const flameOffset = Math.sin((index / frameCols.length) * Math.PI * 2) * 4;
-        return renderShipFrame({
-          direction,
-          pilotFrame,
-          flameOffset,
-          armMode,
-          armMotionPhase: (index / frameCols.length) * Math.PI * 2,
-          frameWidth,
-          frameHeight,
-          anchorX,
-          anchorY,
-          shipWidth,
-          shipHeight
-        });
-      });
-    }
+    });
   }
 
   return cache;
@@ -1068,8 +1157,6 @@ function renderShipFrame({
   direction,
   pilotFrame,
   flameOffset,
-  armMode,
-  armMotionPhase,
   frameWidth,
   frameHeight,
   anchorX,
@@ -1095,7 +1182,6 @@ function renderShipFrame({
   }
 
   frameCtx.drawImage(state.images.ship, -shipWidth / 2, -shipHeight / 2, shipWidth, shipHeight);
-  drawTentacleArm(frameCtx, shipWidth, shipHeight, armMode, armMotionPhase);
   drawPilotInCockpit(frameCtx, shipWidth, shipHeight, direction, pilotFrame);
   drawCanopyGlass(frameCtx, shipWidth, shipHeight);
   frameCtx.restore();
@@ -1108,12 +1194,11 @@ function renderShipFrame({
 }
 
 function getShipFrame() {
-  const armMode = getArmMode();
   const direction = angleToDirection(player.angle);
   if (!player.thrusting) {
-    return state.shipFrameCache[armMode].idle[direction];
+    return state.shipFrameCache.idle[direction];
   }
-  const frames = state.shipFrameCache[armMode].thrust[direction];
+  const frames = state.shipFrameCache.thrust[direction];
   const frameIndex = Math.floor(visualTimeMs / SHIP_FRAME_MS) % frames.length;
   return frames[frameIndex];
 }
@@ -1303,7 +1388,11 @@ function closeOverlay() {
   experimentWindow.classList.remove("is-active");
   closeExperimentFrame();
   overlayTitle.textContent = "Standby Window";
-  setStatus("Leave the box and re-enter it to reopen that experiment.");
+  if (activeZone) {
+    setStatus(describeExperimentStation(activeZone));
+  } else {
+    setStatus("Return to the field. Deliver objects, then press Enter on a ready station.");
+  }
   renderCaptureHud();
   invalidateActorLayer();
 }
@@ -1334,21 +1423,28 @@ function respawn() {
   activeZone = null;
   rearmZoneId = null;
   deathMessage = "Field integrity lost. Repositioning ship...";
+  for (const object of state.experimentObjects) {
+    if (!object.delivered) {
+      object.x = object.sourceX;
+      object.y = object.sourceY;
+    }
+  }
+  resetArmState(true);
   updateHullHud();
   updateFieldHud({ tier: "clear" });
-  setStatus("Ship reset. Cross an outlined zone to open its experiment view.");
+  setStatus("Ship reset. Deploy the arm with Space and deliver experiment objects.");
   renderCaptureHud();
   invalidateActorLayer();
 }
 
-function getInputVector() {
+function getShipInputVector() {
   if (overlayOpen) {
     return { x: 0, y: 0, mag: 0 };
   }
-  const up = keys.has("w") || keys.has("arrowup");
-  const down = keys.has("s") || keys.has("arrowdown");
-  const left = keys.has("a") || keys.has("arrowleft");
-  const right = keys.has("d") || keys.has("arrowright");
+  const up = keys.has("arrowup");
+  const down = keys.has("arrowdown");
+  const left = keys.has("arrowleft");
+  const right = keys.has("arrowright");
   let x = (right ? 1 : 0) - (left ? 1 : 0);
   let y = (down ? 1 : 0) - (up ? 1 : 0);
   const mag = Math.hypot(x, y);
@@ -1357,6 +1453,480 @@ function getInputVector() {
     y /= mag;
   }
   return { x, y, mag };
+}
+
+function getArmInputVector() {
+  if (overlayOpen || !arm.deployed || arm.extension < 0.08) {
+    return { x: 0, y: 0, mag: 0 };
+  }
+  const up = keys.has("w");
+  const down = keys.has("s");
+  const left = keys.has("a");
+  const right = keys.has("d");
+  let x = (right ? 1 : 0) - (left ? 1 : 0);
+  let y = (down ? 1 : 0) - (up ? 1 : 0);
+  const mag = Math.hypot(x, y);
+  if (mag > 0) {
+    x /= mag;
+    y /= mag;
+  }
+  return { x, y, mag };
+}
+
+function buildExperimentObjects() {
+  return EXPERIMENTS.flatMap((experiment) =>
+    experiment.requirements.map((requirement, index) => ({
+      id: `${experiment.id}::${requirement.key}`,
+      experimentId: experiment.id,
+      slotIndex: index,
+      kind: requirement.kind,
+      name: requirement.name,
+      formula: requirement.formula,
+      tint: requirement.tint || "#d8ecff",
+      sourceX: requirement.start.x * TILE_SIZE,
+      sourceY: requirement.start.y * TILE_SIZE,
+      x: requirement.start.x * TILE_SIZE,
+      y: requirement.start.y * TILE_SIZE,
+      delivered: false
+    }))
+  );
+}
+
+function getDeliveredCount(experiment) {
+  return state.experimentObjects.filter((object) => object.experimentId === experiment.id && object.delivered).length;
+}
+
+function isExperimentReady(experiment) {
+  return getDeliveredCount(experiment) === experiment.requirements.length;
+}
+
+function getFocusedExperiment() {
+  if (overlayOpen && activeZone) {
+    return activeZone;
+  }
+  const shipFocus = getZoneAtPoint(player.x, player.y);
+  if (shipFocus) {
+    return shipFocus;
+  }
+  if (arm.extension > 0.12) {
+    return getZoneAtPoint(arm.headWorldX, arm.headWorldY);
+  }
+  return null;
+}
+
+function describeExperimentStation(experiment) {
+  const delivered = getDeliveredCount(experiment);
+  if (isExperimentReady(experiment)) {
+    return `${experiment.title} ready. Press Enter to open the experiment view.`;
+  }
+
+  const nextObject = state.experimentObjects.find((object) => object.experimentId === experiment.id && !object.delivered);
+  if (nextObject) {
+    return `${experiment.title}: place ${nextObject.name} (${nextObject.formula}) on the station pad.`;
+  }
+
+  return `${experiment.title}: place the required objects on the station pad.`;
+}
+
+function tryStartExperimentFromField() {
+  if (overlayOpen || !player.alive || !activeZone) {
+    return;
+  }
+  if (!isExperimentReady(activeZone)) {
+    setStatus(describeExperimentStation(activeZone));
+    return;
+  }
+  openExperiment(activeZone);
+}
+
+function toggleArmDeployment() {
+  if (!assetsReady || overlayOpen || !player.alive) {
+    return;
+  }
+  arm.deployed = !arm.deployed;
+  if (!arm.deployed) {
+    setStatus("Arm retracting.");
+  } else {
+    setStatus("Arm deployed. Guide the claw with WASD.");
+  }
+  invalidateActorLayer();
+}
+
+function getArmMountWorld() {
+  const shipWidth = state.images.ship.width * SHIP_SCALE;
+  const shipHeight = state.images.ship.height * SHIP_SCALE;
+  return {
+    x: player.x + shipWidth * 0.24,
+    y: player.y + shipHeight * 0.06
+  };
+}
+
+function getArmRestLocal() {
+  return {
+    x: 12 + arm.extension * 30,
+    y: 2 - arm.extension * 3
+  };
+}
+
+function resetArmState(force = false) {
+  arm.deployed = false;
+  arm.extension = 0;
+  const rest = { x: 12, y: 2 };
+  arm.headLocalX = rest.x;
+  arm.headLocalY = rest.y;
+  arm.pathLocal = Array.from({ length: ARM_SEGMENT_COUNT * 2 }, () => ({ ...rest }));
+  const mount = assetsReady ? getArmMountWorld() : { x: spawnPoint.x, y: spawnPoint.y };
+  arm.headWorldX = mount.x + rest.x;
+  arm.headWorldY = mount.y + rest.y;
+  arm.aimAngle = 0;
+  if (force) {
+    arm.carryingId = null;
+  }
+}
+
+function updateArm(dtMs) {
+  const dt = dtMs / 1000;
+  const previousExtension = arm.extension;
+  const previousHeadX = arm.headLocalX;
+  const previousHeadY = arm.headLocalY;
+  const targetExtension = arm.deployed && !overlayOpen && player.alive ? 1 : 0;
+  arm.extension = approach(arm.extension, targetExtension, dt * ARM_EXTEND_SPEED);
+
+  const rest = getArmRestLocal();
+  const input = getArmInputVector();
+  if (arm.deployed && arm.extension > 0.1) {
+    arm.headLocalX += input.x * ARM_HEAD_SPEED * dt;
+    arm.headLocalY += input.y * ARM_HEAD_SPEED * dt;
+  } else {
+    arm.headLocalX = approach(arm.headLocalX, rest.x, dt * 220);
+    arm.headLocalY = approach(arm.headLocalY, rest.y, dt * 220);
+  }
+
+  const offsetX = arm.headLocalX - rest.x;
+  const offsetY = arm.headLocalY - rest.y;
+  const maxReach = ARM_MAX_REACH * (0.2 + arm.extension * 0.8);
+  const reach = Math.hypot(offsetX, offsetY);
+  if (reach > maxReach) {
+    const scale = maxReach / reach;
+    arm.headLocalX = rest.x + offsetX * scale;
+    arm.headLocalY = rest.y + offsetY * scale;
+  }
+
+  if (arm.extension < 0.02 && !arm.deployed) {
+    arm.headLocalX = rest.x;
+    arm.headLocalY = rest.y;
+  }
+
+  pushArmHistoryPoint({ x: arm.headLocalX, y: arm.headLocalY }, rest);
+
+  const mount = getArmMountWorld();
+  arm.headWorldX = mount.x + arm.headLocalX;
+  arm.headWorldY = mount.y + arm.headLocalY;
+  arm.aimAngle = Math.atan2(arm.headLocalY - rest.y, arm.headLocalX - rest.x);
+
+  if (arm.extension > 0.22) {
+    if (circleIntersectsAnyRockMask(arm.headWorldX, arm.headWorldY, ARM_HEAD_RADIUS)) {
+      failArm("Arm tip clipped a rock. Retraction triggered.");
+    } else {
+      const headField = sampleAnomalyInfluence(arm.headWorldX, arm.headWorldY);
+      if (headField.tier === "medium" || headField.tier === "lethal" || headField.tier === "core") {
+        failArm("Arm tip entered a dense anomaly field. Retraction triggered.");
+      }
+    }
+  }
+
+  if (arm.carryingId) {
+    const carried = getCarriedObject();
+    if (carried) {
+      carried.x = arm.headWorldX + Math.cos(arm.aimAngle || 0) * 12;
+      carried.y = arm.headWorldY + Math.sin(arm.aimAngle || 0) * 12;
+      deliverCarriedObjectIfPossible(carried);
+    } else {
+      arm.carryingId = null;
+    }
+  } else if (arm.deployed && arm.extension > 0.2) {
+    autoLatchNearestObject();
+  }
+
+  return (
+    Math.abs(previousExtension - arm.extension) > 0.0001 ||
+    Math.abs(previousHeadX - arm.headLocalX) > 0.001 ||
+    Math.abs(previousHeadY - arm.headLocalY) > 0.001
+  );
+}
+
+function pushArmHistoryPoint(point, rest) {
+  if (!arm.pathLocal.length) {
+    arm.pathLocal.push({ ...point });
+    return;
+  }
+
+  const head = arm.pathLocal[0];
+  const dx = point.x - head.x;
+  const dy = point.y - head.y;
+  const distance = Math.hypot(dx, dy);
+
+  if (distance < ARM_HISTORY_STEP * 0.55) {
+    arm.pathLocal[0] = { ...point };
+  } else {
+    const steps = Math.ceil(distance / ARM_HISTORY_STEP);
+    for (let step = steps; step >= 1; step--) {
+      const t = step / steps;
+      arm.pathLocal.unshift({
+        x: head.x + dx * t,
+        y: head.y + dy * t
+      });
+    }
+  }
+
+  arm.pathLocal[0] = { ...point };
+  const maxPoints = ARM_SEGMENT_COUNT * 14;
+  if (arm.pathLocal.length > maxPoints) {
+    arm.pathLocal.length = maxPoints;
+  }
+
+  const tail = arm.pathLocal[arm.pathLocal.length - 1];
+  if (Math.hypot(tail.x - rest.x, tail.y - rest.y) > ARM_HISTORY_STEP) {
+    arm.pathLocal.push({ ...rest });
+    arm.pathLocal.push({ x: 0, y: 0 });
+  }
+}
+
+function sampleArmTrailPoints() {
+  const mount = getArmMountWorld();
+  const localPoints = arm.pathLocal.length ? arm.pathLocal.slice() : [{ x: arm.headLocalX, y: arm.headLocalY }];
+  localPoints.push(getArmRestLocal(), { x: 0, y: 0 });
+
+  const samples = [localPoints[0]];
+  let accumulated = 0;
+  let targetDistance = ARM_SEGMENT_SPACING;
+
+  for (let index = 1; index < localPoints.length && samples.length < ARM_SEGMENT_COUNT + 1; index++) {
+    const prev = localPoints[index - 1];
+    const next = localPoints[index];
+    const segmentLength = Math.hypot(next.x - prev.x, next.y - prev.y);
+    if (segmentLength === 0) {
+      continue;
+    }
+
+    while (accumulated + segmentLength >= targetDistance && samples.length < ARM_SEGMENT_COUNT + 1) {
+      const t = (targetDistance - accumulated) / segmentLength;
+      samples.push({
+        x: prev.x + (next.x - prev.x) * t,
+        y: prev.y + (next.y - prev.y) * t
+      });
+      targetDistance += ARM_SEGMENT_SPACING;
+    }
+
+    accumulated += segmentLength;
+  }
+
+  while (samples.length < ARM_SEGMENT_COUNT + 1) {
+    samples.push({ x: 0, y: 0 });
+  }
+
+  return samples
+    .slice(0, ARM_SEGMENT_COUNT + 1)
+    .reverse()
+    .map((point) => ({ x: mount.x + point.x, y: mount.y + point.y }));
+}
+
+function autoLatchNearestObject() {
+  let bestObject = null;
+  let bestDistance = Infinity;
+
+  for (const object of state.experimentObjects) {
+    if (object.delivered) {
+      continue;
+    }
+    const dx = object.x - arm.headWorldX;
+    const dy = object.y - arm.headWorldY;
+    const distance = Math.hypot(dx, dy);
+    if (distance < ARM_LATCH_RADIUS && distance < bestDistance) {
+      bestDistance = distance;
+      bestObject = object;
+    }
+  }
+
+  if (!bestObject) {
+    return;
+  }
+
+  arm.carryingId = bestObject.id;
+  setStatus(`${bestObject.name} latched to the claw.`);
+}
+
+function deliverCarriedObjectIfPossible(object) {
+  const experiment = findExperimentByIdentifier(object.experimentId);
+  if (!experiment) {
+    return false;
+  }
+
+  const zone = experiment.zone;
+  const tileX = Math.floor(arm.headWorldX / TILE_SIZE);
+  const tileY = Math.floor(arm.headWorldY / TILE_SIZE);
+  if (tileX < zone.x || tileX >= zone.x + zone.w || tileY < zone.y || tileY >= zone.y + zone.h) {
+    return false;
+  }
+
+  const slot = getExperimentSlotPosition(experiment, object.slotIndex);
+  object.delivered = true;
+  object.x = slot.x;
+  object.y = slot.y;
+  arm.carryingId = null;
+  hudFocusExperimentId = experiment.id;
+  renderCaptureHud();
+  setStatus(`${object.name} placed on ${experiment.title}. ${getDeliveredCount(experiment)}/${experiment.requirements.length} ready.`);
+  return true;
+}
+
+function failArm(message) {
+  const carried = getCarriedObject();
+  if (carried) {
+    carried.x = carried.sourceX;
+    carried.y = carried.sourceY;
+  }
+  arm.carryingId = null;
+  arm.deployed = false;
+  setStatus(message);
+}
+
+function getCarriedObject() {
+  return arm.carryingId ? state.experimentObjects.find((object) => object.id === arm.carryingId) || null : null;
+}
+
+function getExperimentSlotPosition(experiment, slotIndex) {
+  const { x, y, w, h } = experiment.zone;
+  const count = experiment.requirements.length;
+  const centerX = (x + w / 2) * TILE_SIZE;
+  const baseY = (y + h) * TILE_SIZE - 18;
+  const spread = Math.max(0, (count - 1) * 18);
+  return {
+    x: centerX - spread / 2 + slotIndex * 18,
+    y: baseY
+  };
+}
+
+function drawExperimentObjects() {
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  for (const object of state.experimentObjects) {
+    drawExperimentObject(object);
+  }
+  ctx.restore();
+}
+
+function drawExperimentObject(object) {
+  const selected = activeZone?.id === object.experimentId;
+  const x = object.x;
+  const y = object.y;
+
+  if (object.kind === "ice") {
+    drawSpriteImage(state.images.experimentArt.iceCube, x, y, 22, 22);
+  } else if (object.kind === "steel") {
+    drawSpriteImage(state.images.experimentArt.steelWool, x, y, 26, 20);
+  } else if (object.kind === "steel-burn") {
+    drawSpriteImage(state.images.experimentArt.steelWoolBurnable, x, y, 26, 22);
+  } else if (object.kind === "tablet") {
+    drawSpriteImage(state.images.experimentArt.alkaTablet, x, y, 20, 16);
+  } else {
+    drawCanisterPickup(x, y, object);
+  }
+
+  ctx.fillStyle = object.delivered ? "rgba(185, 255, 205, 0.88)" : selected ? "rgba(255, 244, 184, 0.92)" : "rgba(14, 18, 24, 0.88)";
+  ctx.fillRect(Math.round(x - 24), Math.round(y + 15), 48, 16);
+  ctx.fillStyle = object.delivered ? "#133222" : "#f5f5f5";
+  ctx.font = "8px Georgia";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(object.formula, Math.round(x), Math.round(y + 23));
+}
+
+function drawSpriteImage(image, x, y, width, height) {
+  if (!image) {
+    return;
+  }
+  ctx.drawImage(image, Math.round(x - width / 2), Math.round(y - height / 2), width, height);
+}
+
+function drawCanisterPickup(x, y, object) {
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  ctx.fillStyle = "rgba(18, 28, 34, 0.92)";
+  ctx.fillRect(-13, -14, 26, 28);
+  ctx.strokeStyle = "rgba(208, 233, 242, 0.65)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-12.5, -13.5, 25, 27);
+  ctx.fillStyle = object.tint;
+  ctx.fillRect(-9, -8, 18, 11);
+  ctx.fillStyle = "#ecfaff";
+  ctx.font = "bold 8px Georgia";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(object.kind === "sugar" ? "C12" : object.name === "Water" ? "H2O" : "AQ", 0, 7);
+  ctx.restore();
+}
+
+function drawArm() {
+  if (!assetsReady || arm.extension <= 0.01) {
+    return;
+  }
+
+  const parts = state.images.armParts;
+  const points = sampleArmTrailPoints();
+  if (points.length < 2) {
+    return;
+  }
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+
+  const base = points[0];
+  const baseAngle = Math.atan2(points[1].y - base.y, points[1].x - base.x);
+  const mountWidth = parts.baseMount.width * 0.08;
+  const mountHeight = parts.baseMount.height * 0.08;
+  ctx.drawImage(parts.baseMount, base.x - mountWidth * 0.9, base.y - mountHeight * 0.52, mountWidth, mountHeight);
+  drawArmPart(parts.socketCup, base.x + 4, base.y + 1, baseAngle + Math.PI / 2, 0.08);
+
+  for (let index = 0; index < points.length - 1; index++) {
+    const from = points[index];
+    const to = points[index + 1];
+    const angle = Math.atan2(to.y - from.y, to.x - from.x);
+    const midX = (from.x + to.x) / 2;
+    const midY = (from.y + to.y) / 2;
+    drawArmPart(parts.connector, midX, midY, angle + Math.PI / 2, 0.065);
+    if (index < points.length - 2) {
+      const jointImage = index % 2 === 0 ? parts.jointPlain : parts.jointStriped;
+      drawArmPart(jointImage, to.x, to.y, angle, 0.072);
+    }
+  }
+
+  const head = points[points.length - 1];
+  const neck = points[points.length - 2];
+  const headAngle = Math.atan2(head.y - neck.y, head.x - neck.x);
+  const clawImage = arm.carryingId ? parts.clawClosed : parts.clawOpen;
+  drawArmPart(clawImage, head.x, head.y, headAngle, 0.074);
+  ctx.restore();
+}
+
+function drawArmPart(image, x, y, angle, scale) {
+  const width = image.width * scale;
+  const height = image.height * scale;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.drawImage(image, -width / 2, -height / 2, width, height);
+  ctx.restore();
+}
+
+function approach(current, target, delta) {
+  if (current < target) {
+    return Math.min(target, current + delta);
+  }
+  if (current > target) {
+    return Math.max(target, current - delta);
+  }
+  return target;
 }
 
 function createFilledGrid() {
@@ -1446,13 +2016,15 @@ function renderCaptureHud() {
     captureActiveTitle.textContent = activeZone.title;
     captureActiveCopy.textContent = experimentFrameReady
       ? "Temporary hook: run the live experiment, then record that result here."
-      : "Experiment window is loading. Capture arms as soon as the live view is ready.";
+      : isExperimentReady(activeZone)
+        ? "Experiment window is loading. Capture arms as soon as the live view is ready."
+        : "This station still needs its required objects before the experiment can start.";
   } else if (focusExperiment && focusRecord && focusRecord.count > 0) {
     captureActiveTitle.textContent = `${focusExperiment.title} log`;
     captureActiveCopy.textContent = "No live zone selected. The latest recorded evidence stays visible here until you arm another zone.";
   } else {
-    captureActiveTitle.textContent = "No active zone";
-    captureActiveCopy.textContent = "Cross a zone to arm capture, then use the temporary capture button after a run.";
+    captureActiveTitle.textContent = "No active station";
+    captureActiveCopy.textContent = "Focus a field station, deliver its objects, then run the experiment and capture the result.";
   }
 
   const displayRecord = activeZone ? activeRecord : focusRecord;
@@ -1619,7 +2191,7 @@ function sampleAnomalyInfluence(x, y) {
 
 function setExplorationStatus() {
   if (!activeZone && !overlayOpen) {
-    setStatus("Cross an outlined zone to open its experiment view.");
+    setStatus("Arrow keys fly the ship. Space deploys the arm. WASD moves the arm head.");
   }
 }
 

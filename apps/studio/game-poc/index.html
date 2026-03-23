@@ -10,8 +10,9 @@
     <main class="app-shell">
       <header class="top-bar">
         <h1>Ship Experiment Field</h1>
-        <p><strong>Move</strong> with arrow keys</p>
-        <p><strong>Use</strong> space to stop</p>
+        <p><strong>Ship</strong> arrow keys</p>
+        <p><strong>Arm</strong> space + WASD</p>
+        <p><strong>Enter</strong> begin ready experiment</p>
         <p id="hud-hull">Hull 100%</p>
         <p id="hud-field">Field clear</p>
       </header>
@@ -37,7 +38,7 @@
           </div>
           <div class="experiment-window__body">
             <div id="experiment-placeholder" class="experiment-placeholder">
-              Cross one of the outlined field zones to load that Lesson 1 experiment inside this window.
+              Deliver the required objects to a field station, then press Enter to load that Lesson 1 experiment inside this window.
             </div>
             <iframe
               id="experiment-frame"
@@ -53,7 +54,7 @@
                 <p class="eyebrow">Capture</p>
                 <h3 id="capture-active-title">No active zone</h3>
                 <p id="capture-active-copy" class="capture-copy">
-                  Cross a zone to arm capture, then use the temporary capture button after a run.
+                  Move onto a field station to focus it. Deliver its objects, start the live run, then capture the evidence.
                 </p>
               </div>
               <button id="capture-evidence" class="capture-button" type="button">Capture Evidence</button>

@@ -1,5 +1,6 @@
 (function() {
   var controller = null;
+  var customStageDisposer = null;
   var launchOptions = null;
   var embedBridge = {
     enabled: false,
@@ -85,7 +86,66 @@
   }
 
   function buildRawUrl(experiment) {
+    if (experiment.rawUrl) {
+      return experiment.rawUrl;
+    }
+
     return "/vendor/lab/dist/embeddable.html#" + experiment.interactiveUrl;
+  }
+
+  function loadScriptOnce(src) {
+    return new Promise(function(resolve, reject) {
+      var existing = document.querySelector("script[data-rainbow-script=\"" + src + "\"]");
+
+      function handleLoad() {
+        resolve();
+      }
+
+      function handleError() {
+        reject(new Error("Failed to load script: " + src));
+      }
+
+      if (existing) {
+        if (existing.getAttribute("data-loaded") === "true") {
+          resolve();
+          return;
+        }
+
+        existing.addEventListener("load", handleLoad, { once: true });
+        existing.addEventListener("error", handleError, { once: true });
+        return;
+      }
+
+      existing = document.createElement("script");
+      existing.src = src;
+      existing.async = false;
+      existing.setAttribute("data-rainbow-script", src);
+      existing.addEventListener("load", function() {
+        existing.setAttribute("data-loaded", "true");
+        resolve();
+      }, { once: true });
+      existing.addEventListener("error", handleError, { once: true });
+      document.body.appendChild(existing);
+    });
+  }
+
+  function disposeMountedStage() {
+    var interactiveContainer = document.getElementById("interactive-container");
+
+    if (typeof customStageDisposer === "function") {
+      try {
+        customStageDisposer();
+      } catch (error) {
+        console.warn("Rainbow custom stage dispose failed", error);
+      }
+    }
+
+    customStageDisposer = null;
+    controller = null;
+
+    if (interactiveContainer) {
+      interactiveContainer.innerHTML = "";
+    }
   }
 
   function createListItem(label, value, className) {
@@ -538,6 +598,64 @@
 
   function mountInteractive(experiment) {
     var interactiveContainer = document.getElementById("interactive-container");
+
+    disposeMountedStage();
+
+    if (experiment.renderMode === "custom") {
+      if (!interactiveContainer) {
+        text("interactive-stage-status", "Custom stage container was not available.");
+        return;
+      }
+
+      hostState.status.host = "Ready";
+      hostState.status.interactive = "Loading";
+      hostState.status.model = "Waiting for custom stage";
+      renderInstrumentPanel();
+      scheduleStateDispatch("customStageLoading");
+
+      text("interactive-stage-status", "Loading custom experiment stage...");
+      recordEvent("host.customStageRequested", {
+        experimentId: experiment.id,
+        script: experiment.customStageScript || ""
+      });
+
+      loadScriptOnce(experiment.customStageScript).then(function() {
+        var registry = window.RainbowCustomStages || {};
+        var stage = registry[experiment.customStageId || experiment.id];
+
+        if (!stage || typeof stage.mount !== "function") {
+          throw new Error("Custom stage was not registered for " + experiment.id);
+        }
+
+        customStageDisposer = stage.mount({
+          container: interactiveContainer,
+          experiment: experiment,
+          host: window.RainbowLabHost,
+          shellMode: hostState.shellMode
+        }) || null;
+
+        hostState.status.interactive = "Rendered";
+        hostState.status.model = "Custom stage";
+        renderInstrumentPanel();
+        text("interactive-stage-status", "Custom experiment stage loaded.");
+        recordEvent("customStage.rendered", {
+          experimentId: experiment.id
+        });
+        notifyParent("rainbow.labHost.interactiveRendered", {
+          title: experiment.title
+        });
+        scheduleStateDispatch("customStageRendered");
+      }).catch(function(error) {
+        hostState.status.interactive = "Failed";
+        hostState.status.model = "Custom stage error";
+        renderInstrumentPanel();
+        text("interactive-stage-status", error.message || "Custom stage failed to load.");
+        notifyParent("rainbow.labHost.error", {
+          message: error.message || "Custom stage failed to load."
+        });
+      });
+      return;
+    }
 
     if (!interactiveContainer || !window.Lab || !window.Lab.InteractivesController) {
       text("interactive-stage-status", "Lab runtime was not available.");
