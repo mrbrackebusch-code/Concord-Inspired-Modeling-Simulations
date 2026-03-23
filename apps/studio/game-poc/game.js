@@ -60,6 +60,15 @@ const EXPERIMENTS = [
   }
 ];
 
+const CAPTURE_PRESETS = {
+  "unit-01/lesson-01/mass-change/ice-to-water": { before: 84.2, after: 84.2 },
+  "unit-01/lesson-01/mass-change/precipitate": { before: 120.0, after: 120.0 },
+  "unit-01/lesson-01/mass-change/steel-wool-pulled-apart": { before: 42.6, after: 42.6 },
+  "unit-01/lesson-01/mass-change/sugar-dissolves": { before: 93.4, after: 93.4 },
+  "unit-01/lesson-01/mass-change/steel-wool-burns": { before: 18.2, after: 19.1 },
+  "unit-01/lesson-01/mass-change/alka-seltzer": { before: 102.5, after: 100.8 }
+};
+
 const PLATFORM_RECTS = [
   { x: 1, y: 1, w: 5, h: 4 },
   { x: 10, y: 1, w: 6, h: 4 },
@@ -81,6 +90,14 @@ const experimentWindow = document.getElementById("experiment-window");
 const overlayTitle = document.getElementById("experiment-title");
 const overlayFrame = document.getElementById("experiment-frame");
 const closeOverlayButton = document.getElementById("close-overlay");
+const captureButton = document.getElementById("capture-evidence");
+const captureActiveTitle = document.getElementById("capture-active-title");
+const captureActiveCopy = document.getElementById("capture-active-copy");
+const captureBefore = document.getElementById("capture-before");
+const captureAfter = document.getElementById("capture-after");
+const captureDelta = document.getElementById("capture-delta");
+const captureCount = document.getElementById("capture-count");
+const zoneCaptureList = document.getElementById("zone-capture-list");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
 
 const keys = new Set();
@@ -89,11 +106,13 @@ const spawnPoint = { x: 14 * TILE_SIZE + TILE_SIZE / 2, y: 9 * TILE_SIZE + TILE_
 
 let assetsReady = false;
 let overlayOpen = false;
+let experimentFrameReady = false;
 let rearmZoneId = null;
 let activeZone = null;
 let animationTime = 0;
 let deathTimerMs = 0;
 let stars = [];
+let hudFocusExperimentId = null;
 
 const player = {
   x: spawnPoint.x,
@@ -113,7 +132,8 @@ const state = {
     ship: null
   },
   animationMap: null,
-  platformLayer: null
+  platformLayer: null,
+  captures: createCaptureState()
 };
 
 const loadState = Promise.all([
@@ -135,6 +155,7 @@ const loadState = Promise.all([
   state.platformLayer = buildPlatformLayer();
   assetsReady = true;
   statusPill.textContent = "Cross an outlined zone to open its experiment view.";
+  renderCaptureHud();
 
   if (startupExperimentId) {
     const initialExperiment = findExperimentByIdentifier(startupExperimentId);
@@ -142,6 +163,8 @@ const loadState = Promise.all([
       openExperiment(initialExperiment);
       rearmZoneId = initialExperiment.id;
       activeZone = initialExperiment;
+      hudFocusExperimentId = initialExperiment.id;
+      renderCaptureHud();
     }
   }
 });
@@ -161,9 +184,12 @@ document.addEventListener("keyup", (event) => {
 });
 
 closeOverlayButton.addEventListener("click", closeOverlay);
+captureButton.addEventListener("click", captureEvidence);
 overlayFrame.addEventListener("load", () => {
   if (overlayOpen) {
+    experimentFrameReady = true;
     statusPill.textContent = `${overlayTitle.textContent} ready in the experiment window.`;
+    renderCaptureHud();
   }
 });
 
@@ -244,7 +270,17 @@ function update(dtMs) {
     return;
   }
 
-  activeZone = getZoneAtPoint(player.x, player.y);
+  const nextZone = getZoneAtPoint(player.x, player.y);
+  if ((nextZone?.id || null) !== (activeZone?.id || null)) {
+    activeZone = nextZone;
+    if (activeZone) {
+      hudFocusExperimentId = activeZone.id;
+    }
+    renderCaptureHud();
+  } else {
+    activeZone = nextZone;
+  }
+
   if (!activeZone) {
     rearmZoneId = null;
     statusPill.textContent = "Cross an outlined zone to open its experiment view.";
@@ -501,14 +537,18 @@ function drawDeathOverlay() {
 
 function openExperiment(experiment) {
   overlayOpen = true;
+  experimentFrameReady = false;
+  hudFocusExperimentId = experiment.id;
   experimentWindow.classList.add("is-active");
   overlayTitle.textContent = experiment.title;
   statusPill.textContent = `Loading ${experiment.title} into the experiment window...`;
   const url = `/vendor/lab/dist/embeddable.html#${experiment.interactiveUrl}`;
   overlayFrame.src = url;
+  renderCaptureHud();
 }
 
 function closeExperimentFrame() {
+  experimentFrameReady = false;
   overlayFrame.src = "about:blank";
 }
 
@@ -518,6 +558,7 @@ function closeOverlay() {
   closeExperimentFrame();
   overlayTitle.textContent = "Standby Window";
   statusPill.textContent = "Leave the box and re-enter it to reopen that experiment.";
+  renderCaptureHud();
 }
 
 function killPlayer() {
@@ -540,6 +581,7 @@ function respawn() {
   activeZone = null;
   rearmZoneId = null;
   statusPill.textContent = "Ship reset. Cross an outlined zone to open its experiment view.";
+  renderCaptureHud();
 }
 
 function getInputVector() {
@@ -580,6 +622,118 @@ function getZoneAtPoint(x, y) {
 
 function findExperimentByIdentifier(identifier) {
   return EXPERIMENTS.find((experiment) => experiment.id === identifier || experiment.id.endsWith(`/${identifier}`)) || null;
+}
+
+function createCaptureState() {
+  return Object.fromEntries(
+    EXPERIMENTS.map((experiment) => [
+      experiment.id,
+      {
+        count: 0,
+        before: null,
+        after: null,
+        delta: null,
+        lastCapturedAt: null
+      }
+    ])
+  );
+}
+
+function captureEvidence() {
+  if (!activeZone || !overlayOpen || !experimentFrameReady || !player.alive) {
+    return;
+  }
+
+  const preset = CAPTURE_PRESETS[activeZone.id];
+  const record = state.captures[activeZone.id];
+  record.count += 1;
+  record.before = preset.before;
+  record.after = preset.after;
+  record.delta = roundToTwo(preset.after - preset.before);
+  record.lastCapturedAt = Date.now();
+  hudFocusExperimentId = activeZone.id;
+
+  statusPill.textContent = `${activeZone.title} evidence captured into the side log.`;
+  renderCaptureHud();
+}
+
+function renderCaptureHud() {
+  const focusExperiment = getHudFocusExperiment();
+  const focusRecord = focusExperiment ? state.captures[focusExperiment.id] : null;
+  const activeRecord = activeZone ? state.captures[activeZone.id] : null;
+  const canCapture = Boolean(activeZone && overlayOpen && experimentFrameReady && player.alive);
+
+  captureButton.disabled = !canCapture;
+  captureButton.textContent = canCapture ? `Capture ${activeZone.label}` : "Capture Evidence";
+
+  if (activeZone) {
+    captureActiveTitle.textContent = activeZone.title;
+    captureActiveCopy.textContent = experimentFrameReady
+      ? "Temporary hook: run the live experiment, then record that result here."
+      : "Experiment window is loading. Capture arms as soon as the live view is ready.";
+  } else if (focusExperiment && focusRecord && focusRecord.count > 0) {
+    captureActiveTitle.textContent = `${focusExperiment.title} log`;
+    captureActiveCopy.textContent = "No live zone selected. The latest recorded evidence stays visible here until you arm another zone.";
+  } else {
+    captureActiveTitle.textContent = "No active zone";
+    captureActiveCopy.textContent = "Cross a zone to arm capture, then use the temporary capture button after a run.";
+  }
+
+  const displayRecord = activeZone ? activeRecord : focusRecord;
+  if (displayRecord && displayRecord.count > 0) {
+    captureBefore.textContent = formatMass(displayRecord.before);
+    captureAfter.textContent = formatMass(displayRecord.after);
+    captureDelta.textContent = formatSignedMass(displayRecord.delta);
+    captureCount.textContent = String(displayRecord.count);
+  } else {
+    captureBefore.textContent = "--";
+    captureAfter.textContent = "--";
+    captureDelta.textContent = "--";
+    captureCount.textContent = "0";
+  }
+
+  zoneCaptureList.innerHTML = EXPERIMENTS.map((experiment) => {
+    const record = state.captures[experiment.id];
+    const isActive = activeZone && activeZone.id === experiment.id;
+    const cardClasses = [
+      "zone-capture-card",
+      isActive ? "is-active" : "",
+      record.count > 0 ? "is-captured" : ""
+    ].filter(Boolean).join(" ");
+
+    let stateCopy = "Awaiting first capture.";
+    if (isActive && canCapture) {
+      stateCopy = "Window live. Capture ready.";
+    } else if (isActive && overlayOpen && !experimentFrameReady) {
+      stateCopy = "Window loading.";
+    } else if (record.count > 0) {
+      stateCopy = "Recorded in side log.";
+    }
+
+    return `
+      <article class="${cardClasses}">
+        <div class="zone-capture-card__top">
+          <div>
+            <div class="zone-capture-card__label">${experiment.label}</div>
+            <strong>${experiment.title}</strong>
+          </div>
+          <strong>${record.count}</strong>
+        </div>
+        <p class="zone-capture-card__state">${stateCopy}</p>
+        <div class="zone-capture-card__stats">
+          <span>Captures <strong>${record.count}</strong></span>
+          <span>Delta <strong>${record.count > 0 ? formatSignedMass(record.delta) : "--"}</strong></span>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+function getHudFocusExperiment() {
+  if (activeZone) {
+    return activeZone;
+  }
+  return hudFocusExperimentId ? findExperimentByIdentifier(hudFocusExperimentId) : null;
 }
 
 function isSafePoint(x, y) {
@@ -636,6 +790,19 @@ function normalizeAngle(angle) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function roundToTwo(value) {
+  return Math.round(value * 100) / 100;
+}
+
+function formatMass(value) {
+  return `${value.toFixed(2)} g`;
+}
+
+function formatSignedMass(value) {
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${value.toFixed(2)} g`;
 }
 
 function loadImage(src) {

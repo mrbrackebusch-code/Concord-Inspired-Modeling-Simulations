@@ -25,18 +25,6 @@
               <p class="controls"><strong>Brake:</strong> <kbd>Space</kbd></p>
             </div>
           </div>
-
-          <div class="zone-bar">
-            <h2>Experiment Zones</h2>
-            <ol class="zone-list">
-              <li><span>ICE</span><small>Ice to water</small></li>
-              <li><span>PRECIP</span><small>Precipitate</small></li>
-              <li><span>STEEL PULL</span><small>Steel wool pulled apart</small></li>
-              <li><span>SUGAR</span><small>Sugar dissolves</small></li>
-              <li><span>STEEL BURN</span><small>Steel wool burns</small></li>
-              <li><span>ALKA</span><small>Alka-Seltzer</small></li>
-            </ol>
-          </div>
         </section>
 
         <section class="canvas-frame">
@@ -65,6 +53,42 @@
             referrerpolicy="no-referrer"
           ></iframe>
         </div>
+        <section class="experiment-hud">
+          <div class="capture-toolbar">
+            <div class="capture-toolbar__copy">
+              <p class="eyebrow">Evidence Capture</p>
+              <h3 id="capture-active-title">No active zone</h3>
+              <p id="capture-active-copy" class="capture-copy">
+                Cross a zone to arm capture, then use the temporary capture button after a run.
+              </p>
+            </div>
+            <button id="capture-evidence" class="capture-button" type="button">Capture Evidence</button>
+          </div>
+
+          <div class="capture-readouts">
+            <article class="readout-card">
+              <span>Before</span>
+              <strong id="capture-before">--</strong>
+            </article>
+            <article class="readout-card">
+              <span>After</span>
+              <strong id="capture-after">--</strong>
+            </article>
+            <article class="readout-card">
+              <span>Delta</span>
+              <strong id="capture-delta">--</strong>
+            </article>
+            <article class="readout-card">
+              <span>Captures</span>
+              <strong id="capture-count">0</strong>
+            </article>
+          </div>
+
+          <div class="zone-hud">
+            <p class="eyebrow">Experiment Zones</p>
+            <div id="zone-capture-list" class="zone-capture-list"></div>
+          </div>
+        </section>
       </aside>
     </main>
 
