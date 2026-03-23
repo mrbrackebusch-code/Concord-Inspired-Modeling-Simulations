@@ -3,6 +3,17 @@ const GRID_COLS = 28;
 const GRID_ROWS = 18;
 const CANVAS_WIDTH = GRID_COLS * TILE_SIZE;
 const CANVAS_HEIGHT = GRID_ROWS * TILE_SIZE;
+const SHOP_PLATFORM_TEMPLATE_SIZE = 9;
+const SHOP_PLATFORM_CENTER_VARIANTS = [
+  { row: 2, col: 5 },
+  { row: 2, col: 6 },
+  { row: 3, col: 5 },
+  { row: 3, col: 6 }
+];
+const SHOP_PLATFORM_TOP_EDGE_COLS = [1, 2, 3, 4, 5, 6, 7];
+const SHOP_PLATFORM_BOTTOM_EDGE_COLS = [1, 2, 3, 4, 5, 6, 7];
+const SHOP_PLATFORM_LEFT_EDGE_ROWS = [1, 2, 3, 4, 5, 6, 7];
+const SHOP_PLATFORM_RIGHT_EDGE_ROWS = [1, 2, 3, 4, 5, 6, 7];
 
 const EXPERIMENTS = [
   {
@@ -60,10 +71,11 @@ const PLATFORM_RECTS = [
 const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("game-canvas"));
 const ctx = canvas.getContext("2d");
 const statusPill = document.getElementById("status-pill");
-const overlay = document.getElementById("experiment-overlay");
+const experimentWindow = document.getElementById("experiment-window");
 const overlayTitle = document.getElementById("experiment-title");
 const overlayFrame = document.getElementById("experiment-frame");
 const closeOverlayButton = document.getElementById("close-overlay");
+const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
 
 const keys = new Set();
 const platformGrid = createPlatformGrid();
@@ -94,8 +106,7 @@ const state = {
     pilotSheet: null,
     ship: null
   },
-  animationMap: null,
-  platformCenterFrame: null
+  animationMap: null
 };
 
 const loadState = Promise.all([
@@ -113,10 +124,18 @@ const loadState = Promise.all([
   state.images.pilotSheet = pilotSheet;
   state.images.ship = ship;
   state.animationMap = animationMap;
-  state.platformCenterFrame = { row: 2, col: 5 };
   stars = buildStarfield();
   assetsReady = true;
   statusPill.textContent = "Cross an outlined zone to open its experiment view.";
+
+  if (startupExperimentId) {
+    const initialExperiment = findExperimentByIdentifier(startupExperimentId);
+    if (initialExperiment) {
+      openExperiment(initialExperiment);
+      rearmZoneId = initialExperiment.id;
+      activeZone = initialExperiment;
+    }
+  }
 });
 
 document.addEventListener("keydown", (event) => {
@@ -135,12 +154,6 @@ document.addEventListener("keyup", (event) => {
 
 closeOverlayButton.addEventListener("click", closeOverlay);
 
-overlay?.addEventListener("click", (event) => {
-  if (event.target === overlay || event.target === overlay.querySelector(".experiment-overlay__backdrop")) {
-    closeOverlay();
-  }
-});
-
 let previousTime = performance.now();
 requestAnimationFrame(frame);
 
@@ -152,7 +165,7 @@ function frame(now) {
     if (!overlayOpen) {
       update(dtMs);
     }
-    render(dtMs);
+    render();
   } else {
     renderLoading();
   }
@@ -235,12 +248,12 @@ function update(dtMs) {
   rearmZoneId = activeZone.id;
 }
 
-function render(dtMs) {
+function render() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBackground(nowCycle(animationTime));
   drawPlatforms();
   drawExperimentZones();
-  drawPlayer(dtMs);
+  drawPlayer();
 
   if (!player.alive) {
     drawDeathOverlay();
@@ -288,16 +301,17 @@ function drawBackground(cycle) {
 
 function drawPlatforms() {
   const sheet = state.images.platformSheet;
-  const frame = state.platformCenterFrame;
-  const frameSize = sheet.width / 9;
-  const sx = frame.col * frameSize;
-  const sy = frame.row * frameSize;
+  const frameSize = sheet.width / SHOP_PLATFORM_TEMPLATE_SIZE;
 
   for (let row = 0; row < GRID_ROWS; row++) {
     for (let col = 0; col < GRID_COLS; col++) {
       if (!platformGrid[row][col]) continue;
+
+      const frame = resolvePlatformFrameRef(row, col);
       const px = col * TILE_SIZE;
       const py = row * TILE_SIZE;
+      const sx = frame.col * frameSize;
+      const sy = frame.row * frameSize;
 
       ctx.save();
       ctx.shadowColor = "rgba(0, 0, 0, 0.22)";
@@ -305,24 +319,29 @@ function drawPlatforms() {
       ctx.shadowOffsetY = 3;
       ctx.drawImage(sheet, sx, sy, frameSize, frameSize, px, py, TILE_SIZE, TILE_SIZE);
       ctx.restore();
-
-      const north = row > 0 && platformGrid[row - 1][col];
-      const south = row < GRID_ROWS - 1 && platformGrid[row + 1][col];
-      const west = col > 0 && platformGrid[row][col - 1];
-      const east = col < GRID_COLS - 1 && platformGrid[row][col + 1];
-
-      ctx.strokeStyle = "rgba(190, 206, 220, 0.1)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(px + 0.5, py + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
-
-      ctx.strokeStyle = "rgba(18, 23, 31, 0.5)";
-      ctx.lineWidth = 2;
-      if (!north) drawLine(px, py, px + TILE_SIZE, py);
-      if (!south) drawLine(px, py + TILE_SIZE, px + TILE_SIZE, py + TILE_SIZE);
-      if (!west) drawLine(px, py, px, py + TILE_SIZE);
-      if (!east) drawLine(px + TILE_SIZE, py, px + TILE_SIZE, py + TILE_SIZE);
     }
   }
+}
+
+function resolvePlatformFrameRef(row, col) {
+  const north = row > 0 && platformGrid[row - 1][col];
+  const south = row < GRID_ROWS - 1 && platformGrid[row + 1][col];
+  const west = col > 0 && platformGrid[row][col - 1];
+  const east = col < GRID_COLS - 1 && platformGrid[row][col + 1];
+
+  if (!north && !west) return { row: 0, col: 0 };
+  if (!north && !east) return { row: 0, col: 8 };
+  if (!south && !west) return { row: 8, col: 0 };
+  if (!south && !east) return { row: 8, col: 8 };
+  if (!north) return { row: 0, col: pickSequenceValue(SHOP_PLATFORM_TOP_EDGE_COLS, col) };
+  if (!south) return { row: 8, col: pickSequenceValue(SHOP_PLATFORM_BOTTOM_EDGE_COLS, col) };
+  if (!west) return { row: pickSequenceValue(SHOP_PLATFORM_LEFT_EDGE_ROWS, row), col: 0 };
+  if (!east) return { row: pickSequenceValue(SHOP_PLATFORM_RIGHT_EDGE_ROWS, row), col: 8 };
+  return SHOP_PLATFORM_CENTER_VARIANTS[((row & 1) << 1) | (col & 1)];
+}
+
+function pickSequenceValue(sequence, seed) {
+  return sequence[Math.abs(seed) % sequence.length];
 }
 
 function drawExperimentZones() {
@@ -361,7 +380,6 @@ function drawPlayer() {
 
   ctx.save();
   ctx.translate(player.x, player.y);
-  ctx.rotate(player.angle);
 
   ctx.fillStyle = "rgba(10, 15, 22, 0.35)";
   ctx.beginPath();
@@ -370,17 +388,7 @@ function drawPlayer() {
 
   const thrusterAlpha = clamp((speed - 20) / 120, 0, 0.7);
   if (thrusterAlpha > 0) {
-    const thruster = ctx.createLinearGradient(0, shipHeight * 0.15, 0, shipHeight * 0.52);
-    thruster.addColorStop(0, `rgba(255, 252, 210, ${thrusterAlpha})`);
-    thruster.addColorStop(0.35, `rgba(255, 179, 61, ${thrusterAlpha * 0.95})`);
-    thruster.addColorStop(1, "rgba(255, 120, 10, 0)");
-    ctx.fillStyle = thruster;
-    ctx.beginPath();
-    ctx.moveTo(-shipWidth * 0.08, shipHeight * 0.14);
-    ctx.lineTo(shipWidth * 0.08, shipHeight * 0.14);
-    ctx.lineTo(0, shipHeight * 0.54 + Math.sin(animationTime * 0.03) * 4);
-    ctx.closePath();
-    ctx.fill();
+    drawDirectionalThruster(shipWidth, shipHeight, thrusterAlpha);
   }
 
   ctx.drawImage(shipImage, -shipWidth / 2, -shipHeight / 2, shipWidth, shipHeight);
@@ -390,11 +398,30 @@ function drawPlayer() {
   ctx.restore();
 }
 
+function drawDirectionalThruster(shipWidth, shipHeight, thrusterAlpha) {
+  ctx.save();
+  ctx.rotate(player.angle);
+
+  const thruster = ctx.createLinearGradient(0, shipHeight * 0.12, 0, shipHeight * 0.58);
+  thruster.addColorStop(0, `rgba(255, 252, 210, ${thrusterAlpha})`);
+  thruster.addColorStop(0.35, `rgba(255, 179, 61, ${thrusterAlpha * 0.95})`);
+  thruster.addColorStop(1, "rgba(255, 120, 10, 0)");
+  ctx.fillStyle = thruster;
+  ctx.beginPath();
+  ctx.moveTo(-shipWidth * 0.08, shipHeight * 0.14);
+  ctx.lineTo(shipWidth * 0.08, shipHeight * 0.14);
+  ctx.lineTo(0, shipHeight * 0.54 + Math.sin(animationTime * 0.03) * 4);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
 function drawPilotInCockpit(shipWidth, shipHeight) {
   const pilot = state.images.pilotSheet;
   const animationMap = state.animationMap;
-  const key = "thrustNorth";
-  const animationDef = animationMap.animations[key];
+  const direction = angleToDirection(player.angle);
+  const animationDef = animationMap.animations[`thrust${direction}`];
   const frames = animationDef.cols;
   const frameIndex = frames[Math.floor(animationTime / 90) % frames.length];
   const frameSize = animationMap.frameSize[0];
@@ -451,7 +478,7 @@ function drawDeathOverlay() {
 
 function openExperiment(experiment) {
   overlayOpen = true;
-  overlay.hidden = false;
+  experimentWindow.classList.add("is-active");
   overlayTitle.textContent = experiment.title;
   const url = `../experiment-window/index.html?experiment=${encodeURIComponent(experiment.id)}&mode=embed&parentOrigin=${encodeURIComponent(window.location.origin)}`;
   overlayFrame.src = url;
@@ -463,8 +490,9 @@ function closeExperimentFrame() {
 
 function closeOverlay() {
   overlayOpen = false;
-  overlay.hidden = true;
+  experimentWindow.classList.remove("is-active");
   closeExperimentFrame();
+  overlayTitle.textContent = "Standby Window";
   statusPill.textContent = "Leave the box and re-enter it to reopen that experiment.";
 }
 
@@ -526,6 +554,10 @@ function getZoneAtPoint(x, y) {
   }) || null;
 }
 
+function findExperimentByIdentifier(identifier) {
+  return EXPERIMENTS.find((experiment) => experiment.id === identifier || experiment.id.endsWith(`/${identifier}`)) || null;
+}
+
 function isSafePoint(x, y) {
   const tileX = Math.floor(x / TILE_SIZE);
   const tileY = Math.floor(y / TILE_SIZE);
@@ -533,6 +565,15 @@ function isSafePoint(x, y) {
     return false;
   }
   return platformGrid[tileY][tileX];
+}
+
+function angleToDirection(angle) {
+  const normalized = normalizeAngle(angle);
+  const quarter = Math.PI / 4;
+  if (normalized >= -quarter && normalized < quarter) return "North";
+  if (normalized >= quarter && normalized < quarter * 3) return "East";
+  if (normalized >= -quarter * 3 && normalized < -quarter) return "West";
+  return "South";
 }
 
 function buildStarfield() {
@@ -551,13 +592,6 @@ function buildStarfield() {
 
 function nowCycle(ms) {
   return ms || performance.now();
-}
-
-function drawLine(x1, y1, x2, y2) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
 }
 
 function easeAngle(current, target, amount) {

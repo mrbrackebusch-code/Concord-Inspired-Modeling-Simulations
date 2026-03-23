@@ -22,6 +22,27 @@
       <section class="canvas-frame">
         <canvas id="game-canvas" width="896" height="576" aria-label="Ship experiment proof of concept"></canvas>
         <div id="status-pill" class="status-pill">Loading assets...</div>
+        <section id="experiment-window" class="experiment-window" aria-live="polite">
+          <div class="experiment-window__header">
+            <div>
+              <p class="eyebrow">Experiment View</p>
+              <h2 id="experiment-title">Standby Window</h2>
+            </div>
+            <button id="close-overlay" class="close-button" type="button">Collapse Window</button>
+          </div>
+          <div class="experiment-window__body">
+            <div id="experiment-placeholder" class="experiment-placeholder">
+              Cross one of the outlined platform zones to load that Lesson 1 experiment inside this window.
+            </div>
+            <iframe
+              id="experiment-frame"
+              class="experiment-frame"
+              title="Experiment view"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            ></iframe>
+          </div>
+        </section>
       </section>
 
       <section class="hud-card hud-card-right">
@@ -36,26 +57,6 @@
         </ol>
       </section>
     </main>
-
-    <section id="experiment-overlay" class="experiment-overlay" hidden>
-      <div class="experiment-overlay__backdrop"></div>
-      <div class="experiment-overlay__panel" role="dialog" aria-modal="true" aria-labelledby="experiment-title">
-        <div class="experiment-overlay__header">
-          <div>
-            <p class="eyebrow">Experiment View</p>
-            <h2 id="experiment-title">Experiment</h2>
-          </div>
-          <button id="close-overlay" class="close-button" type="button">Return To Map</button>
-        </div>
-        <iframe
-          id="experiment-frame"
-          class="experiment-frame"
-          title="Experiment view"
-          loading="lazy"
-          referrerpolicy="no-referrer"
-        ></iframe>
-      </div>
-    </section>
 
     <script type="module" src="game.js"></script>
   </body>

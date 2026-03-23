@@ -38,7 +38,7 @@ body {
 
 .hud-card,
 .canvas-frame,
-.experiment-overlay__panel {
+.experiment-window {
   border: 1px solid var(--panel-line);
   border-radius: 24px;
   background: var(--panel);
@@ -120,6 +120,8 @@ kbd {
 .canvas-frame {
   position: relative;
   padding: 1rem;
+  display: grid;
+  gap: 0.9rem;
 }
 
 #game-canvas {
@@ -134,10 +136,7 @@ kbd {
 }
 
 .status-pill {
-  position: absolute;
-  left: 1.8rem;
-  bottom: 1.8rem;
-  max-width: calc(100% - 3.6rem);
+  max-width: 100%;
   padding: 0.5rem 0.8rem;
   border: 1px solid rgba(109, 227, 255, 0.26);
   border-radius: 999px;
@@ -147,39 +146,36 @@ kbd {
   line-height: 1.25;
 }
 
-.experiment-overlay[hidden] {
-  display: none;
-}
-
-.experiment-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: grid;
-  place-items: center;
-}
-
-.experiment-overlay__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(3, 8, 14, 0.78);
-}
-
-.experiment-overlay__panel {
-  position: relative;
-  width: min(1240px, calc(100vw - 2rem));
-  height: min(860px, calc(100vh - 2rem));
+.experiment-window {
   padding: 1rem;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 0.9rem;
+  min-height: 240px;
+  transition:
+    min-height 260ms ease,
+    border-color 260ms ease,
+    box-shadow 260ms ease,
+    transform 260ms ease;
 }
 
-.experiment-overlay__header {
+.experiment-window.is-active {
+  min-height: min(680px, 66vh);
+  border-color: rgba(109, 227, 255, 0.42);
+  box-shadow: 0 34px 96px rgba(0, 0, 0, 0.34);
+  transform: translateY(-2px);
+}
+
+.experiment-window__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.experiment-window__body {
+  position: relative;
+  min-height: 160px;
 }
 
 .close-button {
@@ -196,12 +192,39 @@ kbd {
   border-color: rgba(109, 227, 255, 0.6);
 }
 
+.experiment-placeholder,
 .experiment-frame {
   width: 100%;
   height: 100%;
   border: 1px solid rgba(109, 227, 255, 0.2);
   border-radius: 18px;
+}
+
+.experiment-placeholder {
+  display: grid;
+  place-items: center;
+  min-height: 160px;
+  padding: 1.2rem;
+  background:
+    radial-gradient(circle at top, rgba(109, 227, 255, 0.1), transparent 55%),
+    rgba(6, 16, 26, 0.92);
+  color: var(--muted);
+  line-height: 1.55;
+  text-align: center;
+}
+
+.experiment-frame {
+  display: none;
   background: #fff;
+}
+
+.experiment-window.is-active .experiment-placeholder {
+  display: none;
+}
+
+.experiment-window.is-active .experiment-frame {
+  display: block;
+  min-height: min(560px, 56vh);
 }
 
 @media (max-width: 1280px) {
@@ -218,10 +241,5 @@ kbd {
 
   .canvas-frame {
     width: min(928px, 100%);
-  }
-
-  .status-pill {
-    position: static;
-    margin-top: 0.85rem;
   }
 }
