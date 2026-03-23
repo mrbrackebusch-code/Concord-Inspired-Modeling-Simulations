@@ -8,54 +8,64 @@
   </head>
   <body>
     <main class="game-shell">
-      <section class="hud-card hud-card-left">
-        <p class="eyebrow">Game Proof Of Concept</p>
-        <h1>Ship Experiment Platforms</h1>
-        <p class="lede">
-          Drive the ship across the gray platforms. Falling into the void resets the run.
-          Crossing an outlined zone opens one of the six Lesson 1 experiment views.
-        </p>
-        <p class="controls"><strong>Move:</strong> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</p>
-        <p class="controls"><strong>Brake:</strong> <kbd>Space</kbd></p>
-      </section>
+      <section class="play-column">
+        <section class="command-bar">
+          <div class="command-bar__main">
+            <div class="command-copy">
+              <p class="eyebrow">Game Proof Of Concept</p>
+              <h1>Ship Experiment Platforms</h1>
+              <p class="lede">
+                Drive the ship across the gray platforms. Falling into the void resets the run.
+                Crossing an outlined zone opens one of the six Lesson 1 experiment views.
+              </p>
+            </div>
 
-      <section class="canvas-frame">
-        <canvas id="game-canvas" width="896" height="576" aria-label="Ship experiment proof of concept"></canvas>
-        <div id="status-pill" class="status-pill">Loading assets...</div>
-        <section id="experiment-window" class="experiment-window" aria-live="polite">
-          <div class="experiment-window__header">
-            <div>
-              <p class="eyebrow">Experiment View</p>
-              <h2 id="experiment-title">Standby Window</h2>
+            <div class="command-rules">
+              <p class="controls"><strong>Move:</strong> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</p>
+              <p class="controls"><strong>Brake:</strong> <kbd>Space</kbd></p>
             </div>
-            <button id="close-overlay" class="close-button" type="button">Collapse Window</button>
           </div>
-          <div class="experiment-window__body">
-            <div id="experiment-placeholder" class="experiment-placeholder">
-              Cross one of the outlined platform zones to load that Lesson 1 experiment inside this window.
-            </div>
-            <iframe
-              id="experiment-frame"
-              class="experiment-frame"
-              title="Experiment view"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-            ></iframe>
+
+          <div class="zone-bar">
+            <h2>Experiment Zones</h2>
+            <ol class="zone-list">
+              <li><span>ICE</span><small>Ice to water</small></li>
+              <li><span>PRECIP</span><small>Precipitate</small></li>
+              <li><span>STEEL PULL</span><small>Steel wool pulled apart</small></li>
+              <li><span>SUGAR</span><small>Sugar dissolves</small></li>
+              <li><span>STEEL BURN</span><small>Steel wool burns</small></li>
+              <li><span>ALKA</span><small>Alka-Seltzer</small></li>
+            </ol>
           </div>
+        </section>
+
+        <section class="canvas-frame">
+          <canvas id="game-canvas" width="896" height="576" aria-label="Ship experiment proof of concept"></canvas>
+          <div id="status-pill" class="status-pill">Loading assets...</div>
         </section>
       </section>
 
-      <section class="hud-card hud-card-right">
-        <h2>Experiment Zones</h2>
-        <ol class="zone-list">
-          <li>Ice to water</li>
-          <li>Precipitate</li>
-          <li>Steel wool pulled apart</li>
-          <li>Sugar dissolves</li>
-          <li>Steel wool burns</li>
-          <li>Alka-Seltzer</li>
-        </ol>
-      </section>
+      <aside id="experiment-window" class="experiment-window" aria-live="polite">
+        <div class="experiment-window__header">
+          <div>
+            <p class="eyebrow">Experiment View</p>
+            <h2 id="experiment-title">Standby Window</h2>
+          </div>
+          <button id="close-overlay" class="close-button" type="button">Collapse Window</button>
+        </div>
+        <div class="experiment-window__body">
+          <div id="experiment-placeholder" class="experiment-placeholder">
+            Cross one of the outlined platform zones to load that Lesson 1 experiment inside this window.
+          </div>
+          <iframe
+            id="experiment-frame"
+            class="experiment-frame"
+            title="Experiment view"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+          ></iframe>
+        </div>
+      </aside>
     </main>
 
     <script type="module" src="game.js"></script>

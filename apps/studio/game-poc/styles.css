@@ -26,17 +26,18 @@ body {
 }
 
 .game-shell {
-  width: min(1440px, calc(100% - 2rem));
+  width: min(1680px, calc(100% - 2rem));
   margin: 0 auto;
   min-height: 100vh;
   display: grid;
-  grid-template-columns: minmax(220px, 280px) auto minmax(220px, 260px);
+  grid-template-columns: minmax(0, 1fr) minmax(420px, 500px);
   gap: 1rem;
-  align-items: start;
-  padding: 1rem 0 1.25rem;
+  align-items: stretch;
+  padding: 1rem 0;
 }
 
-.hud-card,
+.play-column,
+.command-bar,
 .canvas-frame,
 .experiment-window {
   border: 1px solid var(--panel-line);
@@ -46,18 +47,38 @@ body {
   backdrop-filter: blur(12px);
 }
 
-.hud-card {
-  padding: 1.1rem 1.2rem 1.3rem;
+.play-column {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 1rem;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
-.hud-card-left {
-  position: sticky;
-  top: 1rem;
+.command-bar {
+  padding: 1rem 1.2rem;
+  display: grid;
+  gap: 0.9rem;
 }
 
-.hud-card-right {
-  position: sticky;
-  top: 1rem;
+.command-bar__main {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.command-copy {
+  max-width: 42rem;
+}
+
+.command-rules {
+  min-width: 15rem;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .eyebrow {
@@ -70,28 +91,32 @@ body {
 
 h1,
 h2 {
-  margin: 0 0 0.8rem;
+  margin: 0;
   font-weight: 600;
 }
 
 h1 {
   font-size: 1.7rem;
-  line-height: 1.1;
+  line-height: 1.08;
 }
 
 h2 {
-  font-size: 1.15rem;
+  font-size: 1rem;
 }
 
 .lede,
-.controls,
-.zone-list {
+.controls {
   margin: 0;
-  line-height: 1.55;
+  line-height: 1.45;
+}
+
+.lede {
+  margin-top: 0.55rem;
+  max-width: 44rem;
 }
 
 .controls {
-  margin-top: 0.7rem;
+  font-size: 0.95rem;
 }
 
 kbd {
@@ -109,26 +134,59 @@ kbd {
   text-align: center;
 }
 
-.zone-list {
-  padding-left: 1.3rem;
+.zone-bar {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.2rem;
+  border-top: 1px solid rgba(162, 190, 214, 0.12);
 }
 
-.zone-list li + li {
-  margin-top: 0.35rem;
+.zone-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.zone-list li {
+  display: grid;
+  gap: 0.12rem;
+  padding: 0.6rem 0.72rem;
+  border: 1px solid rgba(109, 227, 255, 0.18);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.zone-list span {
+  color: var(--ink);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.zone-list small {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.3;
 }
 
 .canvas-frame {
-  position: relative;
+  min-width: 0;
+  min-height: 0;
   padding: 1rem;
   display: grid;
+  grid-template-rows: 1fr auto;
   gap: 0.9rem;
 }
 
 #game-canvas {
   display: block;
-  width: 896px;
-  height: 576px;
-  max-width: 100%;
+  width: 100%;
+  height: auto;
+  max-height: calc(100vh - 250px);
+  aspect-ratio: 14 / 9;
   margin: 0 auto;
   border-radius: 18px;
   background: #06101a;
@@ -147,23 +205,14 @@ kbd {
 }
 
 .experiment-window {
+  min-height: calc(100vh - 2rem);
   padding: 1rem;
+  position: sticky;
+  top: 1rem;
   display: grid;
   grid-template-rows: auto 1fr;
   gap: 0.9rem;
-  min-height: 240px;
-  transition:
-    min-height 260ms ease,
-    border-color 260ms ease,
-    box-shadow 260ms ease,
-    transform 260ms ease;
-}
-
-.experiment-window.is-active {
-  min-height: min(680px, 66vh);
-  border-color: rgba(109, 227, 255, 0.42);
-  box-shadow: 0 34px 96px rgba(0, 0, 0, 0.34);
-  transform: translateY(-2px);
+  overflow: hidden;
 }
 
 .experiment-window__header {
@@ -174,8 +223,8 @@ kbd {
 }
 
 .experiment-window__body {
-  position: relative;
-  min-height: 160px;
+  min-height: 0;
+  display: grid;
 }
 
 .close-button {
@@ -196,6 +245,7 @@ kbd {
 .experiment-frame {
   width: 100%;
   height: 100%;
+  min-height: 0;
   border: 1px solid rgba(109, 227, 255, 0.2);
   border-radius: 18px;
 }
@@ -203,7 +253,6 @@ kbd {
 .experiment-placeholder {
   display: grid;
   place-items: center;
-  min-height: 160px;
   padding: 1.2rem;
   background:
     radial-gradient(circle at top, rgba(109, 227, 255, 0.1), transparent 55%),
@@ -224,22 +273,62 @@ kbd {
 
 .experiment-window.is-active .experiment-frame {
   display: block;
-  min-height: min(560px, 56vh);
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1340px) {
+  .game-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
+  }
+
+  .zone-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
   .game-shell {
     grid-template-columns: 1fr;
-    justify-items: center;
+    width: min(980px, calc(100% - 1rem));
+    padding: 0.5rem 0 1rem;
   }
 
-  .hud-card-left,
-  .hud-card-right {
+  .play-column {
+    order: 1;
+  }
+
+  .experiment-window {
+    order: 2;
     position: static;
-    width: min(896px, 100%);
+    min-height: 55vh;
   }
 
-  .canvas-frame {
-    width: min(928px, 100%);
+  .command-bar__main {
+    flex-direction: column;
+  }
+
+  .command-rules {
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #game-canvas {
+    max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .zone-list,
+  .command-rules {
+    grid-template-columns: 1fr;
+  }
+
+  .game-shell {
+    width: calc(100% - 0.75rem);
+  }
+
+  .command-bar,
+  .canvas-frame,
+  .experiment-window {
+    padding: 0.85rem;
   }
 }
