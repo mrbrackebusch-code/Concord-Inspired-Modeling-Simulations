@@ -7,17 +7,56 @@ const MOTION_EPSILON = 1.5;
 const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
-const SHOP_PLATFORM_TEMPLATE_SIZE = 9;
-const SHOP_PLATFORM_CENTER_VARIANTS = [
-  { row: 2, col: 5 },
-  { row: 2, col: 6 },
-  { row: 3, col: 5 },
-  { row: 3, col: 6 }
-];
-const SHOP_PLATFORM_TOP_EDGE_COLS = [1, 2, 3, 4, 5, 6, 7];
-const SHOP_PLATFORM_BOTTOM_EDGE_COLS = [1, 2, 3, 4, 5, 6, 7];
-const SHOP_PLATFORM_LEFT_EDGE_ROWS = [1, 2, 3, 4, 5, 6, 7];
-const SHOP_PLATFORM_RIGHT_EDGE_ROWS = [1, 2, 3, 4, 5, 6, 7];
+const TERRAIN_THEME = {
+  ground: "groundBlack",
+  chasm: "chasmBlack"
+};
+
+const TERRAIN_FAMILIES = {
+  groundBlack: {
+    interior: [
+      { row: 17, col: 12 },
+      { row: 17, col: 13 },
+      { row: 17, col: 14 }
+    ],
+    edgeN: { row: 14, col: 13 },
+    edgeS: { row: 16, col: 13 },
+    edgeW: { row: 15, col: 12 },
+    edgeE: { row: 15, col: 14 },
+    cornerNW: { row: 14, col: 12 },
+    cornerNE: { row: 14, col: 14 },
+    cornerSE: { row: 16, col: 14 },
+    cornerSW: { row: 16, col: 12 },
+    innerNW: { row: 12, col: 13 },
+    innerNE: { row: 12, col: 14 },
+    innerSE: { row: 13, col: 14 },
+    innerSW: { row: 13, col: 13 },
+    decor: [
+      { row: 12, col: 12 },
+      { row: 13, col: 12 }
+    ]
+  },
+  chasmBlack: {
+    interior: [
+      { row: 5, col: 15 },
+      { row: 5, col: 16 },
+      { row: 5, col: 17 }
+    ],
+    edgeN: { row: 2, col: 16 },
+    edgeS: { row: 4, col: 16 },
+    edgeW: { row: 3, col: 15 },
+    edgeE: { row: 3, col: 17 },
+    cornerNW: { row: 2, col: 15 },
+    cornerNE: { row: 2, col: 17 },
+    cornerSE: { row: 4, col: 17 },
+    cornerSW: { row: 4, col: 15 },
+    innerNW: { row: 0, col: 16 },
+    innerNE: { row: 0, col: 17 },
+    innerSE: { row: 1, col: 17 },
+    innerSW: { row: 1, col: 16 },
+    decor: []
+  }
+};
 
 const EXPERIMENTS = [
   {
@@ -108,6 +147,7 @@ const startupExperimentId = new URLSearchParams(window.location.search).get("exp
 
 const keys = new Set();
 const platformGrid = createPlatformGrid();
+const chasmGrid = invertGrid(platformGrid);
 const spawnPoint = { x: 14 * TILE_SIZE + TILE_SIZE / 2, y: 9 * TILE_SIZE + TILE_SIZE / 2 };
 
 let assetsReady = false;
@@ -137,13 +177,14 @@ const player = {
 
 const state = {
   images: {
-    platformSheet: null,
+    terrainSheet: null,
     pilotSheet: null,
     ship: null
   },
   animationMap: null,
   backgroundLayer: null,
-  platformLayer: null,
+  chasmLayer: null,
+  groundLayer: null,
   worldLayer: null,
   shipFrameCache: null,
   captures: createCaptureState()
@@ -152,7 +193,7 @@ const state = {
 initializeZoneCaptureCards();
 
 const loadState = Promise.all([
-  loadImage("../../../assets/game-poc/tiles/shopPlatform.png"),
+  loadImage("../../../assets/game-poc/tiles/terrain.png"),
   loadImage("../../../assets/game-poc/heroes/DefaultHero.png"),
   loadImage("../../../assets/spaceship/spaceship.png"),
   fetch("../../../assets/game-poc/heroes/anim_map.json").then((res) => {
@@ -161,13 +202,18 @@ const loadState = Promise.all([
     }
     return res.json();
   })
-]).then(([platformSheet, pilotSheet, ship, animationMap]) => {
-  state.images.platformSheet = platformSheet;
+]).then(([terrainSheet, pilotSheet, ship, animationMap]) => {
+  state.images.terrainSheet = terrainSheet;
   state.images.pilotSheet = pilotSheet;
   state.images.ship = ship;
   state.animationMap = animationMap;
   state.backgroundLayer = buildBackgroundLayer();
-  state.platformLayer = buildPlatformLayer();
+  state.chasmLayer = buildTerrainLayer(chasmGrid, TERRAIN_THEME.chasm);
+  state.groundLayer = buildTerrainLayer(platformGrid, TERRAIN_THEME.ground, {
+    shadowColor: "rgba(0, 0, 0, 0.26)",
+    shadowBlur: 9,
+    shadowOffsetY: 3
+  });
   state.worldLayer = buildWorldLayer();
   state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
@@ -423,60 +469,181 @@ function buildWorldLayer() {
   layer.width = CANVAS_WIDTH;
   layer.height = CANVAS_HEIGHT;
   const layerCtx = layer.getContext("2d");
-  layerCtx.drawImage(state.platformLayer, 0, 0);
+  layerCtx.drawImage(state.chasmLayer, 0, 0);
+  layerCtx.drawImage(state.groundLayer, 0, 0);
   drawExperimentZonesBase(layerCtx);
   return layer;
 }
 
-function buildPlatformLayer() {
+function buildTerrainLayer(grid, familyId, options = {}) {
   const layer = document.createElement("canvas");
   layer.width = CANVAS_WIDTH;
   layer.height = CANVAS_HEIGHT;
   const layerCtx = layer.getContext("2d");
-  const sheet = state.images.platformSheet;
-  const frameSize = sheet.width / SHOP_PLATFORM_TEMPLATE_SIZE;
+  const sheet = state.images.terrainSheet;
+  const family = TERRAIN_FAMILIES[familyId];
+  const shadowColor = options.shadowColor || "";
+  const shadowBlur = options.shadowBlur || 0;
+  const shadowOffsetY = options.shadowOffsetY || 0;
 
   for (let row = 0; row < GRID_ROWS; row++) {
     for (let col = 0; col < GRID_COLS; col++) {
-      if (!platformGrid[row][col]) continue;
+      if (!grid[row][col]) continue;
 
-      const frame = resolvePlatformFrameRef(row, col);
+      const frame = resolveTerrainFrameRef(grid, row, col, family);
       const px = col * TILE_SIZE;
       const py = row * TILE_SIZE;
-      const sx = frame.col * frameSize;
-      const sy = frame.row * frameSize;
+      const sx = frame.col * TILE_SIZE;
+      const sy = frame.row * TILE_SIZE;
 
-      layerCtx.save();
-      layerCtx.shadowColor = "rgba(0, 0, 0, 0.22)";
-      layerCtx.shadowBlur = 10;
-      layerCtx.shadowOffsetY = 3;
-      layerCtx.drawImage(sheet, sx, sy, frameSize, frameSize, px, py, TILE_SIZE, TILE_SIZE);
-      layerCtx.restore();
+      if (shadowColor) {
+        layerCtx.save();
+        layerCtx.shadowColor = shadowColor;
+        layerCtx.shadowBlur = shadowBlur;
+        layerCtx.shadowOffsetY = shadowOffsetY;
+        layerCtx.drawImage(sheet, sx, sy, TILE_SIZE, TILE_SIZE, px, py, TILE_SIZE, TILE_SIZE);
+        layerCtx.restore();
+      } else {
+        layerCtx.drawImage(sheet, sx, sy, TILE_SIZE, TILE_SIZE, px, py, TILE_SIZE, TILE_SIZE);
+      }
     }
   }
 
   return layer;
 }
 
-function resolvePlatformFrameRef(row, col) {
-  const north = row > 0 && platformGrid[row - 1][col];
-  const south = row < GRID_ROWS - 1 && platformGrid[row + 1][col];
-  const west = col > 0 && platformGrid[row][col - 1];
-  const east = col < GRID_COLS - 1 && platformGrid[row][col + 1];
+function resolveTerrainFrameRef(grid, row, col, family) {
+  const mask = computeNeighborMask(grid, row, col);
+  const innerShape = innerCornerFromMask(mask);
+  if (innerShape !== "none") {
+    const innerFrame = resolveInnerCornerFrame(family, innerShape);
+    if (innerFrame) {
+      return innerFrame;
+    }
+  }
 
-  if (!north && !west) return { row: 0, col: 0 };
-  if (!north && !east) return { row: 0, col: 8 };
-  if (!south && !west) return { row: 8, col: 0 };
-  if (!south && !east) return { row: 8, col: 8 };
-  if (!north) return { row: 0, col: pickSequenceValue(SHOP_PLATFORM_TOP_EDGE_COLS, col) };
-  if (!south) return { row: 8, col: pickSequenceValue(SHOP_PLATFORM_BOTTOM_EDGE_COLS, col) };
-  if (!west) return { row: pickSequenceValue(SHOP_PLATFORM_LEFT_EDGE_ROWS, row), col: 0 };
-  if (!east) return { row: pickSequenceValue(SHOP_PLATFORM_RIGHT_EDGE_ROWS, row), col: 8 };
-  return SHOP_PLATFORM_CENTER_VARIANTS[((row & 1) << 1) | (col & 1)];
+  const shape = autoShapeFromMask(mask);
+  if (shape === "single" && family.decor.length > 0) {
+    return pickTerrainVariant(family.decor, row, col, 41);
+  }
+
+  if (family[shape]) {
+    return family[shape];
+  }
+
+  return pickTerrainVariant(family.interior, row, col, 17);
 }
 
-function pickSequenceValue(sequence, seed) {
-  return sequence[Math.abs(seed) % sequence.length];
+function resolveInnerCornerFrame(family, innerShape) {
+  switch (innerShape) {
+    case "innerNW":
+      return family.innerSE;
+    case "innerNE":
+      return family.innerSW;
+    case "innerSE":
+      return family.innerNW;
+    case "innerSW":
+      return family.innerNE;
+    default:
+      return null;
+  }
+}
+
+function pickTerrainVariant(variants, row, col, salt) {
+  const index = Math.abs(mixSeed(row, col, salt)) % variants.length;
+  return variants[index];
+}
+
+function computeNeighborMask(grid, row, col) {
+  const same = (nextRow, nextCol) => {
+    const clampedRow = clamp(nextRow, 0, GRID_ROWS - 1);
+    const clampedCol = clamp(nextCol, 0, GRID_COLS - 1);
+    return grid[clampedRow][clampedCol];
+  };
+
+  let mask = 0;
+  if (same(row - 1, col)) mask |= 1 << 0;
+  if (same(row, col + 1)) mask |= 1 << 1;
+  if (same(row + 1, col)) mask |= 1 << 2;
+  if (same(row, col - 1)) mask |= 1 << 3;
+  if (same(row - 1, col + 1)) mask |= 1 << 4;
+  if (same(row + 1, col + 1)) mask |= 1 << 5;
+  if (same(row + 1, col - 1)) mask |= 1 << 6;
+  if (same(row - 1, col - 1)) mask |= 1 << 7;
+  return mask;
+}
+
+function innerCornerFromMask(mask) {
+  const north = (mask & (1 << 0)) !== 0;
+  const east = (mask & (1 << 1)) !== 0;
+  const south = (mask & (1 << 2)) !== 0;
+  const west = (mask & (1 << 3)) !== 0;
+  const northEast = (mask & (1 << 4)) !== 0;
+  const southEast = (mask & (1 << 5)) !== 0;
+  const southWest = (mask & (1 << 6)) !== 0;
+  const northWest = (mask & (1 << 7)) !== 0;
+
+  if (!(north && east && south && west)) {
+    return "none";
+  }
+  if (north && west && !northWest) return "innerNW";
+  if (north && east && !northEast) return "innerNE";
+  if (south && west && !southWest) return "innerSW";
+  if (south && east && !southEast) return "innerSE";
+  return "none";
+}
+
+function autoShapeFromMask(mask) {
+  const north = (mask & (1 << 0)) !== 0;
+  const east = (mask & (1 << 1)) !== 0;
+  const south = (mask & (1 << 2)) !== 0;
+  const west = (mask & (1 << 3)) !== 0;
+
+  const cardinalMask =
+    (north ? 1 : 0) |
+    (east ? 2 : 0) |
+    (south ? 4 : 0) |
+    (west ? 8 : 0);
+
+  switch (cardinalMask) {
+    case 0:
+      return "single";
+    case 1:
+      return "edgeS";
+    case 2:
+      return "edgeW";
+    case 4:
+      return "edgeN";
+    case 8:
+      return "edgeE";
+    case 3:
+      return "cornerSW";
+    case 9:
+      return "cornerSE";
+    case 6:
+      return "cornerNW";
+    case 12:
+      return "cornerNE";
+    case 5:
+      return "edgeW";
+    case 10:
+      return "edgeN";
+    case 14:
+      return "edgeN";
+    case 11:
+      return "edgeS";
+    case 13:
+      return "edgeE";
+    case 7:
+      return "edgeW";
+    case 15:
+    default:
+      return "center";
+  }
+}
+
+function mixSeed(row, col, salt) {
+  return (((row + 1) * 73856093) ^ ((col + 1) * 19349663) ^ salt) >>> 0;
 }
 
 function drawExperimentZonesBase(layerCtx) {
@@ -790,6 +957,10 @@ function createPlatformGrid() {
     }
   }
   return grid;
+}
+
+function invertGrid(grid) {
+  return grid.map((row) => row.map((cell) => !cell));
 }
 
 function getZoneAtPoint(x, y) {
