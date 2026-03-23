@@ -20,7 +20,7 @@ const ARM_LATCH_RADIUS = 18;
 const MAX_HULL = 100;
 const TERRAIN_THEME = {
   ground: "sand",
-  water: "sandWater"
+  water: "sandWaterPool"
 };
 const ARM_PART_SOURCES = {
   baseMount: "../../../assets/Mechanical Tentacle Arm/base_mount_large.png",
@@ -118,6 +118,26 @@ const TERRAIN_FAMILIES = {
       { row: 12, col: 3 },
       { row: 13, col: 3 }
     ]
+  },
+  sandWaterPool: {
+    interior: [
+      { row: 17, col: 3 },
+      { row: 17, col: 4 },
+      { row: 17, col: 5 }
+    ],
+    edgeN: { row: 16, col: 4 },
+    edgeS: { row: 14, col: 4 },
+    edgeW: { row: 15, col: 5 },
+    edgeE: { row: 15, col: 3 },
+    cornerNW: { row: 16, col: 5 },
+    cornerNE: { row: 16, col: 3 },
+    cornerSE: { row: 14, col: 3 },
+    cornerSW: { row: 14, col: 5 },
+    innerNW: { row: 13, col: 5 },
+    innerNE: { row: 13, col: 4 },
+    innerSE: { row: 12, col: 4 },
+    innerSW: { row: 12, col: 5 },
+    decor: []
   }
 };
 
