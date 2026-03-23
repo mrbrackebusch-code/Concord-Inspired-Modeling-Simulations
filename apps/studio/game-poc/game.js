@@ -4,6 +4,9 @@ const GRID_ROWS = 18;
 const CANVAS_WIDTH = GRID_COLS * TILE_SIZE;
 const CANVAS_HEIGHT = GRID_ROWS * TILE_SIZE;
 const MOTION_EPSILON = 1.5;
+const SHIP_SCALE = 0.17;
+const SHIP_FRAME_MS = 120;
+const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
 const SHOP_PLATFORM_TEMPLATE_SIZE = 9;
 const SHOP_PLATFORM_CENTER_VARIANTS = [
   { row: 2, col: 5 },
@@ -142,6 +145,7 @@ const state = {
   backgroundLayer: null,
   platformLayer: null,
   worldLayer: null,
+  shipFrameCache: null,
   captures: createCaptureState()
 };
 
@@ -165,6 +169,7 @@ const loadState = Promise.all([
   state.backgroundLayer = buildBackgroundLayer();
   state.platformLayer = buildPlatformLayer();
   state.worldLayer = buildWorldLayer();
+  state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
   setStatus("Cross an outlined zone to open its experiment view.");
   renderCaptureHud();
@@ -516,101 +521,176 @@ function drawActiveExperimentZone() {
 }
 
 function drawPlayer() {
-  const shipImage = state.images.ship;
-  const shipScale = 0.17;
-  const shipWidth = shipImage.width * shipScale;
-  const shipHeight = shipImage.height * shipScale;
-  const speed = Math.hypot(player.vx, player.vy);
-
-  ctx.save();
-  ctx.translate(player.x, player.y);
-
-  ctx.fillStyle = "rgba(10, 15, 22, 0.35)";
-  ctx.beginPath();
-  ctx.ellipse(0, shipHeight * 0.34, shipWidth * 0.24, shipHeight * 0.12, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  const thrusterAlpha = player.thrusting ? clamp((speed + 40) / 180, 0.22, 0.68) : 0;
-  if (thrusterAlpha > 0) {
-    drawDirectionalThruster(shipWidth, shipHeight, thrusterAlpha);
-  }
-
-  ctx.drawImage(shipImage, -shipWidth / 2, -shipHeight / 2, shipWidth, shipHeight);
-  drawPilotInCockpit(shipWidth, shipHeight);
-  drawCanopyGlass(shipWidth, shipHeight);
-
-  ctx.restore();
+  const frame = getShipFrame();
+  ctx.drawImage(frame.canvas, Math.round(player.x - frame.anchorX), Math.round(player.y - frame.anchorY));
 }
 
-function drawDirectionalThruster(shipWidth, shipHeight, thrusterAlpha) {
-  ctx.save();
-  ctx.rotate(player.angle);
+function buildShipFrameCache() {
+  const shipImage = state.images.ship;
+  const shipWidth = shipImage.width * SHIP_SCALE;
+  const shipHeight = shipImage.height * SHIP_SCALE;
+  const paddingX = 18;
+  const paddingTop = 10;
+  const paddingBottom = 28;
+  const frameWidth = Math.ceil(shipWidth + paddingX * 2);
+  const frameHeight = Math.ceil(shipHeight + paddingTop + paddingBottom);
+  const anchorX = frameWidth / 2;
+  const anchorY = paddingTop + shipHeight / 2;
 
-  const thruster = ctx.createLinearGradient(0, shipHeight * 0.12, 0, shipHeight * 0.58);
+  const cache = {
+    idle: Object.create(null),
+    thrust: Object.create(null),
+    anchorX,
+    anchorY
+  };
+
+  for (const direction of SHIP_DIRECTIONS) {
+    const animationDef = state.animationMap.animations[`thrust${direction}`];
+    const frameCols = animationDef.cols;
+    cache.idle[direction] = renderShipFrame({
+      direction,
+      pilotFrame: frameCols[0],
+      flameOffset: null,
+      frameWidth,
+      frameHeight,
+      anchorX,
+      anchorY,
+      shipWidth,
+      shipHeight
+    });
+
+    cache.thrust[direction] = frameCols.map((pilotFrame, index) => {
+      const flameOffset = Math.sin((index / frameCols.length) * Math.PI * 2) * 4;
+      return renderShipFrame({
+        direction,
+        pilotFrame,
+        flameOffset,
+        frameWidth,
+        frameHeight,
+        anchorX,
+        anchorY,
+        shipWidth,
+        shipHeight
+      });
+    });
+  }
+
+  return cache;
+}
+
+function renderShipFrame({
+  direction,
+  pilotFrame,
+  flameOffset,
+  frameWidth,
+  frameHeight,
+  anchorX,
+  anchorY,
+  shipWidth,
+  shipHeight
+}) {
+  const canvas = document.createElement("canvas");
+  canvas.width = frameWidth;
+  canvas.height = frameHeight;
+  const frameCtx = canvas.getContext("2d");
+
+  frameCtx.save();
+  frameCtx.translate(anchorX, anchorY);
+
+  frameCtx.fillStyle = "rgba(10, 15, 22, 0.35)";
+  frameCtx.beginPath();
+  frameCtx.ellipse(0, shipHeight * 0.34, shipWidth * 0.24, shipHeight * 0.12, 0, 0, Math.PI * 2);
+  frameCtx.fill();
+
+  if (typeof flameOffset === "number") {
+    drawDirectionalThruster(frameCtx, shipWidth, shipHeight, 0.52, directionToAngle(direction), flameOffset);
+  }
+
+  frameCtx.drawImage(state.images.ship, -shipWidth / 2, -shipHeight / 2, shipWidth, shipHeight);
+  drawPilotInCockpit(frameCtx, shipWidth, shipHeight, direction, pilotFrame);
+  drawCanopyGlass(frameCtx, shipWidth, shipHeight);
+  frameCtx.restore();
+
+  return {
+    canvas,
+    anchorX,
+    anchorY
+  };
+}
+
+function getShipFrame() {
+  const direction = angleToDirection(player.angle);
+  if (!player.thrusting) {
+    return state.shipFrameCache.idle[direction];
+  }
+  const frames = state.shipFrameCache.thrust[direction];
+  const frameIndex = Math.floor(visualTimeMs / SHIP_FRAME_MS) % frames.length;
+  return frames[frameIndex];
+}
+
+function drawDirectionalThruster(targetCtx, shipWidth, shipHeight, thrusterAlpha, angle, flameOffset) {
+  targetCtx.save();
+  targetCtx.rotate(angle);
+
+  const thruster = targetCtx.createLinearGradient(0, shipHeight * 0.12, 0, shipHeight * 0.58);
   thruster.addColorStop(0, `rgba(255, 252, 210, ${thrusterAlpha})`);
   thruster.addColorStop(0.35, `rgba(255, 179, 61, ${thrusterAlpha * 0.95})`);
   thruster.addColorStop(1, "rgba(255, 120, 10, 0)");
-  ctx.fillStyle = thruster;
-  ctx.beginPath();
-  ctx.moveTo(-shipWidth * 0.08, shipHeight * 0.14);
-  ctx.lineTo(shipWidth * 0.08, shipHeight * 0.14);
-  ctx.lineTo(0, shipHeight * 0.54 + Math.sin(visualTimeMs * 0.03) * 4);
-  ctx.closePath();
-  ctx.fill();
+  targetCtx.fillStyle = thruster;
+  targetCtx.beginPath();
+  targetCtx.moveTo(-shipWidth * 0.08, shipHeight * 0.14);
+  targetCtx.lineTo(shipWidth * 0.08, shipHeight * 0.14);
+  targetCtx.lineTo(0, shipHeight * 0.54 + flameOffset);
+  targetCtx.closePath();
+  targetCtx.fill();
 
-  ctx.restore();
+  targetCtx.restore();
 }
 
-function drawPilotInCockpit(shipWidth, shipHeight) {
+function drawPilotInCockpit(targetCtx, shipWidth, shipHeight, direction, frameIndex) {
   const pilot = state.images.pilotSheet;
-  const animationMap = state.animationMap;
-  const direction = angleToDirection(player.angle);
-  const animationDef = animationMap.animations[`thrust${direction}`];
-  const frames = animationDef.cols;
-  const frameIndex = player.thrusting
-    ? frames[Math.floor(visualTimeMs / 120) % frames.length]
-    : frames[0];
-  const frameSize = animationMap.frameSize[0];
+  const animationDef = state.animationMap.animations[`thrust${direction}`];
+  const frameSize = state.animationMap.frameSize[0];
   const sx = frameIndex * frameSize;
   const sy = animationDef.row * frameSize;
   const drawSize = 34;
   const cockpitY = -shipHeight * 0.22;
 
-  ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(0, cockpitY, shipWidth * 0.18, shipHeight * 0.19, 0, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(pilot, sx, sy, frameSize, frameSize, -drawSize / 2, cockpitY - 24, drawSize, drawSize);
-  ctx.restore();
+  targetCtx.save();
+  targetCtx.beginPath();
+  targetCtx.ellipse(0, cockpitY, shipWidth * 0.18, shipHeight * 0.19, 0, 0, Math.PI * 2);
+  targetCtx.clip();
+  targetCtx.imageSmoothingEnabled = false;
+  targetCtx.drawImage(pilot, sx, sy, frameSize, frameSize, -drawSize / 2, cockpitY - 24, drawSize, drawSize);
+  targetCtx.restore();
 }
 
-function drawCanopyGlass(shipWidth, shipHeight) {
+function drawCanopyGlass(targetCtx, shipWidth, shipHeight) {
   const canopyY = -shipHeight * 0.21;
   const canopyRadiusX = shipWidth * 0.2;
   const canopyRadiusY = shipHeight * 0.21;
 
-  const canopyGradient = ctx.createLinearGradient(0, canopyY - canopyRadiusY, 0, canopyY + canopyRadiusY);
+  const canopyGradient = targetCtx.createLinearGradient(0, canopyY - canopyRadiusY, 0, canopyY + canopyRadiusY);
   canopyGradient.addColorStop(0, "rgba(231, 249, 255, 0.34)");
   canopyGradient.addColorStop(0.35, "rgba(120, 222, 255, 0.18)");
   canopyGradient.addColorStop(1, "rgba(7, 108, 150, 0.26)");
 
-  ctx.fillStyle = canopyGradient;
-  ctx.beginPath();
-  ctx.ellipse(0, canopyY, canopyRadiusX, canopyRadiusY, 0, 0, Math.PI * 2);
-  ctx.fill();
+  targetCtx.fillStyle = canopyGradient;
+  targetCtx.beginPath();
+  targetCtx.ellipse(0, canopyY, canopyRadiusX, canopyRadiusY, 0, 0, Math.PI * 2);
+  targetCtx.fill();
 
-  ctx.strokeStyle = "rgba(225, 247, 255, 0.58)";
-  ctx.lineWidth = 1.4;
-  ctx.beginPath();
-  ctx.ellipse(0, canopyY, canopyRadiusX, canopyRadiusY, 0, 0, Math.PI * 2);
-  ctx.stroke();
+  targetCtx.strokeStyle = "rgba(225, 247, 255, 0.58)";
+  targetCtx.lineWidth = 1.4;
+  targetCtx.beginPath();
+  targetCtx.ellipse(0, canopyY, canopyRadiusX, canopyRadiusY, 0, 0, Math.PI * 2);
+  targetCtx.stroke();
 
-  ctx.strokeStyle = "rgba(8, 70, 96, 0.42)";
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  ctx.ellipse(0, -shipHeight * 0.03, shipWidth * 0.24, shipHeight * 0.05, 0, Math.PI, Math.PI * 2);
-  ctx.stroke();
+  targetCtx.strokeStyle = "rgba(8, 70, 96, 0.42)";
+  targetCtx.lineWidth = 2.2;
+  targetCtx.beginPath();
+  targetCtx.ellipse(0, -shipHeight * 0.03, shipWidth * 0.24, shipHeight * 0.05, 0, Math.PI, Math.PI * 2);
+  targetCtx.stroke();
 }
 
 function drawDeathOverlay() {
@@ -838,6 +918,19 @@ function angleToDirection(angle) {
   if (normalized >= quarter && normalized < quarter * 3) return "East";
   if (normalized >= -quarter * 3 && normalized < -quarter) return "West";
   return "South";
+}
+
+function directionToAngle(direction) {
+  switch (direction) {
+    case "East":
+      return Math.PI / 2;
+    case "South":
+      return Math.PI;
+    case "West":
+      return -Math.PI / 2;
+    default:
+      return 0;
+  }
 }
 
 function buildStarfield() {
