@@ -9,9 +9,11 @@
   <body>
     <main class="app-shell">
       <header class="top-bar">
-        <h1>Ship Experiment Platforms</h1>
+        <h1>Ship Experiment Field</h1>
         <p><strong>Move</strong> with arrow keys</p>
         <p><strong>Use</strong> space to stop</p>
+        <p id="hud-hull">Hull 100%</p>
+        <p id="hud-field">Field clear</p>
       </header>
 
       <section class="game-shell">
@@ -35,7 +37,7 @@
           </div>
           <div class="experiment-window__body">
             <div id="experiment-placeholder" class="experiment-placeholder">
-              Cross one of the outlined platform zones to load that Lesson 1 experiment inside this window.
+              Cross one of the outlined field zones to load that Lesson 1 experiment inside this window.
             </div>
             <iframe
               id="experiment-frame"

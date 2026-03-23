@@ -5,9 +5,11 @@ const CANVAS_WIDTH = GRID_COLS * TILE_SIZE;
 const CANVAS_HEIGHT = GRID_ROWS * TILE_SIZE;
 const MOTION_EPSILON = 1.5;
 const PLAYER_COLLISION_RADIUS = 14;
+const ROCK_MASK_ALPHA_THRESHOLD = 16;
 const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
+const MAX_HULL = 100;
 const TERRAIN_THEME = {
   ground: "sand",
   water: "sandWater"
@@ -175,6 +177,8 @@ const experimentWindow = document.getElementById("experiment-window");
 const overlayTitle = document.getElementById("experiment-title");
 const overlayFrame = document.getElementById("experiment-frame");
 const closeOverlayButton = document.getElementById("close-overlay");
+const hullHud = document.getElementById("hud-hull");
+const fieldHud = document.getElementById("hud-field");
 const captureButton = document.getElementById("capture-evidence");
 const captureActiveTitle = document.getElementById("capture-active-title");
 const captureActiveCopy = document.getElementById("capture-active-copy");
@@ -188,7 +192,6 @@ const startupExperimentId = new URLSearchParams(window.location.search).get("exp
 const keys = new Set();
 const groundGrid = createFilledGrid();
 const waterGrid = createBlobGrid(WATER_POOLS);
-const rockColliders = buildRockColliders(ROCK_INSTANCES);
 const spawnPoint = { x: 14 * TILE_SIZE + TILE_SIZE / 2, y: 9 * TILE_SIZE + TILE_SIZE / 2 };
 
 let assetsReady = false;
@@ -199,6 +202,7 @@ let activeZone = null;
 let visualTimeMs = 0;
 let deathTimerMs = 0;
 let deathMessage = "Field integrity lost. Repositioning ship...";
+let impactCooldownMs = 0;
 let hudFocusExperimentId = null;
 let frameHandle = 0;
 let previousTime = 0;
@@ -213,6 +217,7 @@ const player = {
   angle: 0,
   thrusting: false,
   alive: true,
+  hull: MAX_HULL,
   lastSafeX: spawnPoint.x,
   lastSafeY: spawnPoint.y
 };
@@ -221,6 +226,7 @@ const state = {
   images: {
     terrainSheet: null,
     rockSheet: null,
+    rockAuraSheet: null,
     pilotSheet: null,
     ship: null
   },
@@ -230,6 +236,7 @@ const state = {
   waterLayer: null,
   anomalyLayer: null,
   rockLayer: null,
+  rockMasks: [],
   worldLayer: null,
   shipFrameCache: null,
   captures: createCaptureState()
@@ -240,6 +247,7 @@ initializeZoneCaptureCards();
 const loadState = Promise.all([
   loadImage("../../../assets/game-poc/tiles/terrain.png"),
   loadImage("../../../assets/game-poc/tiles/rocks.png"),
+  loadImage("../../../assets/game-poc/tiles/rocks_aura_r0.png"),
   loadImage("../../../assets/game-poc/heroes/DefaultHero.png"),
   loadImage("../../../assets/spaceship/spaceship.png"),
   fetch("../../../assets/game-poc/heroes/anim_map.json").then((res) => {
@@ -248,9 +256,10 @@ const loadState = Promise.all([
     }
     return res.json();
   })
-]).then(([terrainSheet, rockSheet, pilotSheet, ship, animationMap]) => {
+]).then(([terrainSheet, rockSheet, rockAuraSheet, pilotSheet, ship, animationMap]) => {
   state.images.terrainSheet = terrainSheet;
   state.images.rockSheet = rockSheet;
+  state.images.rockAuraSheet = rockAuraSheet;
   state.images.pilotSheet = pilotSheet;
   state.images.ship = ship;
   state.animationMap = animationMap;
@@ -259,11 +268,14 @@ const loadState = Promise.all([
   state.waterLayer = buildTerrainLayer(waterGrid, TERRAIN_THEME.water);
   state.anomalyLayer = buildAnomalyLayer();
   state.rockLayer = buildRockLayer();
+  state.rockMasks = buildRockMasks();
   state.worldLayer = buildWorldLayer();
   state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
   setStatus("Cross an outlined zone to open its experiment view.");
   renderCaptureHud();
+  updateHullHud();
+  updateFieldHud({ tier: "clear" });
   invalidateWorldLayer();
   invalidateActorLayer();
 
@@ -356,6 +368,8 @@ function update(dtMs) {
     return;
   }
 
+  impactCooldownMs = Math.max(0, impactCooldownMs - dtMs);
+
   const input = getInputVector();
   const brakeHeld = keys.has(" ");
   const dt = dtMs / 1000;
@@ -366,6 +380,7 @@ function update(dtMs) {
   const accel = baseAccel * anomalyInfluence.inputScale;
   const maxSpeed = baseMaxSpeed * anomalyInfluence.maxSpeedScale;
   const drag = baseDrag - anomalyInfluence.dragBoost * 0.12;
+  updateFieldHud(anomalyInfluence);
   player.thrusting = input.mag > 0;
 
   if (input.mag > 0) {
@@ -409,6 +424,11 @@ function update(dtMs) {
   resolvePlayerMovement(dt);
 
   const postMoveInfluence = sampleAnomalyInfluence(player.x, player.y);
+  updateFieldHud(postMoveInfluence);
+  applyAnomalyDamage(postMoveInfluence, dtMs);
+  if (!player.alive) {
+    return;
+  }
   if (postMoveInfluence.inCore) {
     killPlayer("Dense anomaly overwhelmed the ship. Resetting...");
     return;
@@ -603,6 +623,55 @@ function buildRockLayer() {
   return layer;
 }
 
+function buildRockMasks() {
+  const masks = [];
+  const auraSheet = state.images.rockAuraSheet;
+
+  for (const rock of ROCK_INSTANCES) {
+    const visual = ROCK_VISUALS[rock.visualId];
+    if (!visual) {
+      continue;
+    }
+
+    const widthPx = visual.wTiles * TILE_SIZE;
+    const heightPx = visual.hTiles * TILE_SIZE;
+    const topRow = visual.ref.row - visual.hTiles + 1;
+    const composite = document.createElement("canvas");
+    composite.width = widthPx;
+    composite.height = heightPx;
+    const compositeCtx = composite.getContext("2d");
+
+    for (let tileY = 0; tileY < visual.hTiles; tileY++) {
+      for (let tileX = 0; tileX < visual.wTiles; tileX++) {
+        const sx = (visual.ref.col + tileX) * TILE_SIZE;
+        const sy = (topRow + tileY) * TILE_SIZE;
+        compositeCtx.drawImage(
+          auraSheet,
+          sx,
+          sy,
+          TILE_SIZE,
+          TILE_SIZE,
+          tileX * TILE_SIZE,
+          tileY * TILE_SIZE,
+          TILE_SIZE,
+          TILE_SIZE
+        );
+      }
+    }
+
+    const imageData = compositeCtx.getImageData(0, 0, widthPx, heightPx);
+    masks.push({
+      x: rock.tileX * TILE_SIZE,
+      y: rock.tileY * TILE_SIZE,
+      w: widthPx,
+      h: heightPx,
+      alpha: imageData.data
+    });
+  }
+
+  return masks;
+}
+
 function drawAnomalySignature(layerCtx, anomaly, index) {
   const centerX = anomaly.cx * TILE_SIZE;
   const centerY = anomaly.cy * TILE_SIZE;
@@ -670,6 +739,46 @@ function drawAnomalyDebris(layerCtx, anomaly, index) {
       size,
       size
     );
+  }
+}
+
+function applyImpactDamage(speed) {
+  if (impactCooldownMs > 0 || speed < 80 || !player.alive) {
+    return;
+  }
+
+  const damage = Math.max(0, Math.round((speed - 80) / 6));
+  if (damage <= 0) {
+    impactCooldownMs = 120;
+    return;
+  }
+
+  impactCooldownMs = 220;
+  applyHullDamage(damage, damage >= 28 ? "Hull impact severe" : "Hull impact registered");
+}
+
+function applyAnomalyDamage(influence, dtMs) {
+  if (!player.alive) {
+    return;
+  }
+  const damage = influence.damagePerSecond * (dtMs / 1000);
+  if (damage <= 0) {
+    return;
+  }
+  applyHullDamage(damage, influence.tier === "lethal" ? "Anomaly shear is stripping the hull" : "Anomaly field is damaging the ship");
+}
+
+function applyHullDamage(amount, message) {
+  player.hull = clamp(player.hull - amount, 0, MAX_HULL);
+  updateHullHud();
+
+  if (player.hull <= 0) {
+    killPlayer(`${message}. Hull failure.`);
+    return;
+  }
+
+  if (!activeZone && !overlayOpen && message) {
+    setStatus(`${message}.`);
   }
 }
 
@@ -1078,15 +1187,19 @@ function respawn() {
   player.alive = true;
   player.x = spawnPoint.x;
   player.y = spawnPoint.y;
+  player.hull = MAX_HULL;
   player.lastSafeX = spawnPoint.x;
   player.lastSafeY = spawnPoint.y;
   player.vx = 0;
   player.vy = 0;
   player.angle = 0;
   player.thrusting = false;
+  impactCooldownMs = 0;
   activeZone = null;
   rearmZoneId = null;
   deathMessage = "Field integrity lost. Repositioning ship...";
+  updateHullHud();
+  updateFieldHud({ tier: "clear" });
   setStatus("Ship reset. Cross an outlined zone to open its experiment view.");
   renderCaptureHud();
   invalidateActorLayer();
@@ -1250,44 +1363,54 @@ function getHudFocusExperiment() {
 
 function resolvePlayerMovement(dt) {
   const proposedX = clamp(player.x + player.vx * dt, PLAYER_COLLISION_RADIUS, CANVAS_WIDTH - PLAYER_COLLISION_RADIUS);
-  const resolvedX = resolveRockAxis(proposedX, player.y, "x");
-  if (Math.abs(resolvedX - proposedX) > 0.01) {
+  const xResult = resolveRockAxis(proposedX, player.y, "x");
+  if (xResult.collided) {
     player.vx = 0;
+    applyImpactDamage(xResult.impactSpeed);
   }
-  player.x = resolvedX;
+  player.x = xResult.position;
 
   const proposedY = clamp(player.y + player.vy * dt, PLAYER_COLLISION_RADIUS, CANVAS_HEIGHT - PLAYER_COLLISION_RADIUS);
-  const resolvedY = resolveRockAxis(player.x, proposedY, "y");
-  if (Math.abs(resolvedY - proposedY) > 0.01) {
+  const yResult = resolveRockAxis(player.x, proposedY, "y");
+  if (yResult.collided) {
     player.vy = 0;
+    applyImpactDamage(yResult.impactSpeed);
   }
-  player.y = resolvedY;
+  player.y = yResult.position;
 }
 
 function resolveRockAxis(nextX, nextY, axis) {
-  let resolved = axis === "x" ? nextX : nextY;
-
-  for (const collider of rockColliders) {
-    const testX = axis === "x" ? resolved : nextX;
-    const testY = axis === "y" ? resolved : nextY;
-    if (!circleIntersectsRect(testX, testY, PLAYER_COLLISION_RADIUS, collider)) {
-      continue;
-    }
-
-    if (axis === "x") {
-      if (player.vx > 0) {
-        resolved = Math.min(resolved, collider.x - PLAYER_COLLISION_RADIUS);
-      } else if (player.vx < 0) {
-        resolved = Math.max(resolved, collider.x + collider.w + PLAYER_COLLISION_RADIUS);
-      }
-    } else if (player.vy > 0) {
-      resolved = Math.min(resolved, collider.y - PLAYER_COLLISION_RADIUS);
-    } else if (player.vy < 0) {
-      resolved = Math.max(resolved, collider.y + collider.h + PLAYER_COLLISION_RADIUS);
-    }
+  const start = axis === "x" ? player.x : player.y;
+  const direction = Math.sign((axis === "x" ? nextX - player.x : nextY - player.y) || 0);
+  if (!direction) {
+    return { position: start, collided: false, impactSpeed: 0 };
   }
 
-  return resolved;
+  const stepSize = Math.max(1, Math.min(4, Math.abs(axis === "x" ? nextX - player.x : nextY - player.y) / 6));
+  let position = start;
+  let candidate = start;
+  let collided = false;
+
+  while ((direction > 0 && candidate < (axis === "x" ? nextX : nextY)) || (direction < 0 && candidate > (axis === "x" ? nextX : nextY))) {
+    candidate += direction * stepSize;
+    if ((direction > 0 && candidate > (axis === "x" ? nextX : nextY)) || (direction < 0 && candidate < (axis === "x" ? nextX : nextY))) {
+      candidate = axis === "x" ? nextX : nextY;
+    }
+
+    const testX = axis === "x" ? candidate : nextX;
+    const testY = axis === "y" ? candidate : nextY;
+    if (circleIntersectsAnyRockMask(testX, testY, PLAYER_COLLISION_RADIUS)) {
+      collided = true;
+      break;
+    }
+    position = candidate;
+  }
+
+  return {
+    position,
+    collided,
+    impactSpeed: collided ? Math.hypot(player.vx, player.vy) : 0
+  };
 }
 
 function sampleAnomalyInfluence(x, y) {
@@ -1297,6 +1420,7 @@ function sampleAnomalyInfluence(x, y) {
   let maxSpeedScale = 1;
   let dragBoost = 0;
   let warningLevel = 0;
+  let damagePerSecond = 0;
   let inCore = false;
 
   for (const anomaly of ANOMALY_FIELDS) {
@@ -1325,7 +1449,24 @@ function sampleAnomalyInfluence(x, y) {
     maxSpeedScale = Math.min(maxSpeedScale, 1 - anomaly.controlLoss * 0.48 * normalized);
     dragBoost = Math.max(dragBoost, anomaly.dragBoost * normalized);
     warningLevel = Math.max(warningLevel, normalized);
+    if (normalized > 0.68) {
+      damagePerSecond = Math.max(damagePerSecond, 22);
+    } else if (normalized > 0.4) {
+      damagePerSecond = Math.max(damagePerSecond, 9);
+    } else if (normalized > 0.18) {
+      damagePerSecond = Math.max(damagePerSecond, 3);
+    }
   }
+
+  const tier = inCore
+    ? "core"
+    : damagePerSecond >= 20
+      ? "lethal"
+      : damagePerSecond >= 8
+        ? "medium"
+        : damagePerSecond > 0
+          ? "mild"
+          : "clear";
 
   return {
     pullX,
@@ -1334,6 +1475,8 @@ function sampleAnomalyInfluence(x, y) {
     maxSpeedScale: clamp(maxSpeedScale, 0.58, 1),
     dragBoost,
     warningLevel,
+    damagePerSecond,
+    tier,
     inCore
   };
 }
@@ -1344,12 +1487,46 @@ function setExplorationStatus() {
   }
 }
 
-function circleIntersectsRect(x, y, radius, rect) {
-  const nearestX = clamp(x, rect.x, rect.x + rect.w);
-  const nearestY = clamp(y, rect.y, rect.y + rect.h);
-  const dx = x - nearestX;
-  const dy = y - nearestY;
-  return (dx * dx) + (dy * dy) < radius * radius;
+function circleIntersectsAnyRockMask(x, y, radius) {
+  for (const mask of state.rockMasks) {
+    if (circleIntersectsRockMask(x, y, radius, mask)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function circleIntersectsRockMask(x, y, radius, mask) {
+  const boundsLeft = x - radius;
+  const boundsTop = y - radius;
+  const boundsRight = x + radius;
+  const boundsBottom = y + radius;
+
+  if (boundsRight < mask.x || boundsLeft > mask.x + mask.w || boundsBottom < mask.y || boundsTop > mask.y + mask.h) {
+    return false;
+  }
+
+  const startX = Math.max(0, Math.floor(boundsLeft - mask.x));
+  const endX = Math.min(mask.w - 1, Math.ceil(boundsRight - mask.x));
+  const startY = Math.max(0, Math.floor(boundsTop - mask.y));
+  const endY = Math.min(mask.h - 1, Math.ceil(boundsBottom - mask.y));
+  const radiusSq = radius * radius;
+
+  for (let py = startY; py <= endY; py++) {
+    for (let px = startX; px <= endX; px++) {
+      const alpha = mask.alpha[((py * mask.w + px) * 4) + 3];
+      if (alpha <= ROCK_MASK_ALPHA_THRESHOLD) {
+        continue;
+      }
+      const dx = (mask.x + px + 0.5) - x;
+      const dy = (mask.y + py + 0.5) - y;
+      if ((dx * dx) + (dy * dy) <= radiusSq) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 function buildRockVisualCatalog(colorKey) {
@@ -1369,22 +1546,6 @@ function buildRockVisualCatalog(colorKey) {
       ];
     })
   );
-}
-
-function buildRockColliders(instances) {
-  return instances.map((rock) => {
-    const visual = ROCK_VISUALS[rock.visualId];
-    const widthPx = visual.wTiles * TILE_SIZE;
-    const heightPx = visual.hTiles * TILE_SIZE;
-    const insetX = Math.max(6, Math.round(widthPx * 0.12));
-    const insetY = Math.max(8, Math.round(heightPx * 0.16));
-    return {
-      x: rock.tileX * TILE_SIZE + insetX,
-      y: rock.tileY * TILE_SIZE + insetY,
-      w: Math.max(10, widthPx - insetX * 2),
-      h: Math.max(10, heightPx - insetY * 2)
-    };
-  });
 }
 
 function angleToDirection(angle) {
@@ -1476,6 +1637,25 @@ function setStatus(text) {
   if (statusPill.textContent !== text) {
     statusPill.textContent = text;
   }
+}
+
+function updateHullHud() {
+  hullHud.textContent = `Hull ${Math.round(player.hull)}%`;
+}
+
+function updateFieldHud(influence) {
+  const tier = influence?.tier || "clear";
+  let text = "Field clear";
+  if (tier === "mild") {
+    text = "Field mild";
+  } else if (tier === "medium") {
+    text = "Field medium";
+  } else if (tier === "lethal") {
+    text = "Field severe";
+  } else if (tier === "core") {
+    text = "Field critical";
+  }
+  fieldHud.textContent = text;
 }
 
 function invalidateWorldLayer() {
