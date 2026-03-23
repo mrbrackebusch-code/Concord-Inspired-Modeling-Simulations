@@ -4,59 +4,113 @@ const GRID_ROWS = 18;
 const CANVAS_WIDTH = GRID_COLS * TILE_SIZE;
 const CANVAS_HEIGHT = GRID_ROWS * TILE_SIZE;
 const MOTION_EPSILON = 1.5;
+const PLAYER_COLLISION_RADIUS = 14;
 const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
 const TERRAIN_THEME = {
-  ground: "groundBlack",
-  chasm: "chasmBlack"
+  ground: "sand",
+  water: "sandWater"
 };
 
 const TERRAIN_FAMILIES = {
-  groundBlack: {
+  sand: {
     interior: [
-      { row: 17, col: 12 },
-      { row: 17, col: 13 },
-      { row: 17, col: 14 }
+      { row: 17, col: 0 },
+      { row: 17, col: 1 },
+      { row: 17, col: 2 }
     ],
-    edgeN: { row: 14, col: 13 },
-    edgeS: { row: 16, col: 13 },
-    edgeW: { row: 15, col: 12 },
-    edgeE: { row: 15, col: 14 },
-    cornerNW: { row: 14, col: 12 },
-    cornerNE: { row: 14, col: 14 },
-    cornerSE: { row: 16, col: 14 },
-    cornerSW: { row: 16, col: 12 },
-    innerNW: { row: 12, col: 13 },
-    innerNE: { row: 12, col: 14 },
-    innerSE: { row: 13, col: 14 },
-    innerSW: { row: 13, col: 13 },
+    edgeN: { row: 14, col: 1 },
+    edgeS: { row: 16, col: 1 },
+    edgeW: { row: 15, col: 0 },
+    edgeE: { row: 15, col: 2 },
+    cornerNW: { row: 14, col: 0 },
+    cornerNE: { row: 14, col: 2 },
+    cornerSE: { row: 16, col: 2 },
+    cornerSW: { row: 16, col: 0 },
+    innerNW: { row: 12, col: 1 },
+    innerNE: { row: 12, col: 2 },
+    innerSE: { row: 13, col: 2 },
+    innerSW: { row: 13, col: 1 },
     decor: [
-      { row: 12, col: 12 },
-      { row: 13, col: 12 }
+      { row: 12, col: 0 },
+      { row: 13, col: 0 }
     ]
   },
-  chasmBlack: {
+  sandWater: {
     interior: [
-      { row: 5, col: 15 },
-      { row: 5, col: 16 },
-      { row: 5, col: 17 }
+      { row: 17, col: 3 },
+      { row: 17, col: 4 },
+      { row: 17, col: 5 }
     ],
-    edgeN: { row: 2, col: 16 },
-    edgeS: { row: 4, col: 16 },
-    edgeW: { row: 3, col: 15 },
-    edgeE: { row: 3, col: 17 },
-    cornerNW: { row: 2, col: 15 },
-    cornerNE: { row: 2, col: 17 },
-    cornerSE: { row: 4, col: 17 },
-    cornerSW: { row: 4, col: 15 },
-    innerNW: { row: 0, col: 16 },
-    innerNE: { row: 0, col: 17 },
-    innerSE: { row: 1, col: 17 },
-    innerSW: { row: 1, col: 16 },
-    decor: []
+    edgeN: { row: 14, col: 4 },
+    edgeS: { row: 16, col: 4 },
+    edgeW: { row: 15, col: 3 },
+    edgeE: { row: 15, col: 5 },
+    cornerNW: { row: 14, col: 3 },
+    cornerNE: { row: 14, col: 5 },
+    cornerSE: { row: 16, col: 5 },
+    cornerSW: { row: 16, col: 3 },
+    innerNW: { row: 12, col: 4 },
+    innerNE: { row: 12, col: 5 },
+    innerSE: { row: 13, col: 5 },
+    innerSW: { row: 13, col: 4 },
+    decor: [
+      { row: 12, col: 3 },
+      { row: 13, col: 3 }
+    ]
   }
 };
+
+const WATER_POOLS = [
+  { cx: 6.2, cy: 5.6, rx: 1.7, ry: 1.2, jitter: 0.18 },
+  { cx: 14.2, cy: 6.6, rx: 1.4, ry: 1.05, jitter: 0.18 },
+  { cx: 22.2, cy: 5.8, rx: 1.8, ry: 1.25, jitter: 0.2 },
+  { cx: 5.2, cy: 10.9, rx: 1.5, ry: 1.05, jitter: 0.16 },
+  { cx: 23.0, cy: 10.5, rx: 1.8, ry: 1.15, jitter: 0.2 }
+];
+
+const ANOMALY_FIELDS = [
+  { id: "north-drift", cx: 14.1, cy: 4.8, radius: 2.2, coreRadius: 0.72, pull: 260, controlLoss: 0.38, dragBoost: 0.32 },
+  { id: "west-cluster", cx: 8.3, cy: 8.4, radius: 2.15, coreRadius: 0.68, pull: 220, controlLoss: 0.3, dragBoost: 0.26 },
+  { id: "east-cluster", cx: 19.5, cy: 9.8, radius: 2.25, coreRadius: 0.74, pull: 240, controlLoss: 0.34, dragBoost: 0.28 }
+];
+
+const ANOMALY_DEBRIS_REFS = [
+  { row: 18, col: 18 },
+  { row: 18, col: 19 },
+  { row: 18, col: 20 },
+  { row: 19, col: 18 },
+  { row: 20, col: 18 },
+  { row: 20, col: 19 },
+  { row: 20, col: 20 },
+  { row: 21, col: 18 },
+  { row: 21, col: 19 },
+  { row: 21, col: 20 },
+  { row: 22, col: 19 }
+];
+
+const ROCK_RECT_DEFS = {
+  "2x2_a": { c0: 0, r0: 0, c1: 1, r1: 1 },
+  "2x2_g": { c0: 24, r0: 4, c1: 25, r1: 5 },
+  "2x2_h": { c0: 26, r0: 4, c1: 27, r1: 5 },
+  "2x2_i": { c0: 24, r0: 6, c1: 25, r1: 7 },
+  "2x2_j": { c0: 26, r0: 6, c1: 27, r1: 7 },
+  "2x3_a": { c0: 16, r0: 0, c1: 17, r1: 2 },
+  "3x3_a": { c0: 9, r0: 0, c1: 11, r1: 2 },
+  "4x3_a": { c0: 20, r0: 5, c1: 23, r1: 7 }
+};
+
+const ROCK_VISUALS = buildRockVisualCatalog("brown");
+const ROCK_INSTANCES = [
+  { visualId: "boss_rock_brown_2x2_a", tileX: 6, tileY: 4 },
+  { visualId: "boss_rock_brown_3x3_a", tileX: 11, tileY: 5 },
+  { visualId: "boss_rock_brown_2x3_a", tileX: 20, tileY: 4 },
+  { visualId: "boss_rock_brown_2x2_g", tileX: 3, tileY: 9 },
+  { visualId: "boss_rock_brown_4x3_a", tileX: 17, tileY: 9 },
+  { visualId: "boss_rock_brown_2x2_i", tileX: 9, tileY: 11 },
+  { visualId: "boss_rock_brown_2x2_j", tileX: 21, tileY: 11 }
+];
 
 const EXPERIMENTS = [
   {
@@ -112,20 +166,6 @@ const CAPTURE_PRESETS = {
   "unit-01/lesson-01/mass-change/alka-seltzer": { before: 102.5, after: 100.8 }
 };
 
-const PLATFORM_RECTS = [
-  { x: 1, y: 1, w: 5, h: 4 },
-  { x: 10, y: 1, w: 6, h: 4 },
-  { x: 20, y: 1, w: 6, h: 4 },
-  { x: 1, y: 12, w: 6, h: 4 },
-  { x: 10, y: 12, w: 6, h: 4 },
-  { x: 20, y: 12, w: 6, h: 4 },
-  { x: 11, y: 6, w: 6, h: 6 },
-  { x: 7, y: 7, w: 4, h: 2 },
-  { x: 17, y: 7, w: 4, h: 2 },
-  { x: 13, y: 4, w: 2, h: 2 },
-  { x: 13, y: 11, w: 2, h: 1 }
-];
-
 const worldCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("world-canvas"));
 const worldCtx = worldCanvas.getContext("2d");
 const actorCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("actor-canvas"));
@@ -146,8 +186,9 @@ const zoneCaptureList = document.getElementById("zone-capture-list");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
 
 const keys = new Set();
-const platformGrid = createPlatformGrid();
-const chasmGrid = invertGrid(platformGrid);
+const groundGrid = createFilledGrid();
+const waterGrid = createBlobGrid(WATER_POOLS);
+const rockColliders = buildRockColliders(ROCK_INSTANCES);
 const spawnPoint = { x: 14 * TILE_SIZE + TILE_SIZE / 2, y: 9 * TILE_SIZE + TILE_SIZE / 2 };
 
 let assetsReady = false;
@@ -157,6 +198,7 @@ let rearmZoneId = null;
 let activeZone = null;
 let visualTimeMs = 0;
 let deathTimerMs = 0;
+let deathMessage = "Field integrity lost. Repositioning ship...";
 let hudFocusExperimentId = null;
 let frameHandle = 0;
 let previousTime = 0;
@@ -178,13 +220,16 @@ const player = {
 const state = {
   images: {
     terrainSheet: null,
+    rockSheet: null,
     pilotSheet: null,
     ship: null
   },
   animationMap: null,
   backgroundLayer: null,
-  chasmLayer: null,
   groundLayer: null,
+  waterLayer: null,
+  anomalyLayer: null,
+  rockLayer: null,
   worldLayer: null,
   shipFrameCache: null,
   captures: createCaptureState()
@@ -194,6 +239,7 @@ initializeZoneCaptureCards();
 
 const loadState = Promise.all([
   loadImage("../../../assets/game-poc/tiles/terrain.png"),
+  loadImage("../../../assets/game-poc/tiles/rocks.png"),
   loadImage("../../../assets/game-poc/heroes/DefaultHero.png"),
   loadImage("../../../assets/spaceship/spaceship.png"),
   fetch("../../../assets/game-poc/heroes/anim_map.json").then((res) => {
@@ -202,18 +248,17 @@ const loadState = Promise.all([
     }
     return res.json();
   })
-]).then(([terrainSheet, pilotSheet, ship, animationMap]) => {
+]).then(([terrainSheet, rockSheet, pilotSheet, ship, animationMap]) => {
   state.images.terrainSheet = terrainSheet;
+  state.images.rockSheet = rockSheet;
   state.images.pilotSheet = pilotSheet;
   state.images.ship = ship;
   state.animationMap = animationMap;
   state.backgroundLayer = buildBackgroundLayer();
-  state.chasmLayer = buildTerrainLayer(chasmGrid, TERRAIN_THEME.chasm);
-  state.groundLayer = buildTerrainLayer(platformGrid, TERRAIN_THEME.ground, {
-    shadowColor: "rgba(0, 0, 0, 0.26)",
-    shadowBlur: 9,
-    shadowOffsetY: 3
-  });
+  state.groundLayer = buildTerrainLayer(groundGrid, TERRAIN_THEME.ground);
+  state.waterLayer = buildTerrainLayer(waterGrid, TERRAIN_THEME.water);
+  state.anomalyLayer = buildAnomalyLayer();
+  state.rockLayer = buildRockLayer();
   state.worldLayer = buildWorldLayer();
   state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
@@ -314,9 +359,13 @@ function update(dtMs) {
   const input = getInputVector();
   const brakeHeld = keys.has(" ");
   const dt = dtMs / 1000;
-  const accel = brakeHeld ? 520 : 1100;
-  const maxSpeed = brakeHeld ? 160 : 320;
-  const drag = brakeHeld ? 0.82 : 0.93;
+  const baseAccel = brakeHeld ? 520 : 1100;
+  const baseMaxSpeed = brakeHeld ? 160 : 320;
+  const baseDrag = brakeHeld ? 0.82 : 0.93;
+  const anomalyInfluence = sampleAnomalyInfluence(player.x, player.y);
+  const accel = baseAccel * anomalyInfluence.inputScale;
+  const maxSpeed = baseMaxSpeed * anomalyInfluence.maxSpeedScale;
+  const drag = baseDrag - anomalyInfluence.dragBoost * 0.12;
   player.thrusting = input.mag > 0;
 
   if (input.mag > 0) {
@@ -333,6 +382,9 @@ function update(dtMs) {
     player.vx *= 0.95;
     player.vy *= 0.95;
   }
+
+  player.vx += anomalyInfluence.pullX * dt;
+  player.vy += anomalyInfluence.pullY * dt;
 
   const speed = Math.hypot(player.vx, player.vy);
   if (input.mag > 0 || speed > MOTION_EPSILON) {
@@ -354,17 +406,20 @@ function update(dtMs) {
     player.vy = 0;
   }
 
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
-  player.x = clamp(player.x, 0, CANVAS_WIDTH);
-  player.y = clamp(player.y, 0, CANVAS_HEIGHT);
+  resolvePlayerMovement(dt);
 
-  if (isSafePoint(player.x, player.y)) {
-    player.lastSafeX = player.x;
-    player.lastSafeY = player.y;
-  } else {
-    killPlayer();
+  const postMoveInfluence = sampleAnomalyInfluence(player.x, player.y);
+  if (postMoveInfluence.inCore) {
+    killPlayer("Dense anomaly overwhelmed the ship. Resetting...");
     return;
+  }
+
+  if (!activeZone && postMoveInfluence.warningLevel > 0.38) {
+    setStatus("Localized dark-sector pull rising. Keep clear of the dense core.");
+  } else if (postMoveInfluence.warningLevel > 0.14 && !overlayOpen && !activeZone) {
+    setStatus("Dust and stones are drifting wrong here. Controls feel unstable.");
+  } else {
+    setExplorationStatus();
   }
 
   const nextZone = getZoneAtPoint(player.x, player.y);
@@ -378,15 +433,14 @@ function update(dtMs) {
     activeZone = nextZone;
   }
 
-  if (!activeZone) {
-    rearmZoneId = null;
-    setStatus("Cross an outlined zone to open its experiment view.");
-  } else if (rearmZoneId === activeZone.id) {
+  if (activeZone && rearmZoneId === activeZone.id) {
     setStatus(`${activeZone.title} is armed again once you leave and re-enter the box.`);
-  } else {
+  } else if (activeZone) {
     setStatus(`Opening ${activeZone.title}...`);
     openExperiment(activeZone);
     rearmZoneId = activeZone.id;
+  } else {
+    rearmZoneId = null;
   }
 
   changed =
@@ -423,9 +477,9 @@ function renderActorLayer() {
 function renderLoading() {
   worldCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.fillStyle = "#07111b";
+  ctx.fillStyle = "#2a2018";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.fillStyle = "#e7f4ff";
+  ctx.fillStyle = "#f2e5c6";
   ctx.font = "24px Georgia";
   ctx.fillText("Loading ship proof of concept...", 28, 60);
 }
@@ -436,30 +490,21 @@ function buildBackgroundLayer() {
   layer.height = CANVAS_HEIGHT;
   const layerCtx = layer.getContext("2d");
   const gradient = layerCtx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-  gradient.addColorStop(0, "#0d1830");
-  gradient.addColorStop(1, "#07101a");
+  gradient.addColorStop(0, "#5b4632");
+  gradient.addColorStop(1, "#2a2018");
   layerCtx.fillStyle = gradient;
   layerCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-  const stars = buildStarfield();
-  for (const star of stars) {
-    layerCtx.fillStyle = `rgba(225, 241, 255, ${star.alphaBase.toFixed(3)})`;
-    layerCtx.fillRect(star.x, star.y, star.size, star.size);
+  for (let i = 0; i < 140; i++) {
+    const x = (mixSeed(i, 3, 11) % CANVAS_WIDTH) | 0;
+    const y = (mixSeed(i, 9, 17) % CANVAS_HEIGHT) | 0;
+    const radius = 1 + (mixSeed(i, 5, 21) % 2);
+    const alpha = 0.04 + ((mixSeed(i, 7, 33) % 40) / 255);
+    layerCtx.fillStyle = `rgba(34, 24, 16, ${alpha.toFixed(3)})`;
+    layerCtx.beginPath();
+    layerCtx.arc(x, y, radius, 0, Math.PI * 2);
+    layerCtx.fill();
   }
-
-  const fieldGlow = layerCtx.createRadialGradient(
-    CANVAS_WIDTH * 0.5,
-    CANVAS_HEIGHT * 0.52,
-    40,
-    CANVAS_WIDTH * 0.5,
-    CANVAS_HEIGHT * 0.52,
-    CANVAS_WIDTH * 0.5
-  );
-  fieldGlow.addColorStop(0, "rgba(18, 184, 255, 0.12)");
-  fieldGlow.addColorStop(0.55, "rgba(18, 184, 255, 0.05)");
-  fieldGlow.addColorStop(1, "rgba(18, 184, 255, 0)");
-  layerCtx.fillStyle = fieldGlow;
-  layerCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   return layer;
 }
@@ -469,8 +514,10 @@ function buildWorldLayer() {
   layer.width = CANVAS_WIDTH;
   layer.height = CANVAS_HEIGHT;
   const layerCtx = layer.getContext("2d");
-  layerCtx.drawImage(state.chasmLayer, 0, 0);
   layerCtx.drawImage(state.groundLayer, 0, 0);
+  layerCtx.drawImage(state.waterLayer, 0, 0);
+  layerCtx.drawImage(state.anomalyLayer, 0, 0);
+  layerCtx.drawImage(state.rockLayer, 0, 0);
   drawExperimentZonesBase(layerCtx);
   return layer;
 }
@@ -510,6 +557,120 @@ function buildTerrainLayer(grid, familyId, options = {}) {
   }
 
   return layer;
+}
+
+function buildAnomalyLayer() {
+  const layer = document.createElement("canvas");
+  layer.width = CANVAS_WIDTH;
+  layer.height = CANVAS_HEIGHT;
+  const layerCtx = layer.getContext("2d");
+
+  for (let index = 0; index < ANOMALY_FIELDS.length; index++) {
+    drawAnomalySignature(layerCtx, ANOMALY_FIELDS[index], index);
+  }
+
+  return layer;
+}
+
+function buildRockLayer() {
+  const layer = document.createElement("canvas");
+  layer.width = CANVAS_WIDTH;
+  layer.height = CANVAS_HEIGHT;
+  const layerCtx = layer.getContext("2d");
+  const rockSheet = state.images.rockSheet;
+
+  for (const rock of ROCK_INSTANCES) {
+    const visual = ROCK_VISUALS[rock.visualId];
+    if (!visual) {
+      continue;
+    }
+
+    const widthPx = visual.wTiles * TILE_SIZE;
+    const heightPx = visual.hTiles * TILE_SIZE;
+    const sx = visual.ref.col * TILE_SIZE;
+    const sy = (visual.ref.row - visual.hTiles + 1) * TILE_SIZE;
+    const dx = rock.tileX * TILE_SIZE;
+    const dy = rock.tileY * TILE_SIZE;
+
+    layerCtx.save();
+    layerCtx.shadowColor = "rgba(0, 0, 0, 0.22)";
+    layerCtx.shadowBlur = 10;
+    layerCtx.shadowOffsetY = 4;
+    layerCtx.drawImage(rockSheet, sx, sy, widthPx, heightPx, dx, dy, widthPx, heightPx);
+    layerCtx.restore();
+  }
+
+  return layer;
+}
+
+function drawAnomalySignature(layerCtx, anomaly, index) {
+  const centerX = anomaly.cx * TILE_SIZE;
+  const centerY = anomaly.cy * TILE_SIZE;
+  const radiusX = anomaly.radius * TILE_SIZE;
+  const radiusY = radiusX * 0.76;
+  const rotation = ((mixSeed(index, 4, 37) % 1000) / 1000) * Math.PI;
+
+  layerCtx.save();
+  layerCtx.translate(centerX, centerY);
+  layerCtx.rotate(rotation);
+
+  const dustFill = layerCtx.createRadialGradient(0, 0, radiusX * 0.12, 0, 0, radiusX);
+  dustFill.addColorStop(0, "rgba(73, 53, 32, 0.22)");
+  dustFill.addColorStop(0.55, "rgba(92, 67, 39, 0.12)");
+  dustFill.addColorStop(1, "rgba(92, 67, 39, 0)");
+  layerCtx.fillStyle = dustFill;
+  layerCtx.beginPath();
+  layerCtx.ellipse(0, 0, radiusX, radiusY, 0, 0, Math.PI * 2);
+  layerCtx.fill();
+
+  for (let arcIndex = 0; arcIndex < 4; arcIndex++) {
+    const inset = arcIndex * 6;
+    const start = 0.3 + arcIndex * 0.55;
+    const end = start + 1.9;
+    layerCtx.strokeStyle = `rgba(82, 61, 37, ${(0.18 - arcIndex * 0.025).toFixed(3)})`;
+    layerCtx.lineWidth = 2;
+    layerCtx.beginPath();
+    layerCtx.ellipse(0, 0, radiusX - inset, radiusY - inset * 0.72, 0, start, end);
+    layerCtx.stroke();
+  }
+
+  layerCtx.fillStyle = "rgba(52, 35, 21, 0.18)";
+  layerCtx.beginPath();
+  layerCtx.ellipse(0, 0, anomaly.coreRadius * TILE_SIZE * 1.05, anomaly.coreRadius * TILE_SIZE * 0.82, 0, 0, Math.PI * 2);
+  layerCtx.fill();
+
+  layerCtx.restore();
+
+  drawAnomalyDebris(layerCtx, anomaly, index);
+}
+
+function drawAnomalyDebris(layerCtx, anomaly, index) {
+  const sheet = state.images.terrainSheet;
+  const centerX = anomaly.cx * TILE_SIZE;
+  const centerY = anomaly.cy * TILE_SIZE;
+  const radius = anomaly.radius * TILE_SIZE;
+
+  for (let i = 0; i < 12; i++) {
+    const seed = mixSeed(index, i, 59);
+    const angle = ((seed % 1000) / 1000) * Math.PI * 2;
+    const distance = radius * (0.48 + ((seed >>> 4) % 280) / 1000);
+    const ref = ANOMALY_DEBRIS_REFS[(seed >>> 7) % ANOMALY_DEBRIS_REFS.length];
+    const size = 12 + ((seed >>> 10) % 10);
+    const drawX = centerX + Math.cos(angle) * distance - size / 2;
+    const drawY = centerY + Math.sin(angle) * distance * 0.78 - size / 2;
+
+    layerCtx.drawImage(
+      sheet,
+      ref.col * TILE_SIZE,
+      ref.row * TILE_SIZE,
+      TILE_SIZE,
+      TILE_SIZE,
+      Math.round(drawX),
+      Math.round(drawY),
+      size,
+      size
+    );
+  }
 }
 
 function resolveTerrainFrameRef(grid, row, col, family) {
@@ -866,7 +1027,7 @@ function drawDeathOverlay() {
   ctx.fillStyle = "#ffe6e6";
   ctx.font = "bold 22px Georgia";
   ctx.textAlign = "center";
-  ctx.fillText("Field integrity lost. Repositioning ship...", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  ctx.fillText(deathMessage, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 }
 
 function openExperiment(experiment) {
@@ -902,13 +1063,14 @@ function closeOverlay() {
   invalidateActorLayer();
 }
 
-function killPlayer() {
+function killPlayer(message = "Ship systems overwhelmed. Resetting...") {
   player.alive = false;
   player.thrusting = false;
   deathTimerMs = 850;
+  deathMessage = message;
   player.vx = 0;
   player.vy = 0;
-  setStatus("Void contact. Resetting ship...");
+  setStatus(message);
   invalidateActorLayer();
 }
 
@@ -924,6 +1086,7 @@ function respawn() {
   player.thrusting = false;
   activeZone = null;
   rearmZoneId = null;
+  deathMessage = "Field integrity lost. Repositioning ship...";
   setStatus("Ship reset. Cross an outlined zone to open its experiment view.");
   renderCaptureHud();
   invalidateActorLayer();
@@ -947,20 +1110,32 @@ function getInputVector() {
   return { x, y, mag };
 }
 
-function createPlatformGrid() {
+function createFilledGrid() {
+  return Array.from({ length: GRID_ROWS }, () => Array.from({ length: GRID_COLS }, () => true));
+}
+
+function createBlobGrid(blobs) {
   const grid = Array.from({ length: GRID_ROWS }, () => Array.from({ length: GRID_COLS }, () => false));
-  for (const rect of PLATFORM_RECTS) {
-    for (let row = rect.y; row < rect.y + rect.h; row++) {
-      for (let col = rect.x; col < rect.x + rect.w; col++) {
-        grid[row][col] = true;
+
+  for (let row = 0; row < GRID_ROWS; row++) {
+    for (let col = 0; col < GRID_COLS; col++) {
+      const sampleX = col + 0.5;
+      const sampleY = row + 0.5;
+
+      for (let index = 0; index < blobs.length; index++) {
+        const blob = blobs[index];
+        const dx = (sampleX - blob.cx) / blob.rx;
+        const dy = (sampleY - blob.cy) / blob.ry;
+        const noise = (((mixSeed(row, col, 71 + index * 13) % 1000) / 1000) - 0.5) * blob.jitter;
+        if ((dx * dx) + (dy * dy) <= 1 + noise) {
+          grid[row][col] = true;
+          break;
+        }
       }
     }
   }
-  return grid;
-}
 
-function invertGrid(grid) {
-  return grid.map((row) => row.map((cell) => !cell));
+  return grid;
 }
 
 function getZoneAtPoint(x, y) {
@@ -1073,13 +1248,143 @@ function getHudFocusExperiment() {
   return hudFocusExperimentId ? findExperimentByIdentifier(hudFocusExperimentId) : null;
 }
 
-function isSafePoint(x, y) {
-  const tileX = Math.floor(x / TILE_SIZE);
-  const tileY = Math.floor(y / TILE_SIZE);
-  if (tileX < 0 || tileX >= GRID_COLS || tileY < 0 || tileY >= GRID_ROWS) {
-    return false;
+function resolvePlayerMovement(dt) {
+  const proposedX = clamp(player.x + player.vx * dt, PLAYER_COLLISION_RADIUS, CANVAS_WIDTH - PLAYER_COLLISION_RADIUS);
+  const resolvedX = resolveRockAxis(proposedX, player.y, "x");
+  if (Math.abs(resolvedX - proposedX) > 0.01) {
+    player.vx = 0;
   }
-  return platformGrid[tileY][tileX];
+  player.x = resolvedX;
+
+  const proposedY = clamp(player.y + player.vy * dt, PLAYER_COLLISION_RADIUS, CANVAS_HEIGHT - PLAYER_COLLISION_RADIUS);
+  const resolvedY = resolveRockAxis(player.x, proposedY, "y");
+  if (Math.abs(resolvedY - proposedY) > 0.01) {
+    player.vy = 0;
+  }
+  player.y = resolvedY;
+}
+
+function resolveRockAxis(nextX, nextY, axis) {
+  let resolved = axis === "x" ? nextX : nextY;
+
+  for (const collider of rockColliders) {
+    const testX = axis === "x" ? resolved : nextX;
+    const testY = axis === "y" ? resolved : nextY;
+    if (!circleIntersectsRect(testX, testY, PLAYER_COLLISION_RADIUS, collider)) {
+      continue;
+    }
+
+    if (axis === "x") {
+      if (player.vx > 0) {
+        resolved = Math.min(resolved, collider.x - PLAYER_COLLISION_RADIUS);
+      } else if (player.vx < 0) {
+        resolved = Math.max(resolved, collider.x + collider.w + PLAYER_COLLISION_RADIUS);
+      }
+    } else if (player.vy > 0) {
+      resolved = Math.min(resolved, collider.y - PLAYER_COLLISION_RADIUS);
+    } else if (player.vy < 0) {
+      resolved = Math.max(resolved, collider.y + collider.h + PLAYER_COLLISION_RADIUS);
+    }
+  }
+
+  return resolved;
+}
+
+function sampleAnomalyInfluence(x, y) {
+  let pullX = 0;
+  let pullY = 0;
+  let inputScale = 1;
+  let maxSpeedScale = 1;
+  let dragBoost = 0;
+  let warningLevel = 0;
+  let inCore = false;
+
+  for (const anomaly of ANOMALY_FIELDS) {
+    const centerX = anomaly.cx * TILE_SIZE;
+    const centerY = anomaly.cy * TILE_SIZE;
+    const radiusPx = anomaly.radius * TILE_SIZE;
+    const corePx = anomaly.coreRadius * TILE_SIZE;
+    const dx = centerX - x;
+    const dy = centerY - y;
+    const distance = Math.hypot(dx, dy);
+
+    if (distance <= corePx) {
+      inCore = true;
+      warningLevel = 1;
+      continue;
+    }
+    if (distance >= radiusPx || distance === 0) {
+      continue;
+    }
+
+    const normalized = 1 - (distance / radiusPx);
+    const strength = normalized * normalized;
+    pullX += (dx / distance) * anomaly.pull * strength;
+    pullY += (dy / distance) * anomaly.pull * strength;
+    inputScale = Math.min(inputScale, 1 - anomaly.controlLoss * normalized);
+    maxSpeedScale = Math.min(maxSpeedScale, 1 - anomaly.controlLoss * 0.48 * normalized);
+    dragBoost = Math.max(dragBoost, anomaly.dragBoost * normalized);
+    warningLevel = Math.max(warningLevel, normalized);
+  }
+
+  return {
+    pullX,
+    pullY,
+    inputScale: clamp(inputScale, 0.42, 1),
+    maxSpeedScale: clamp(maxSpeedScale, 0.58, 1),
+    dragBoost,
+    warningLevel,
+    inCore
+  };
+}
+
+function setExplorationStatus() {
+  if (!activeZone && !overlayOpen) {
+    setStatus("Cross an outlined zone to open its experiment view.");
+  }
+}
+
+function circleIntersectsRect(x, y, radius, rect) {
+  const nearestX = clamp(x, rect.x, rect.x + rect.w);
+  const nearestY = clamp(y, rect.y, rect.y + rect.h);
+  const dx = x - nearestX;
+  const dy = y - nearestY;
+  return (dx * dx) + (dy * dy) < radius * radius;
+}
+
+function buildRockVisualCatalog(colorKey) {
+  const rowOffset = colorKey === "brown" ? 24 : 0;
+  return Object.fromEntries(
+    Object.entries(ROCK_RECT_DEFS).map(([id, rectDef]) => {
+      const wTiles = rectDef.c1 - rectDef.c0 + 1;
+      const hTiles = rectDef.r1 - rectDef.r0 + 1;
+      const visualId = `boss_rock_${colorKey}_${id}`;
+      return [
+        visualId,
+        {
+          ref: { row: rectDef.r1 + rowOffset, col: rectDef.c0 },
+          wTiles,
+          hTiles
+        }
+      ];
+    })
+  );
+}
+
+function buildRockColliders(instances) {
+  return instances.map((rock) => {
+    const visual = ROCK_VISUALS[rock.visualId];
+    const widthPx = visual.wTiles * TILE_SIZE;
+    const heightPx = visual.hTiles * TILE_SIZE;
+    const insetX = Math.max(6, Math.round(widthPx * 0.12));
+    const insetY = Math.max(8, Math.round(heightPx * 0.16));
+    return {
+      x: rock.tileX * TILE_SIZE + insetX,
+      y: rock.tileY * TILE_SIZE + insetY,
+      w: Math.max(10, widthPx - insetX * 2),
+      h: Math.max(10, heightPx - insetY * 2)
+    };
+  });
 }
 
 function angleToDirection(angle) {
