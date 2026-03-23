@@ -17,7 +17,10 @@
       <section class="game-shell">
         <section class="play-column">
           <section class="canvas-frame">
-            <canvas id="game-canvas" width="896" height="576" aria-label="Ship experiment proof of concept"></canvas>
+            <div class="canvas-stack" aria-label="Ship experiment proof of concept">
+              <canvas id="world-canvas" width="896" height="576" aria-hidden="true"></canvas>
+              <canvas id="actor-canvas" width="896" height="576" aria-hidden="true"></canvas>
+            </div>
             <div id="status-pill" class="status-pill">Loading assets...</div>
           </section>
         </section>

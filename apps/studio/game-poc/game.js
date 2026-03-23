@@ -84,8 +84,10 @@ const PLATFORM_RECTS = [
   { x: 13, y: 11, w: 2, h: 1 }
 ];
 
-const canvas = /** @type {HTMLCanvasElement} */ (document.getElementById("game-canvas"));
-const ctx = canvas.getContext("2d");
+const worldCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("world-canvas"));
+const worldCtx = worldCanvas.getContext("2d");
+const actorCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("actor-canvas"));
+const ctx = actorCanvas.getContext("2d");
 const statusPill = document.getElementById("status-pill");
 const experimentWindow = document.getElementById("experiment-window");
 const overlayTitle = document.getElementById("experiment-title");
@@ -115,7 +117,8 @@ let deathTimerMs = 0;
 let hudFocusExperimentId = null;
 let frameHandle = 0;
 let previousTime = 0;
-let sceneDirty = true;
+let worldDirty = true;
+let actorDirty = true;
 
 const player = {
   x: spawnPoint.x,
@@ -165,7 +168,8 @@ const loadState = Promise.all([
   assetsReady = true;
   setStatus("Cross an outlined zone to open its experiment view.");
   renderCaptureHud();
-  invalidateScene();
+  invalidateWorldLayer();
+  invalidateActorLayer();
 
   if (startupExperimentId) {
     const initialExperiment = findExperimentByIdentifier(startupExperimentId);
@@ -220,11 +224,19 @@ function frame(now) {
 
   update(dtMs);
 
-  if (sceneDirty || shouldContinueAnimating()) {
-    render();
+  const keepAnimating = shouldContinueAnimating();
+  const needsWorldPaint = worldDirty;
+  const needsActorPaint = actorDirty || keepAnimating;
+
+  if (needsWorldPaint) {
+    renderWorldLayer();
   }
 
-  if (shouldContinueAnimating()) {
+  if (needsActorPaint) {
+    renderActorLayer();
+  }
+
+  if (needsWorldPaint || needsActorPaint) {
     requestFrame();
   } else {
     previousTime = 0;
@@ -244,7 +256,7 @@ function update(dtMs) {
     if (deathTimerMs <= 0) {
       respawn();
     }
-    invalidateScene();
+    invalidateActorLayer();
     return;
   }
 
@@ -335,15 +347,20 @@ function update(dtMs) {
     priorZoneId !== (activeZone?.id || null);
 
   if (changed) {
-    invalidateScene();
+    invalidateActorLayer();
   }
 }
 
-function render() {
-  sceneDirty = false;
+function renderWorldLayer() {
+  worldDirty = false;
+  worldCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  worldCtx.drawImage(state.backgroundLayer, 0, 0);
+  worldCtx.drawImage(state.worldLayer, 0, 0);
+}
+
+function renderActorLayer() {
+  actorDirty = false;
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.drawImage(state.backgroundLayer, 0, 0);
-  ctx.drawImage(state.worldLayer, 0, 0);
   drawActiveExperimentZone();
   drawPlayer();
 
@@ -353,6 +370,7 @@ function render() {
 }
 
 function renderLoading() {
+  worldCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.fillStyle = "#07111b";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
@@ -619,7 +637,7 @@ function openExperiment(experiment) {
     overlayFrame.src = url;
   }
   renderCaptureHud();
-  invalidateScene();
+  invalidateActorLayer();
 }
 
 function closeExperimentFrame() {
@@ -634,7 +652,7 @@ function closeOverlay() {
   overlayTitle.textContent = "Standby Window";
   setStatus("Leave the box and re-enter it to reopen that experiment.");
   renderCaptureHud();
-  invalidateScene();
+  invalidateActorLayer();
 }
 
 function killPlayer() {
@@ -644,7 +662,7 @@ function killPlayer() {
   player.vx = 0;
   player.vy = 0;
   setStatus("Void contact. Resetting ship...");
-  invalidateScene();
+  invalidateActorLayer();
 }
 
 function respawn() {
@@ -661,7 +679,7 @@ function respawn() {
   rearmZoneId = null;
   setStatus("Ship reset. Cross an outlined zone to open its experiment view.");
   renderCaptureHud();
-  invalidateScene();
+  invalidateActorLayer();
 }
 
 function getInputVector() {
@@ -891,8 +909,13 @@ function setStatus(text) {
   }
 }
 
-function invalidateScene() {
-  sceneDirty = true;
+function invalidateWorldLayer() {
+  worldDirty = true;
+  requestFrame();
+}
+
+function invalidateActorLayer() {
+  actorDirty = true;
   requestFrame();
 }
 
