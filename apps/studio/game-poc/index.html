@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ship Experiment POC</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="game-shell">
+      <section class="hud-card hud-card-left">
+        <p class="eyebrow">Game Proof Of Concept</p>
+        <h1>Ship Experiment Platforms</h1>
+        <p class="lede">
+          Drive the ship across the gray platforms. Falling into the void resets the run.
+          Crossing an outlined zone opens one of the six Lesson 1 experiment views.
+        </p>
+        <p class="controls"><strong>Move:</strong> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> or arrow keys</p>
+        <p class="controls"><strong>Brake:</strong> <kbd>Space</kbd></p>
+      </section>
+
+      <section class="canvas-frame">
+        <canvas id="game-canvas" width="896" height="576" aria-label="Ship experiment proof of concept"></canvas>
+        <div id="status-pill" class="status-pill">Loading assets...</div>
+      </section>
+
+      <section class="hud-card hud-card-right">
+        <h2>Experiment Zones</h2>
+        <ol class="zone-list">
+          <li>Ice to water</li>
+          <li>Precipitate</li>
+          <li>Steel wool pulled apart</li>
+          <li>Sugar dissolves</li>
+          <li>Steel wool burns</li>
+          <li>Alka-Seltzer</li>
+        </ol>
+      </section>
+    </main>
+
+    <section id="experiment-overlay" class="experiment-overlay" hidden>
+      <div class="experiment-overlay__backdrop"></div>
+      <div class="experiment-overlay__panel" role="dialog" aria-modal="true" aria-labelledby="experiment-title">
+        <div class="experiment-overlay__header">
+          <div>
+            <p class="eyebrow">Experiment View</p>
+            <h2 id="experiment-title">Experiment</h2>
+          </div>
+          <button id="close-overlay" class="close-button" type="button">Return To Map</button>
+        </div>
+        <iframe
+          id="experiment-frame"
+          class="experiment-frame"
+          title="Experiment view"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+        ></iframe>
+      </div>
+    </section>
+
+    <script type="module" src="game.js"></script>
+  </body>
+</html>

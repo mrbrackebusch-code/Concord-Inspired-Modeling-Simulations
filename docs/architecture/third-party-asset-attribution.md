@@ -35,3 +35,17 @@ the relevant asset manifest even when this file only carries the public-facing a
   license: `CC BY 3.0`
   attribution text used: `"Spaceship 2D" by Alucard via OpenGameArt, licensed CC BY 3.0.`
   where it is used: repository-level imported game art for planned ship gameplay surfaces
+
+- asset file: `assets/game-poc/tiles/shopPlatform.png`
+  source URL: `https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles`
+  author or project: `Daniel Armstrong (HughSpectrum)` and `Lanea Zimmerman (Sharm)` via Liberated Pixel Cup tileset credits
+  license: `CC BY-SA 3.0 / GPLv3`
+  attribution text used: `LPC tileset material by Daniel Armstrong (HughSpectrum) and Lanea Zimmerman (Sharm), imported via the approved donor repo and used under CC BY-SA 3.0 / GPLv3 terms.`
+  where it is used: `apps/studio/game-poc/` gray platform terrain
+
+- asset file: `assets/game-poc/heroes/DefaultHero.png`
+  source URL: `https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles`
+  author or project: `Stephen Challener (Redshrike)`, `Manuel Riecke (MrBeast)`, `Charles Sanchez (CharlesGabriel)`, and other LPC contributors via donor repo credits
+  license: `CC BY-SA 3.0 / GPLv3`
+  attribution text used: `LPC character material by Stephen Challener (Redshrike), Manuel Riecke (MrBeast), Charles Sanchez (CharlesGabriel), and contributors, imported via the approved donor repo and used under CC BY-SA 3.0 / GPLv3 terms.`
+  where it is used: `apps/studio/game-poc/` cockpit pilot sprite

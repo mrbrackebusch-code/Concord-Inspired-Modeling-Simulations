@@ -91,5 +91,23 @@ If an imported asset requires visible attribution on a public-facing surface:
   attribution required: `yes`
   notes: imported from the published `spaceship.zip` pack alongside `assets/spaceship/spaceship.svg`
 
+- `assets/game-poc/tiles/shopPlatform.png`
+  donor source: `C:\my-heroengine-phaser\assets\tiles\shopPlatform.png`
+  upstream source: `https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles`
+  carried-forward credit source: `C:\my-heroengine-phaser\licensing\tilesetAuthors.md`
+  author: `Daniel Armstrong (HughSpectrum)` and `Lanea Zimmerman (Sharm)` via LPC tileset credits
+  license: `CC BY-SA 3.0 / GPLv3`
+  attribution required: `yes`
+  notes: imported for the ship experiment proof of concept platform terrain in `apps/studio/game-poc/`
+
+- `assets/game-poc/heroes/DefaultHero.png`
+  donor source: `C:\my-heroengine-phaser\assets\heroes\DefaultHero.png`
+  upstream source: `https://opengameart.org/content/liberated-pixel-cup-lpc-base-assets-sprites-map-tiles`
+  carried-forward credit source: `C:\my-heroengine-phaser\licensing\spriteAuthors.md`
+  author: `Stephen Challener (Redshrike)`, `Manuel Riecke (MrBeast)`, `Charles Sanchez (CharlesGabriel)`, and other LPC contributors via donor repo credits
+  license: `CC BY-SA 3.0 / GPLv3`
+  attribution required: `yes`
+  notes: imported for the cockpit pilot in `apps/studio/game-poc/`; animation support metadata copied alongside as `assets/game-poc/heroes/anim_map.json`
+
 This file sets the repository policy and staging location.
 Actual imported files still need per-asset manifest entries when they are added.
