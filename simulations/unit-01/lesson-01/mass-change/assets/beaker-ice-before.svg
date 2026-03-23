@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="96" height="132" viewBox="0 0 146 177">
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="154" viewBox="0 0 146 177">
   <defs>
     
       <clipPath id="beakerInterior">
@@ -89,33 +89,33 @@
   <g clip-path="url(#beakerInterior)">
     <rect x="43" y="112" width="60" height="34" rx="7" fill="url(#beakerWater)" opacity="0.92"/>
     <ellipse cx="73" cy="112" rx="28" ry="5.2" fill="#ecf8ff" opacity="0.54"/>
-  <path d="M52 112c7 3 15 4 23 4 9 0 16-1 22-3" fill="none" stroke="#edf8ff" stroke-width="2.8" stroke-linecap="round" opacity="0.28"/>
+  <path d="M52 112c7 3 15 4 23 4 9 0 16-1 22-3" fill="none" stroke="#edf8ff" stroke-width="2.8" stroke-linecap="round" opacity="0.3"/><path d="M56 119c6 2 12 3 19 3" fill="none" stroke="#dfeffb" stroke-width="2" stroke-linecap="round" opacity="0.22"/>
     <g opacity="0.98">
       
-    <g transform="translate(49 99)" opacity="0.96">
-      <path d="M0 7.6L7.6 0L15.2 7.6L7.6 15.2" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.4249999999999998" stroke-linejoin="round"/>
-      <path d="M0 7.6V26.6L7.6 34.2V15.2" fill="#d4eefb" stroke="#7fb6dd" stroke-width="1.1684999999999999" stroke-linejoin="round"/>
-      <path d="M15.2 7.6V26.6L7.6 34.2V15.2" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="1.1684999999999999" stroke-linejoin="round"/>
-      <path d="M2.432 6.46L7.22 2.7359999999999998" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.2825" stroke-linecap="round"/>
-      <path d="M7.904 3.952L13.072 7.4479999999999995" fill="none" stroke="#effaff" stroke-opacity="0.44" stroke-width="1.0259999999999998" stroke-linecap="round"/>
-    </g>
-  
-      
-    <g transform="translate(67 93)" opacity="0.93">
+    <g transform="translate(45 103) rotate(-9 7.36 18.400000000000002)" opacity="0.96">
       <path d="M0 7.36L7.36 0L14.72 7.36L7.36 14.72" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.3800000000000001" stroke-linejoin="round"/>
       <path d="M0 7.36V25.76L7.36 33.120000000000005V14.72" fill="#d4eefb" stroke="#7fb6dd" stroke-width="1.1316" stroke-linejoin="round"/>
       <path d="M14.72 7.36V25.76L7.36 33.120000000000005V14.72" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="1.1316" stroke-linejoin="round"/>
-      <path d="M2.3552 6.256L6.992 2.6496" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.2420000000000002" stroke-linecap="round"/>
-      <path d="M7.654400000000001 3.8272000000000004L12.6592 7.2128000000000005" fill="none" stroke="#effaff" stroke-opacity="0.44" stroke-width="0.9936" stroke-linecap="round"/>
+      <path d="M1.9136000000000002 6.6240000000000006L7.0656 2.3552" fill="none" stroke="#ffffff" stroke-opacity="0.62" stroke-width="1.2696" stroke-linecap="round"/>
+      <path d="M7.654400000000001 3.3856L12.9536 7.5072" fill="none" stroke="#effaff" stroke-opacity="0.46" stroke-width="0.966" stroke-linecap="round"/>
     </g>
   
       
-    <g transform="translate(58 86)" opacity="0.92">
-      <path d="M0 6.4L6.4 0L12.8 6.4L6.4 12.8" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.2000000000000002" stroke-linejoin="round"/>
-      <path d="M0 6.4V22.4L6.4 28.8V12.8" fill="#d4eefb" stroke="#7fb6dd" stroke-width="0.9840000000000001" stroke-linejoin="round"/>
-      <path d="M12.8 6.4V22.4L6.4 28.8V12.8" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="0.9840000000000001" stroke-linejoin="round"/>
-      <path d="M2.048 5.44L6.08 2.304" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.0800000000000003" stroke-linecap="round"/>
-      <path d="M6.656000000000001 3.3280000000000003L11.008000000000001 6.272" fill="none" stroke="#effaff" stroke-opacity="0.44" stroke-width="0.8640000000000001" stroke-linecap="round"/>
+    <g transform="translate(61 97) rotate(7 7.2 18)" opacity="0.95">
+      <path d="M0 7.2L7.2 0L14.4 7.2L7.2 14.4" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.35" stroke-linejoin="round"/>
+      <path d="M0 7.2V25.2L7.2 32.4V14.4" fill="#d4eefb" stroke="#7fb6dd" stroke-width="1.107" stroke-linejoin="round"/>
+      <path d="M14.4 7.2V25.2L7.2 32.4V14.4" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="1.107" stroke-linejoin="round"/>
+      <path d="M1.872 6.48L6.912 2.3040000000000003" fill="none" stroke="#ffffff" stroke-opacity="0.62" stroke-width="1.2420000000000002" stroke-linecap="round"/>
+      <path d="M7.488 3.3120000000000003L12.672 7.344" fill="none" stroke="#effaff" stroke-opacity="0.46" stroke-width="0.945" stroke-linecap="round"/>
+    </g>
+  
+      
+    <g transform="translate(55 83) rotate(-4 6.08 15.2)" opacity="0.92">
+      <path d="M0 6.08L6.08 0L12.16 6.08L6.08 12.16" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.1400000000000001" stroke-linejoin="round"/>
+      <path d="M0 6.08V21.28L6.08 27.36V12.16" fill="#d4eefb" stroke="#7fb6dd" stroke-width="0.9348000000000001" stroke-linejoin="round"/>
+      <path d="M12.16 6.08V21.28L6.08 27.36V12.16" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="0.9348000000000001" stroke-linejoin="round"/>
+      <path d="M1.5808 5.472L5.8368 1.9456" fill="none" stroke="#ffffff" stroke-opacity="0.62" stroke-width="1.0488000000000002" stroke-linecap="round"/>
+      <path d="M6.3232 2.7968L10.700800000000001 6.2016" fill="none" stroke="#effaff" stroke-opacity="0.46" stroke-width="0.798" stroke-linecap="round"/>
     </g>
   
     </g>

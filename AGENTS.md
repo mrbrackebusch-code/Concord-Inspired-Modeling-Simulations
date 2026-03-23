@@ -6,9 +6,11 @@ These instructions apply to any agent working in this repository.
 
 Before authoring or revising any simulation, read:
 
+- `docs/architecture/project-context-and-quality-floor.md`
 - `docs/architecture/concord-interactive-pedagogy.md`
 - `docs/architecture/animation-and-scene-architecture-standard.md`
 - `docs/architecture/process-realism-standard.md`
+- `docs/architecture/mass-change-realism-target-matrix.md`
 - `docs/architecture/svg-asset-sourcing-and-licensing.md`
 - `docs/architecture/verified-svg-source-catalog.md`
 

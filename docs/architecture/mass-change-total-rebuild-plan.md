@@ -17,10 +17,13 @@ It exists because the project has accumulated multiple valid corrections that sh
 
 This document is the working source of truth for that rebuild.
 
+It should also be read in light of the larger project context: these simulations are no longer only lesson windows in isolation. They are being built to survive inside a more ambitious game/world shell, so placeholder-level visual quality is no longer an acceptable temporary resting state.
+
 ## Source Documents
 
 This plan depends on the following files and should be read with them in mind:
 
+- `docs/architecture/project-context-and-quality-floor.md`
 - `docs/architecture/concord-interactive-pedagogy.md`
 - `docs/architecture/animation-and-scene-architecture-standard.md`
 - `docs/architecture/process-realism-standard.md`
@@ -46,6 +49,8 @@ The visual ambition standard is also locked:
 `keep interaction simple; make the modeled reality rich`
 
 That means the suite should not chase complexity through more controls. It should chase quality through better observation and better process detail.
+
+Because the project now includes a broader game/world experience, that richness is not a future luxury. It is part of the current minimum quality floor.
 
 ## Hard Constraints
 

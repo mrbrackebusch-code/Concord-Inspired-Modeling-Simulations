@@ -2,6 +2,8 @@
 
 This repository is the project workspace for building Concord Lab based HTML5 science simulations that can eventually live on `rainbowpossibility.org`.
 
+The project should no longer be thought of as a small collection of isolated lesson widgets. It is becoming a reality-first interactive science experience platform with a larger game/world shell, experiment windows, and high-ambition animation and art requirements. Read `docs/architecture/project-context-and-quality-floor.md` for the current top-level framing and quality floor.
+
 ## Current Status
 
 The repository now follows Concord Lab's distribution-archive workflow:
@@ -17,11 +19,15 @@ The repository now follows Concord Lab's distribution-archive workflow:
 2. Open `http://localhost:8123/apps/studio/index.html`.
 3. Launch the `Mass & Change experiment windows`.
 4. Read `docs/architecture/concord-interactive-pedagogy.md` before building or revising any simulation behavior.
-5. Read `docs/architecture/svg-asset-sourcing-and-licensing.md` before importing or replacing visual assets.
-6. Read `docs/architecture/verified-svg-source-catalog.md` before starting a broad SVG asset search.
-7. Use `docs/architecture/codex-svg-allowlist-denylist.md` for the short allowlist/denylist operating rule.
-8. Use `docs/architecture/third-party-asset-attribution.md` if an imported asset requires visible attribution.
-9. Use `docs/architecture/game-art-donor-repo-licensing.md` before importing LPC or other game-side art from `C:\my-heroengine-phaser`.
+5. Read `docs/architecture/project-context-and-quality-floor.md` before planning scope or quality targets.
+6. Read `docs/architecture/animation-and-scene-architecture-standard.md` before building new scene/object systems.
+7. Read `docs/architecture/process-realism-standard.md` before approving any process-heavy animation.
+8. Read `docs/architecture/mass-change-realism-target-matrix.md` before calling any of the six Lesson 1 simulations "done".
+9. Read `docs/architecture/svg-asset-sourcing-and-licensing.md` before importing or replacing visual assets.
+10. Read `docs/architecture/verified-svg-source-catalog.md` before starting a broad SVG asset search.
+11. Use `docs/architecture/codex-svg-allowlist-denylist.md` for the short allowlist/denylist operating rule.
+12. Use `docs/architecture/third-party-asset-attribution.md` if an imported asset requires visible attribution.
+13. Use `docs/architecture/game-art-donor-repo-licensing.md` before importing LPC or other game-side art from `C:\my-heroengine-phaser`.
 
 ## Where The Real Simulation Files Live
 

@@ -16,6 +16,7 @@ This standard defines:
 
 This note should be treated as a required constraint alongside:
 
+- `docs/architecture/project-context-and-quality-floor.md`
 - `docs/architecture/concord-interactive-pedagogy.md`
 - `docs/architecture/process-realism-standard.md`
 - `docs/architecture/svg-asset-sourcing-and-licensing.md`
@@ -37,6 +38,12 @@ If the learner mainly clicks through prepared endpoints, that is not enough.
 
 If the scene does not visibly develop in response to action, that is not enough.
 
+This definition now lives inside a larger project context:
+
+- the interactive may appear as a popup, encounter, or experiment window inside a broader game/world shell
+
+That means the object art and motion quality must hold up not only as instructional material, but also as part of a larger experiential interface.
+
 ## Default Assumption
 
 Do not begin from the question:
@@ -52,6 +59,7 @@ The default repository assumption is:
 1. every interactive contains meaningful visible change
 2. stillness is local and temporary, not the governing design mode
 3. anything that could visibly respond in the real setup should be built so it can visibly respond here
+4. the quality floor should assume the interactive may sit inside a more visually ambitious host experience and therefore cannot rely on placeholder-level process or art
 
 This does **not** mean:
 

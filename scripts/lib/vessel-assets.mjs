@@ -88,6 +88,40 @@ function beakerScene(assetsRoot, contentMarkup, extraDefs = "") {
   });
 }
 
+function iceBeakerScene(assetsRoot, contentMarkup, extraDefs = "") {
+  return shell({
+    width: 112,
+    height: 154,
+    viewBox: "0 0 146 177",
+    defs: `
+      <clipPath id="beakerInterior">
+        <path d="M43 31H103V145C103 154 96 162 87 162H59C50 162 43 154 43 145Z"/>
+      </clipPath>
+      <linearGradient id="beakerWater" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#cfeafc" stop-opacity="0.92"/>
+        <stop offset="1" stop-color="#86c0e6" stop-opacity="0.94"/>
+      </linearGradient>
+      <radialGradient id="iceFace" cx="34%" cy="24%" r="82%">
+        <stop offset="0" stop-color="#fbfeff"/>
+        <stop offset="1" stop-color="#a7d2ee"/>
+      </radialGradient>
+      <radialGradient id="tabletFace" cx="34%" cy="26%" r="72%">
+        <stop offset="0" stop-color="#ffffff"/>
+        <stop offset="1" stop-color="#d6d9d2"/>
+      </radialGradient>
+      ${extraDefs}
+    `,
+    layers: [
+      `<ellipse cx="73" cy="166" rx="34" ry="7" fill="#a3b5c2" fill-opacity="0.18"/>`,
+      renderSource(assetsRoot, BEAKER_FILLED_SOURCE, 'opacity="0.12"'),
+      `<g clip-path="url(#beakerInterior)">${contentMarkup}</g>`,
+      `<path d="M51 34C54 81 55 121 56 152" fill="none" stroke="#f8fcfe" stroke-opacity="0.4" stroke-width="4.8" stroke-linecap="round"/>`,
+      `<path d="M92 34C90 78 89 118 87 151" fill="none" stroke="#dcebf5" stroke-opacity="0.26" stroke-width="3" stroke-linecap="round"/>`,
+      renderSource(assetsRoot, BEAKER_OUTLINE_SOURCE, 'opacity="0.98"')
+    ]
+  });
+}
+
 function beakerOutlineSvg(assetsRoot) {
   return shell({
     width: 96,
@@ -108,18 +142,23 @@ function beakerWater(y, height) {
   `;
 }
 
-function iceBlock(x, y, scale = 1, opacity = 0.96) {
+function iceBlock(x, y, options = {}) {
+  const scale = options.scale ?? 1;
+  const opacity = options.opacity ?? 0.96;
+  const rotate = options.rotate ?? 0;
   const top = 16 * scale;
   const half = top / 2;
   const sideH = 20 * scale;
   const stroke = 1.5 * scale;
+  const centerX = half;
+  const centerY = half + sideH * 0.6;
   return `
-    <g transform="translate(${x} ${y})" opacity="${opacity}">
+    <g transform="translate(${x} ${y}) rotate(${rotate} ${centerX} ${centerY})" opacity="${opacity}">
       <path d="M0 ${half}L${half} 0L${top} ${half}L${half} ${top}" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="${stroke}" stroke-linejoin="round"/>
       <path d="M0 ${half}V${half + sideH}L${half} ${top + sideH}V${top}" fill="#d4eefb" stroke="#7fb6dd" stroke-width="${stroke * 0.82}" stroke-linejoin="round"/>
       <path d="M${top} ${half}V${half + sideH}L${half} ${top + sideH}V${top}" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="${stroke * 0.82}" stroke-linejoin="round"/>
-      <path d="M${half * 0.32} ${half * 0.85}L${half * 0.95} ${half * 0.36}" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="${stroke * 0.9}" stroke-linecap="round"/>
-      <path d="M${half * 1.04} ${half * 0.52}L${top * 0.86} ${half * 0.98}" fill="none" stroke="#effaff" stroke-opacity="0.44" stroke-width="${stroke * 0.72}" stroke-linecap="round"/>
+      <path d="M${half * 0.26} ${half * 0.9}L${half * 0.96} ${half * 0.32}" fill="none" stroke="#ffffff" stroke-opacity="0.62" stroke-width="${stroke * 0.92}" stroke-linecap="round"/>
+      <path d="M${half * 1.04} ${half * 0.46}L${top * 0.88} ${half * 1.02}" fill="none" stroke="#effaff" stroke-opacity="0.46" stroke-width="${stroke * 0.7}" stroke-linecap="round"/>
     </g>
   `;
 }
@@ -127,9 +166,9 @@ function iceBlock(x, y, scale = 1, opacity = 0.96) {
 function iceSolidCluster() {
   return `
     <g opacity="0.98">
-      ${iceBlock(49, 99, 0.95, 0.96)}
-      ${iceBlock(67, 93, 0.92, 0.93)}
-      ${iceBlock(58, 86, 0.8, 0.92)}
+      ${iceBlock(45, 103, { scale: 0.92, opacity: 0.96, rotate: -9 })}
+      ${iceBlock(61, 97, { scale: 0.9, opacity: 0.95, rotate: 7 })}
+      ${iceBlock(55, 83, { scale: 0.76, opacity: 0.92, rotate: -4 })}
     </g>
   `;
 }
@@ -137,11 +176,25 @@ function iceSolidCluster() {
 function iceRoundedRemnants(opacity = 0.7) {
   return `
     <g opacity="${opacity}">
-      <path d="M53 93c4-5 10-7 16-6 6 1 9 4 10 8 1 5-1 11-6 15-5 4-12 5-18 3-6-2-8-7-7-12 0-3 2-6 5-8Z" fill="#eaf8ff" fill-opacity="0.78" stroke="#98c8e8" stroke-width="1.7"/>
-      <path d="M72 86c5-3 11-3 15 0 4 3 5 8 3 12-2 5-7 9-13 10-6 1-12-1-14-5-2-4-1-9 3-12 2-2 4-4 6-5Z" fill="#e4f6ff" fill-opacity="0.68" stroke="#93c2e1" stroke-width="1.6"/>
-      <path d="M62 81c3-3 7-4 11-3 4 1 6 4 6 7 0 4-2 8-6 10-4 3-9 3-12 1-3-2-4-6-3-9 0-2 2-4 4-6Z" fill="#f4fcff" fill-opacity="0.6" stroke="#9fd0ec" stroke-width="1.3"/>
-      <path d="M60 90c5 3 10 4 16 4" fill="none" stroke="#ffffff" stroke-opacity="0.56" stroke-width="1.7" stroke-linecap="round"/>
-      <path d="M73 92c3 2 6 3 10 3" fill="none" stroke="#eff9ff" stroke-opacity="0.44" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M52 98c5-6 13-8 22-7 8 1 13 5 14 10 1 6-2 12-8 16-6 4-15 5-22 3-7-2-10-8-9-13 0-4 1-7 3-9Z" fill="#eaf8ff" fill-opacity="0.82" stroke="#96c7e7" stroke-width="1.7"/>
+      <path d="M70 89c5-3 12-4 18-2 6 2 9 7 8 12-2 5-7 10-14 12-7 2-14 1-18-3-4-3-4-9-2-13 2-3 4-5 8-6Z" fill="#e6f7ff" fill-opacity="0.72" stroke="#92c3e3" stroke-width="1.55"/>
+      <path d="M60 93c6 3 12 5 19 5" fill="none" stroke="#ffffff" stroke-opacity="0.58" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M75 97c3 2 7 3 12 3" fill="none" stroke="#eff9ff" stroke-opacity="0.44" stroke-width="1.45" stroke-linecap="round"/>
+    </g>
+  `;
+}
+
+function iceSoftChunk(x, y, options = {}) {
+  const scale = options.scale ?? 1;
+  const opacity = options.opacity ?? 0.72;
+  const rotate = options.rotate ?? 0;
+  const bodyW = 22 * scale;
+  const bodyH = 17 * scale;
+  return `
+    <g transform="translate(${x} ${y}) rotate(${rotate} ${bodyW / 2} ${bodyH / 2})" opacity="${opacity}">
+      <path d="M2 ${bodyH * 0.42}C3 ${bodyH * 0.16} ${bodyW * 0.22} 1 ${bodyW * 0.42} 1H${bodyW * 0.66}C${bodyW * 0.88} 1 ${bodyW} ${bodyH * 0.18} ${bodyW} ${bodyH * 0.42}V${bodyH * 0.63}C${bodyW} ${bodyH * 0.88} ${bodyW * 0.84} ${bodyH} ${bodyW * 0.62} ${bodyH}H${bodyW * 0.3}C${bodyW * 0.12} ${bodyH} 0 ${bodyH * 0.86} 0 ${bodyH * 0.67}V${bodyH * 0.46}C0 ${bodyH * 0.45} 1 ${bodyH * 0.44} 2 ${bodyH * 0.42}Z" fill="#ebf9ff" fill-opacity="0.82" stroke="#98c8e8" stroke-width="${1.55 * scale}"/>
+      <path d="M${bodyW * 0.22} ${bodyH * 0.38}C${bodyW * 0.36} ${bodyH * 0.28} ${bodyW * 0.58} ${bodyH * 0.26} ${bodyW * 0.76} ${bodyH * 0.34}" fill="none" stroke="#ffffff" stroke-opacity="0.58" stroke-width="${1.55 * scale}" stroke-linecap="round"/>
+      <path d="M${bodyW * 0.28} ${bodyH * 0.62}C${bodyW * 0.42} ${bodyH * 0.7} ${bodyW * 0.58} ${bodyH * 0.72} ${bodyW * 0.76} ${bodyH * 0.66}" fill="none" stroke="#eff9ff" stroke-opacity="0.34" stroke-width="${1.15 * scale}" stroke-linecap="round"/>
     </g>
   `;
 }
@@ -149,35 +202,59 @@ function iceRoundedRemnants(opacity = 0.7) {
 function iceSurfaceRemnant(opacity = 0.42) {
   return `
     <g opacity="${opacity}">
-      <path d="M56 84c5-4 11-5 17-4 5 1 9 4 9 8 0 5-3 9-8 12-6 2-12 3-17 1-5-2-7-6-6-10 0-3 2-5 5-7Z" fill="#eefaff" fill-opacity="0.66" stroke="#9ecbeb" stroke-width="1.5"/>
-      <path d="M61 89c4 2 8 3 14 3" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M60 88c4-3 10-4 16-3 6 1 10 4 10 8 0 4-3 8-8 10-5 2-11 3-16 1-5-1-8-5-7-9 0-3 2-5 5-7Z" fill="#eefaff" fill-opacity="0.7" stroke="#9ecbeb" stroke-width="1.45"/>
+      <path d="M65 92c4 2 8 3 14 3" fill="none" stroke="#ffffff" stroke-opacity="0.52" stroke-width="1.45" stroke-linecap="round"/>
+    </g>
+  `;
+}
+
+function iceAfterFragments(opacity = 0.5) {
+  return `
+    <g opacity="${opacity}">
+      <path d="M58 90c4-3 9-4 14-3 5 1 8 4 8 8 0 4-3 7-8 9-5 2-11 2-15 0-4-2-6-5-5-8 1-2 3-4 6-6Z" fill="#eefaff" fill-opacity="0.56" stroke="#9ecbeb" stroke-width="1.25"/>
+      <path d="M66 94c3 1 6 2 11 2" fill="none" stroke="#ffffff" stroke-opacity="0.48" stroke-width="1.25" stroke-linecap="round"/>
+      <path d="M77 99c3-2 7-2 10-1 3 2 4 4 4 6 0 3-2 5-5 6-4 1-8 1-11-1-3-1-4-4-3-6 0-2 2-3 5-4Z" fill="#f2fbff" fill-opacity="0.4" stroke="#add0ea" stroke-width="1.05"/>
+    </g>
+  `;
+}
+
+function iceLateSlush(opacity = 0.48) {
+  return `
+    <g opacity="${opacity}">
+      <path d="M53 98c5-3 11-4 18-4 8 0 14 2 18 5 4 4 4 8 1 11-4 4-10 6-18 6-7 0-14-2-19-5-4-3-5-7-2-10 1-1 2-2 2-3Z" fill="#eaf8ff" fill-opacity="0.34" stroke="#b4d7ee" stroke-width="1.05"/>
+      <path d="M59 97c3 2 7 3 12 3 6 1 12 0 17-2" fill="none" stroke="#ffffff" stroke-opacity="0.34" stroke-width="1.2" stroke-linecap="round"/>
+      <ellipse cx="63" cy="103" rx="8" ry="5" fill="#f3fbff" fill-opacity="0.22"/>
+      <ellipse cx="81" cy="101" rx="7" ry="4.5" fill="#eefaff" fill-opacity="0.2"/>
+      <path d="M66 92c3-2 7-3 10-2 4 0 7 2 7 5 0 3-2 5-6 6-4 1-8 1-11-1-3-1-5-3-4-5 0-1 2-2 4-3Z" fill="#f5fcff" fill-opacity="0.28" stroke="#c5e1f2" stroke-width="0.95"/>
     </g>
   `;
 }
 
 function beakerIceBeforeSvg(assetsRoot) {
-  return beakerScene(
+  return iceBeakerScene(
     assetsRoot,
     beakerWater(112, 34) +
-      `<path d="M52 112c7 3 15 4 23 4 9 0 16-1 22-3" fill="none" stroke="#edf8ff" stroke-width="2.8" stroke-linecap="round" opacity="0.28"/>` +
+      `<path d="M52 112c7 3 15 4 23 4 9 0 16-1 22-3" fill="none" stroke="#edf8ff" stroke-width="2.8" stroke-linecap="round" opacity="0.3"/>` +
+      `<path d="M56 119c6 2 12 3 19 3" fill="none" stroke="#dfeffb" stroke-width="2" stroke-linecap="round" opacity="0.22"/>` +
       iceSolidCluster()
   );
 }
 
 function beakerIceAfterSvg(assetsRoot) {
-  return beakerScene(
+  return iceBeakerScene(
     assetsRoot,
     beakerWater(88, 58) +
-      `<path d="M50 94c8 4 17 6 28 6 10 0 19-2 25-5" fill="none" stroke="#ecf8ff" stroke-width="3" stroke-linecap="round" opacity="0.46"/>` +
-      `<path d="M55 101c6 3 12 4 19 4" fill="none" stroke="#dceffd" stroke-width="2.4" stroke-linecap="round" opacity="0.34"/>` +
-      iceSurfaceRemnant(0.3)
+      `<path d="M50 93c8 4 17 6 28 6 10 0 19-2 25-5" fill="none" stroke="#ecf8ff" stroke-width="3.1" stroke-linecap="round" opacity="0.56"/>` +
+      `<path d="M55 101c6 3 12 4 19 4" fill="none" stroke="#dceffd" stroke-width="2.45" stroke-linecap="round" opacity="0.4"/>` +
+      `<path d="M60 109c5 2 10 3 15 3" fill="none" stroke="#eff8ff" stroke-width="1.9" stroke-linecap="round" opacity="0.34"/>` +
+      iceLateSlush(0.62)
   );
 }
 
 function beakerIceMeltingSvg(assetsRoot) {
   return shell({
-    width: 96,
-    height: 132,
+    width: 112,
+    height: 154,
     viewBox: "0 0 146 177",
     defs: `
       <clipPath id="beakerInterior">
@@ -191,46 +268,93 @@ function beakerIceMeltingSvg(assetsRoot) {
         <stop offset="0" stop-color="#fbfeff"/>
         <stop offset="1" stop-color="#a7d2ee"/>
       </radialGradient>
+      <filter id="softIceBlur" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="0.85"/>
+      </filter>
     `,
     layers: [
       `<ellipse cx="73" cy="166" rx="34" ry="7" fill="#a3b5c2" fill-opacity="0.18"/>`,
       renderSource(assetsRoot, BEAKER_FILLED_SOURCE, 'opacity="0.12"'),
       `<g clip-path="url(#beakerInterior)">
         <rect x="43" y="112" width="60" height="34" rx="7" fill="url(#beakerWater)" opacity="0.92">
-          <animate attributeName="y" values="112;106;98;92;90" dur="4.8s" fill="freeze"/>
-          <animate attributeName="height" values="34;40;48;54;56" dur="4.8s" fill="freeze"/>
+          <animate attributeName="y" values="112;108;101;95;90" dur="5.8s" fill="freeze"/>
+          <animate attributeName="height" values="34;38;45;51;56" dur="5.8s" fill="freeze"/>
         </rect>
         <ellipse cx="73" cy="112" rx="28" ry="5.2" fill="#ecf8ff" opacity="0.54">
-          <animate attributeName="cy" values="112;106;98;92;90" dur="4.8s" fill="freeze"/>
-          <animate attributeName="rx" values="27;28;29;28;28" dur="4.8s" fill="freeze"/>
+          <animate attributeName="cy" values="112;108;101;95;90" dur="5.8s" fill="freeze"/>
+          <animate attributeName="rx" values="27;28;29;29;28" dur="5.8s" fill="freeze"/>
         </ellipse>
-        <g opacity="0.98">
-          ${iceSolidCluster()}
-          <animateTransform attributeName="transform" type="translate" values="0 0;1 3;0 6;-1 8;-1 10" dur="4.8s" fill="freeze"/>
-          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.96 0.95;0.88 0.86;0.74 0.68;0.55 0.45" dur="4.8s" fill="freeze"/>
-          <animate attributeName="opacity" values="0.98;0.92;0.74;0.34;0.06" dur="4.8s" fill="freeze"/>
+        <g opacity="0.96">
+          ${iceBlock(45, 103, { scale: 0.92, opacity: 0.96, rotate: -9 })}
+          <animateTransform attributeName="transform" type="translate" values="0 0;-4 2;-9 7;-12 10;-14 11" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.95 0.95;0.78 0.71;0.5 0.42;0.24 0.18" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="rotate" values="0;1;4;6;7" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.96;0.86;0.54;0.12;0.02" dur="5.8s" fill="freeze"/>
         </g>
-        <g opacity="0">
-          ${iceRoundedRemnants(0.92)}
-          <animateTransform attributeName="transform" type="translate" values="0 0;0 -1;1 -4;0 -7;0 -8" dur="4.8s" fill="freeze"/>
-          <animate attributeName="opacity" values="0;0.08;0.44;0.72;0.32" dur="4.8s" fill="freeze"/>
+        <g opacity="0.95">
+          ${iceBlock(61, 97, { scale: 0.9, opacity: 0.95, rotate: 7 })}
+          <animateTransform attributeName="transform" type="translate" values="0 0;2 2;8 7;14 10;17 11" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.95 0.93;0.8 0.73;0.52 0.44;0.26 0.18" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="rotate" values="0;-1;-3;-5;-6" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.95;0.86;0.56;0.14;0.02" dur="5.8s" fill="freeze"/>
         </g>
-        <g opacity="0">
-          ${iceSurfaceRemnant(0.7)}
-          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 -1;0 -3;0 -4" dur="4.8s" fill="freeze"/>
-          <animate attributeName="opacity" values="0;0;0.06;0.24;0.42" dur="4.8s" fill="freeze"/>
+        <g opacity="0.92">
+          ${iceBlock(55, 83, { scale: 0.76, opacity: 0.92, rotate: -4 })}
+          <animateTransform attributeName="transform" type="translate" values="0 0;2 4;3 10;4 14;4 16" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.86 0.82;0.58 0.48;0.22 0.16;0.04 0.03" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="rotate" values="0;2;5;7;9" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.92;0.74;0.28;0.04;0" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          ${iceSoftChunk(43, 101, { scale: 0.78, opacity: 0.82, rotate: -10 })}
+          <animateTransform attributeName="transform" type="translate" values="0 0;-1 0;-5 2;-7 4;-8 5" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.1;0.48;0.2;0.01" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          ${iceSoftChunk(72, 98, { scale: 0.74, opacity: 0.8, rotate: 8 })}
+          <animateTransform attributeName="transform" type="translate" values="0 0;1 1;5 3;8 5;10 6" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.08;0.48;0.22;0.01" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          ${iceSoftChunk(60, 90, { scale: 0.48, opacity: 0.68, rotate: -1 })}
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 1;0 3;1 4;1 5" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.02;0.14;0.1;0" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          ${iceRoundedRemnants(0.72)}
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;1 2;1 4;1 5" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0;0.02;0.08;0.04" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          ${iceLateSlush(0.74)}
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 0;0 1;0 2" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0;0.06;0.28;0.64" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          ${iceSurfaceRemnant(0.48)}
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 -1;0 -2;0 -2" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0;0.04;0.18;0.32" dur="5.8s" fill="freeze"/>
         </g>
         <path d="M58 97c4 7 6 12 7 17" fill="none" stroke="#eefaff" stroke-width="2.2" stroke-linecap="round" opacity="0">
-          <animate attributeName="opacity" values="0;0.1;0.32;0.22;0.1" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.12;0.34;0.24;0.08" dur="5.8s" fill="freeze"/>
         </path>
         <path d="M76 93c3 7 4 12 5 17" fill="none" stroke="#e8f7ff" stroke-width="2" stroke-linecap="round" opacity="0">
-          <animate attributeName="opacity" values="0;0.06;0.24;0.18;0.06" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.08;0.26;0.2;0.07" dur="5.8s" fill="freeze"/>
+        </path>
+        <path d="M67 88c2 5 3 10 3 16" fill="none" stroke="#f3fbff" stroke-width="1.6" stroke-linecap="round" opacity="0">
+          <animate attributeName="opacity" values="0;0.04;0.18;0.22;0.08" dur="5.8s" fill="freeze"/>
+        </path>
+        <path d="M63 86c2 4 4 8 5 14" fill="none" stroke="#f7fdff" stroke-width="1.6" stroke-linecap="round" opacity="0">
+          <animate attributeName="opacity" values="0;0;0.16;0.24;0.1" dur="5.8s" fill="freeze"/>
         </path>
         <path d="M50 116c8 4 18 6 29 6 9 0 17-2 23-5" fill="none" stroke="#eff9ff" stroke-width="3" stroke-linecap="round" opacity="0.12">
-          <animate attributeName="opacity" values="0.12;0.2;0.34;0.52;0.62" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.12;0.22;0.38;0.56;0.66" dur="5.8s" fill="freeze"/>
         </path>
         <path d="M56 126c10 4 18 5 25 4" fill="none" stroke="#dff0fb" stroke-width="2.5" stroke-linecap="round" opacity="0.04">
-          <animate attributeName="opacity" values="0.04;0.16;0.24;0.34;0.42" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.04;0.14;0.26;0.38;0.46" dur="5.8s" fill="freeze"/>
+        </path>
+        <path d="M48 110c7 2 16 3 25 3 11 0 20-1 27-3" fill="none" stroke="#f8fdff" stroke-width="1.8" stroke-linecap="round" opacity="0.08">
+          <animate attributeName="opacity" values="0.08;0.14;0.22;0.3;0.34" dur="5.8s" fill="freeze"/>
         </path>
       </g>`,
       `<path d="M51 34C54 81 55 121 56 152" fill="none" stroke="#f8fcfe" stroke-opacity="0.4" stroke-width="4.8" stroke-linecap="round"/>`,

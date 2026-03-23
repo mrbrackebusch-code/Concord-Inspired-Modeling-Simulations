@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="96" height="132" viewBox="0 0 146 177">
+<svg xmlns="http://www.w3.org/2000/svg" width="112" height="154" viewBox="0 0 146 177">
   <defs>
     
       <clipPath id="beakerInterior">
@@ -13,6 +13,9 @@
         <stop offset="0" stop-color="#fbfeff"/>
         <stop offset="1" stop-color="#a7d2ee"/>
       </radialGradient>
+      <filter id="softIceBlur" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="0.85"/>
+      </filter>
     
   </defs>
   <ellipse cx="73" cy="166" rx="34" ry="7" fill="#a3b5c2" fill-opacity="0.18"/>
@@ -83,83 +86,146 @@
 
   <g clip-path="url(#beakerInterior)">
         <rect x="43" y="112" width="60" height="34" rx="7" fill="url(#beakerWater)" opacity="0.92">
-          <animate attributeName="y" values="112;106;98;92;90" dur="4.8s" fill="freeze"/>
-          <animate attributeName="height" values="34;40;48;54;56" dur="4.8s" fill="freeze"/>
+          <animate attributeName="y" values="112;108;101;95;90" dur="5.8s" fill="freeze"/>
+          <animate attributeName="height" values="34;38;45;51;56" dur="5.8s" fill="freeze"/>
         </rect>
         <ellipse cx="73" cy="112" rx="28" ry="5.2" fill="#ecf8ff" opacity="0.54">
-          <animate attributeName="cy" values="112;106;98;92;90" dur="4.8s" fill="freeze"/>
-          <animate attributeName="rx" values="27;28;29;28;28" dur="4.8s" fill="freeze"/>
+          <animate attributeName="cy" values="112;108;101;95;90" dur="5.8s" fill="freeze"/>
+          <animate attributeName="rx" values="27;28;29;29;28" dur="5.8s" fill="freeze"/>
         </ellipse>
-        <g opacity="0.98">
+        <g opacity="0.96">
           
-    <g opacity="0.98">
-      
-    <g transform="translate(49 99)" opacity="0.96">
-      <path d="M0 7.6L7.6 0L15.2 7.6L7.6 15.2" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.4249999999999998" stroke-linejoin="round"/>
-      <path d="M0 7.6V26.6L7.6 34.2V15.2" fill="#d4eefb" stroke="#7fb6dd" stroke-width="1.1684999999999999" stroke-linejoin="round"/>
-      <path d="M15.2 7.6V26.6L7.6 34.2V15.2" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="1.1684999999999999" stroke-linejoin="round"/>
-      <path d="M2.432 6.46L7.22 2.7359999999999998" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.2825" stroke-linecap="round"/>
-      <path d="M7.904 3.952L13.072 7.4479999999999995" fill="none" stroke="#effaff" stroke-opacity="0.44" stroke-width="1.0259999999999998" stroke-linecap="round"/>
-    </g>
-  
-      
-    <g transform="translate(67 93)" opacity="0.93">
+    <g transform="translate(45 103) rotate(-9 7.36 18.400000000000002)" opacity="0.96">
       <path d="M0 7.36L7.36 0L14.72 7.36L7.36 14.72" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.3800000000000001" stroke-linejoin="round"/>
       <path d="M0 7.36V25.76L7.36 33.120000000000005V14.72" fill="#d4eefb" stroke="#7fb6dd" stroke-width="1.1316" stroke-linejoin="round"/>
       <path d="M14.72 7.36V25.76L7.36 33.120000000000005V14.72" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="1.1316" stroke-linejoin="round"/>
-      <path d="M2.3552 6.256L6.992 2.6496" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.2420000000000002" stroke-linecap="round"/>
-      <path d="M7.654400000000001 3.8272000000000004L12.6592 7.2128000000000005" fill="none" stroke="#effaff" stroke-opacity="0.44" stroke-width="0.9936" stroke-linecap="round"/>
+      <path d="M1.9136000000000002 6.6240000000000006L7.0656 2.3552" fill="none" stroke="#ffffff" stroke-opacity="0.62" stroke-width="1.2696" stroke-linecap="round"/>
+      <path d="M7.654400000000001 3.3856L12.9536 7.5072" fill="none" stroke="#effaff" stroke-opacity="0.46" stroke-width="0.966" stroke-linecap="round"/>
     </g>
   
-      
-    <g transform="translate(58 86)" opacity="0.92">
-      <path d="M0 6.4L6.4 0L12.8 6.4L6.4 12.8" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.2000000000000002" stroke-linejoin="round"/>
-      <path d="M0 6.4V22.4L6.4 28.8V12.8" fill="#d4eefb" stroke="#7fb6dd" stroke-width="0.9840000000000001" stroke-linejoin="round"/>
-      <path d="M12.8 6.4V22.4L6.4 28.8V12.8" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="0.9840000000000001" stroke-linejoin="round"/>
-      <path d="M2.048 5.44L6.08 2.304" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.0800000000000003" stroke-linecap="round"/>
-      <path d="M6.656000000000001 3.3280000000000003L11.008000000000001 6.272" fill="none" stroke="#effaff" stroke-opacity="0.44" stroke-width="0.8640000000000001" stroke-linecap="round"/>
-    </g>
-  
-    </g>
-  
-          <animateTransform attributeName="transform" type="translate" values="0 0;1 3;0 6;-1 8;-1 10" dur="4.8s" fill="freeze"/>
-          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.96 0.95;0.88 0.86;0.74 0.68;0.55 0.45" dur="4.8s" fill="freeze"/>
-          <animate attributeName="opacity" values="0.98;0.92;0.74;0.34;0.06" dur="4.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0;-4 2;-9 7;-12 10;-14 11" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.95 0.95;0.78 0.71;0.5 0.42;0.24 0.18" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="rotate" values="0;1;4;6;7" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.96;0.86;0.54;0.12;0.02" dur="5.8s" fill="freeze"/>
         </g>
-        <g opacity="0">
+        <g opacity="0.95">
           
-    <g opacity="0.92">
-      <path d="M53 93c4-5 10-7 16-6 6 1 9 4 10 8 1 5-1 11-6 15-5 4-12 5-18 3-6-2-8-7-7-12 0-3 2-6 5-8Z" fill="#eaf8ff" fill-opacity="0.78" stroke="#98c8e8" stroke-width="1.7"/>
-      <path d="M72 86c5-3 11-3 15 0 4 3 5 8 3 12-2 5-7 9-13 10-6 1-12-1-14-5-2-4-1-9 3-12 2-2 4-4 6-5Z" fill="#e4f6ff" fill-opacity="0.68" stroke="#93c2e1" stroke-width="1.6"/>
-      <path d="M62 81c3-3 7-4 11-3 4 1 6 4 6 7 0 4-2 8-6 10-4 3-9 3-12 1-3-2-4-6-3-9 0-2 2-4 4-6Z" fill="#f4fcff" fill-opacity="0.6" stroke="#9fd0ec" stroke-width="1.3"/>
-      <path d="M60 90c5 3 10 4 16 4" fill="none" stroke="#ffffff" stroke-opacity="0.56" stroke-width="1.7" stroke-linecap="round"/>
-      <path d="M73 92c3 2 6 3 10 3" fill="none" stroke="#eff9ff" stroke-opacity="0.44" stroke-width="1.5" stroke-linecap="round"/>
+    <g transform="translate(61 97) rotate(7 7.2 18)" opacity="0.95">
+      <path d="M0 7.2L7.2 0L14.4 7.2L7.2 14.4" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.35" stroke-linejoin="round"/>
+      <path d="M0 7.2V25.2L7.2 32.4V14.4" fill="#d4eefb" stroke="#7fb6dd" stroke-width="1.107" stroke-linejoin="round"/>
+      <path d="M14.4 7.2V25.2L7.2 32.4V14.4" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="1.107" stroke-linejoin="round"/>
+      <path d="M1.872 6.48L6.912 2.3040000000000003" fill="none" stroke="#ffffff" stroke-opacity="0.62" stroke-width="1.2420000000000002" stroke-linecap="round"/>
+      <path d="M7.488 3.3120000000000003L12.672 7.344" fill="none" stroke="#effaff" stroke-opacity="0.46" stroke-width="0.945" stroke-linecap="round"/>
     </g>
   
-          <animateTransform attributeName="transform" type="translate" values="0 0;0 -1;1 -4;0 -7;0 -8" dur="4.8s" fill="freeze"/>
-          <animate attributeName="opacity" values="0;0.08;0.44;0.72;0.32" dur="4.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0;2 2;8 7;14 10;17 11" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.95 0.93;0.8 0.73;0.52 0.44;0.26 0.18" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="rotate" values="0;-1;-3;-5;-6" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.95;0.86;0.56;0.14;0.02" dur="5.8s" fill="freeze"/>
         </g>
-        <g opacity="0">
+        <g opacity="0.92">
           
-    <g opacity="0.7">
-      <path d="M56 84c5-4 11-5 17-4 5 1 9 4 9 8 0 5-3 9-8 12-6 2-12 3-17 1-5-2-7-6-6-10 0-3 2-5 5-7Z" fill="#eefaff" fill-opacity="0.66" stroke="#9ecbeb" stroke-width="1.5"/>
-      <path d="M61 89c4 2 8 3 14 3" fill="none" stroke="#ffffff" stroke-opacity="0.5" stroke-width="1.5" stroke-linecap="round"/>
+    <g transform="translate(55 83) rotate(-4 6.08 15.2)" opacity="0.92">
+      <path d="M0 6.08L6.08 0L12.16 6.08L6.08 12.16" fill="url(#iceFace)" stroke="#7fb6dd" stroke-width="1.1400000000000001" stroke-linejoin="round"/>
+      <path d="M0 6.08V21.28L6.08 27.36V12.16" fill="#d4eefb" stroke="#7fb6dd" stroke-width="0.9348000000000001" stroke-linejoin="round"/>
+      <path d="M12.16 6.08V21.28L6.08 27.36V12.16" fill="#a9d3ef" stroke="#7fb6dd" stroke-width="0.9348000000000001" stroke-linejoin="round"/>
+      <path d="M1.5808 5.472L5.8368 1.9456" fill="none" stroke="#ffffff" stroke-opacity="0.62" stroke-width="1.0488000000000002" stroke-linecap="round"/>
+      <path d="M6.3232 2.7968L10.700800000000001 6.2016" fill="none" stroke="#effaff" stroke-opacity="0.46" stroke-width="0.798" stroke-linecap="round"/>
     </g>
   
-          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 -1;0 -3;0 -4" dur="4.8s" fill="freeze"/>
-          <animate attributeName="opacity" values="0;0;0.06;0.24;0.42" dur="4.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" type="translate" values="0 0;2 4;3 10;4 14;4 16" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="scale" values="1 1;0.86 0.82;0.58 0.48;0.22 0.16;0.04 0.03" dur="5.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" additive="sum" type="rotate" values="0;2;5;7;9" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.92;0.74;0.28;0.04;0" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          
+    <g transform="translate(43 101) rotate(-10 8.58 6.63)" opacity="0.82">
+      <path d="M2 5.5691999999999995C3 2.1216 3.7752 1 7.207199999999999 1H11.325600000000001C15.1008 1 17.16 2.3868 17.16 5.5691999999999995V8.3538C17.16 11.6688 14.414399999999999 13.26 10.6392 13.26H5.148C2.0592 13.26 0 11.403599999999999 0 8.8842V6.099600000000001C0 5.967 1 5.8344 2 5.5691999999999995Z" fill="#ebf9ff" fill-opacity="0.82" stroke="#98c8e8" stroke-width="1.209"/>
+      <path d="M3.7752 5.0388C6.1776 3.7128 9.9528 3.4476 13.0416 4.5084" fill="none" stroke="#ffffff" stroke-opacity="0.58" stroke-width="1.209" stroke-linecap="round"/>
+      <path d="M4.8048 8.2212C7.207199999999999 9.282 9.9528 9.5472 13.0416 8.7516" fill="none" stroke="#eff9ff" stroke-opacity="0.34" stroke-width="0.8969999999999999" stroke-linecap="round"/>
+    </g>
+  
+          <animateTransform attributeName="transform" type="translate" values="0 0;-1 0;-5 2;-7 4;-8 5" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.1;0.48;0.2;0.01" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          
+    <g transform="translate(72 98) rotate(8 8.14 6.29)" opacity="0.8">
+      <path d="M2 5.2836C3 2.0128 3.5816000000000003 1 6.8376 1H10.744800000000001C14.326400000000001 1 16.28 2.2643999999999997 16.28 5.2836V7.9254C16.28 11.0704 13.6752 12.58 10.0936 12.58H4.884C1.9536 12.58 0 10.8188 0 8.428600000000001V5.7868C0 5.6610000000000005 1 5.5352 2 5.2836Z" fill="#ebf9ff" fill-opacity="0.82" stroke="#98c8e8" stroke-width="1.147"/>
+      <path d="M3.5816000000000003 4.7804C5.8608 3.5224 9.4424 3.2708 12.372800000000002 4.277200000000001" fill="none" stroke="#ffffff" stroke-opacity="0.58" stroke-width="1.147" stroke-linecap="round"/>
+      <path d="M4.558400000000001 7.7996C6.8376 8.806 9.4424 9.057599999999999 12.372800000000002 8.302800000000001" fill="none" stroke="#eff9ff" stroke-opacity="0.34" stroke-width="0.851" stroke-linecap="round"/>
+    </g>
+  
+          <animateTransform attributeName="transform" type="translate" values="0 0;1 1;5 3;8 5;10 6" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.08;0.48;0.22;0.01" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          
+    <g transform="translate(60 90) rotate(-1 5.279999999999999 4.08)" opacity="0.68">
+      <path d="M2 3.4272C3 1.3056 2.3232 1 4.435199999999999 1H6.9696C9.2928 1 10.559999999999999 1.4687999999999999 10.559999999999999 3.4272V5.1408000000000005C10.559999999999999 7.1808000000000005 8.870399999999998 8.16 6.547199999999999 8.16H3.1679999999999997C1.2671999999999999 8.16 0 7.0176 0 5.4672V3.7536C0 3.672 1 3.5904000000000003 2 3.4272Z" fill="#ebf9ff" fill-opacity="0.82" stroke="#98c8e8" stroke-width="0.744"/>
+      <path d="M2.3232 3.1008C3.801599999999999 2.2848 6.124799999999999 2.1216 8.025599999999999 2.7744000000000004" fill="none" stroke="#ffffff" stroke-opacity="0.58" stroke-width="0.744" stroke-linecap="round"/>
+      <path d="M2.9568 5.0592C4.435199999999999 5.712 6.124799999999999 5.8751999999999995 8.025599999999999 5.3856" fill="none" stroke="#eff9ff" stroke-opacity="0.34" stroke-width="0.5519999999999999" stroke-linecap="round"/>
+    </g>
+  
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 1;0 3;1 4;1 5" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.02;0.14;0.1;0" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          
+    <g opacity="0.72">
+      <path d="M52 98c5-6 13-8 22-7 8 1 13 5 14 10 1 6-2 12-8 16-6 4-15 5-22 3-7-2-10-8-9-13 0-4 1-7 3-9Z" fill="#eaf8ff" fill-opacity="0.82" stroke="#96c7e7" stroke-width="1.7"/>
+      <path d="M70 89c5-3 12-4 18-2 6 2 9 7 8 12-2 5-7 10-14 12-7 2-14 1-18-3-4-3-4-9-2-13 2-3 4-5 8-6Z" fill="#e6f7ff" fill-opacity="0.72" stroke="#92c3e3" stroke-width="1.55"/>
+      <path d="M60 93c6 3 12 5 19 5" fill="none" stroke="#ffffff" stroke-opacity="0.58" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M75 97c3 2 7 3 12 3" fill="none" stroke="#eff9ff" stroke-opacity="0.44" stroke-width="1.45" stroke-linecap="round"/>
+    </g>
+  
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;1 2;1 4;1 5" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0;0.02;0.08;0.04" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          
+    <g opacity="0.74">
+      <path d="M53 98c5-3 11-4 18-4 8 0 14 2 18 5 4 4 4 8 1 11-4 4-10 6-18 6-7 0-14-2-19-5-4-3-5-7-2-10 1-1 2-2 2-3Z" fill="#eaf8ff" fill-opacity="0.34" stroke="#b4d7ee" stroke-width="1.05"/>
+      <path d="M59 97c3 2 7 3 12 3 6 1 12 0 17-2" fill="none" stroke="#ffffff" stroke-opacity="0.34" stroke-width="1.2" stroke-linecap="round"/>
+      <ellipse cx="63" cy="103" rx="8" ry="5" fill="#f3fbff" fill-opacity="0.22"/>
+      <ellipse cx="81" cy="101" rx="7" ry="4.5" fill="#eefaff" fill-opacity="0.2"/>
+      <path d="M66 92c3-2 7-3 10-2 4 0 7 2 7 5 0 3-2 5-6 6-4 1-8 1-11-1-3-1-5-3-4-5 0-1 2-2 4-3Z" fill="#f5fcff" fill-opacity="0.28" stroke="#c5e1f2" stroke-width="0.95"/>
+    </g>
+  
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 0;0 1;0 2" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0;0.06;0.28;0.64" dur="5.8s" fill="freeze"/>
+        </g>
+        <g opacity="0" filter="url(#softIceBlur)">
+          
+    <g opacity="0.48">
+      <path d="M60 88c4-3 10-4 16-3 6 1 10 4 10 8 0 4-3 8-8 10-5 2-11 3-16 1-5-1-8-5-7-9 0-3 2-5 5-7Z" fill="#eefaff" fill-opacity="0.7" stroke="#9ecbeb" stroke-width="1.45"/>
+      <path d="M65 92c4 2 8 3 14 3" fill="none" stroke="#ffffff" stroke-opacity="0.52" stroke-width="1.45" stroke-linecap="round"/>
+    </g>
+  
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 -1;0 -2;0 -2" dur="5.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0;0.04;0.18;0.32" dur="5.8s" fill="freeze"/>
         </g>
         <path d="M58 97c4 7 6 12 7 17" fill="none" stroke="#eefaff" stroke-width="2.2" stroke-linecap="round" opacity="0">
-          <animate attributeName="opacity" values="0;0.1;0.32;0.22;0.1" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.12;0.34;0.24;0.08" dur="5.8s" fill="freeze"/>
         </path>
         <path d="M76 93c3 7 4 12 5 17" fill="none" stroke="#e8f7ff" stroke-width="2" stroke-linecap="round" opacity="0">
-          <animate attributeName="opacity" values="0;0.06;0.24;0.18;0.06" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0;0.08;0.26;0.2;0.07" dur="5.8s" fill="freeze"/>
+        </path>
+        <path d="M67 88c2 5 3 10 3 16" fill="none" stroke="#f3fbff" stroke-width="1.6" stroke-linecap="round" opacity="0">
+          <animate attributeName="opacity" values="0;0.04;0.18;0.22;0.08" dur="5.8s" fill="freeze"/>
+        </path>
+        <path d="M63 86c2 4 4 8 5 14" fill="none" stroke="#f7fdff" stroke-width="1.6" stroke-linecap="round" opacity="0">
+          <animate attributeName="opacity" values="0;0;0.16;0.24;0.1" dur="5.8s" fill="freeze"/>
         </path>
         <path d="M50 116c8 4 18 6 29 6 9 0 17-2 23-5" fill="none" stroke="#eff9ff" stroke-width="3" stroke-linecap="round" opacity="0.12">
-          <animate attributeName="opacity" values="0.12;0.2;0.34;0.52;0.62" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.12;0.22;0.38;0.56;0.66" dur="5.8s" fill="freeze"/>
         </path>
         <path d="M56 126c10 4 18 5 25 4" fill="none" stroke="#dff0fb" stroke-width="2.5" stroke-linecap="round" opacity="0.04">
-          <animate attributeName="opacity" values="0.04;0.16;0.24;0.34;0.42" dur="4.8s" fill="freeze"/>
+          <animate attributeName="opacity" values="0.04;0.14;0.26;0.38;0.46" dur="5.8s" fill="freeze"/>
+        </path>
+        <path d="M48 110c7 2 16 3 25 3 11 0 20-1 27-3" fill="none" stroke="#f8fdff" stroke-width="1.8" stroke-linecap="round" opacity="0.08">
+          <animate attributeName="opacity" values="0.08;0.14;0.22;0.3;0.34" dur="5.8s" fill="freeze"/>
         </path>
       </g>
   <path d="M51 34C54 81 55 121 56 152" fill="none" stroke="#f8fcfe" stroke-opacity="0.4" stroke-width="4.8" stroke-linecap="round"/>
