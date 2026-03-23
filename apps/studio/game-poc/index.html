@@ -20,6 +20,36 @@
       <section class="game-shell">
         <section class="play-column">
           <section class="canvas-frame">
+            <section class="ai-briefing" aria-live="polite">
+              <div class="ai-briefing__top">
+                <div>
+                  <p class="eyebrow">AI Channel</p>
+                  <h2 id="ai-briefing-title">Investigation link offline</h2>
+                </div>
+                <p id="ai-briefing-stage" class="ai-briefing__stage">Investigation 0/6</p>
+              </div>
+              <div class="ai-briefing__status-row">
+                <div class="ai-portrait" aria-hidden="true">
+                  <div class="ai-portrait__screen">?</div>
+                </div>
+                <div class="ai-briefing__status-copy">
+                  <p class="eyebrow">Model Status</p>
+                  <p id="ai-briefing-status" class="ai-briefing__status">Assumption unresolved</p>
+                </div>
+              </div>
+              <div class="ai-briefing__section">
+                <span class="ai-briefing__label">Assumption</span>
+                <p id="ai-briefing-assumption" class="ai-briefing__copy"></p>
+              </div>
+              <div class="ai-briefing__section">
+                <span class="ai-briefing__label">Current Task</span>
+                <p id="ai-briefing-task" class="ai-briefing__copy"></p>
+              </div>
+              <div class="ai-briefing__section">
+                <span class="ai-briefing__label">Evidence Needed</span>
+                <p id="ai-briefing-evidence" class="ai-briefing__copy"></p>
+              </div>
+            </section>
             <div class="canvas-stack" aria-label="Ship experiment proof of concept">
               <canvas id="world-canvas" width="896" height="576" aria-hidden="true"></canvas>
               <canvas id="actor-canvas" width="896" height="576" aria-hidden="true"></canvas>
@@ -38,7 +68,7 @@
           </div>
           <div class="experiment-window__body">
             <div id="experiment-placeholder" class="experiment-placeholder">
-              Deliver the required objects to a field station, then press Enter to load that Lesson 1 experiment inside this window.
+              Retrieve the current investigation objects, place them in the chamber, and press Enter while docked over the chamber to load the live experiment here.
             </div>
             <iframe
               id="experiment-frame"
@@ -52,9 +82,9 @@
             <div class="capture-toolbar">
               <div class="capture-toolbar__copy">
                 <p class="eyebrow">Capture</p>
-                <h3 id="capture-active-title">No active station</h3>
+                <h3 id="capture-active-title">No active investigation</h3>
                 <p id="capture-active-copy" class="capture-copy">
-                  Move onto a field station to focus it. Deliver its objects, start the live run, then capture the evidence.
+                  Follow the AI task, stage the chamber, run the live experiment, then capture evidence from the active investigation.
                 </p>
               </div>
               <button id="capture-evidence" class="capture-button" type="button">Capture Evidence</button>

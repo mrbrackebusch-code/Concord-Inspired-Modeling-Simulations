@@ -18,6 +18,7 @@ const ARM_EXTEND_SPEED = 4.8;
 const ARM_HEAD_RADIUS = 9;
 const ARM_LATCH_RADIUS = 18;
 const MAX_HULL = 100;
+const FIELD_CHAMBER_ZONE = { x: 11, y: 7, w: 6, h: 3 };
 const TERRAIN_THEME = {
   ground: "sand",
   water: "sandWaterPool"
@@ -272,10 +273,38 @@ const CAPTURE_PRESETS = {
   "unit-01/lesson-01/mass-change/alka-seltzer": { before: 102.5, after: 100.8 }
 };
 
+const EXPERIMENT_BRIEFINGS = {
+  "unit-01/lesson-01/mass-change/ice-to-water": {
+    assumption: "Different visible properties may mean ice and liquid water are different substances.",
+    evidence: ["Mass before melt", "Visible melting in the chamber", "Mass after melt"]
+  },
+  "unit-01/lesson-01/mass-change/precipitate": {
+    assumption: "If two clear liquids produce a new solid, total mass may be lost or gained during the transformation.",
+    evidence: ["Mass before pour", "Clouding or solid formation", "Mass after reaction"]
+  },
+  "unit-01/lesson-01/mass-change/steel-wool-pulled-apart": {
+    assumption: "Pulling steel wool apart may create less matter because the sample changes shape and spread.",
+    evidence: ["Mass before pulling", "Visible separation of the same sample", "Mass after pulling"]
+  },
+  "unit-01/lesson-01/mass-change/sugar-dissolves": {
+    assumption: "When sugar disappears into water, some matter may be lost because the solid is no longer visible.",
+    evidence: ["Mass before dissolve", "Sugar becoming less visible", "Mass after dissolve"]
+  },
+  "unit-01/lesson-01/mass-change/steel-wool-burns": {
+    assumption: "Burning may destroy part of the steel wool instead of rearranging matter in the system.",
+    evidence: ["Mass before burning", "Visible burn process", "Mass after burning"]
+  },
+  "unit-01/lesson-01/mass-change/alka-seltzer": {
+    assumption: "Fizzing and escaping gas may make the total mass drop because matter appears to leave the sample.",
+    evidence: ["Mass before fizzing", "Visible bubbling or gas production", "Mass after reaction"]
+  }
+};
+
 const worldCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("world-canvas"));
 const worldCtx = worldCanvas.getContext("2d");
 const actorCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("actor-canvas"));
 const ctx = actorCanvas.getContext("2d");
+const experimentPlaceholder = document.getElementById("experiment-placeholder");
 const statusPill = document.getElementById("status-pill");
 const experimentWindow = document.getElementById("experiment-window");
 const overlayTitle = document.getElementById("experiment-title");
@@ -291,6 +320,12 @@ const captureAfter = document.getElementById("capture-after");
 const captureDelta = document.getElementById("capture-delta");
 const captureCount = document.getElementById("capture-count");
 const zoneCaptureList = document.getElementById("zone-capture-list");
+const aiBriefingTitle = document.getElementById("ai-briefing-title");
+const aiBriefingStage = document.getElementById("ai-briefing-stage");
+const aiBriefingStatus = document.getElementById("ai-briefing-status");
+const aiBriefingAssumption = document.getElementById("ai-briefing-assumption");
+const aiBriefingTask = document.getElementById("ai-briefing-task");
+const aiBriefingEvidence = document.getElementById("ai-briefing-evidence");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
 
 const keys = new Set();
@@ -313,6 +348,9 @@ let previousTime = 0;
 let worldDirty = true;
 let actorDirty = true;
 let spaceHeld = false;
+let currentExperimentId = EXPERIMENTS[0].id;
+let lastAiBriefingSignature = "";
+let lastCaptureHudSignature = "";
 
 const player = {
   x: spawnPoint.x,
@@ -378,6 +416,11 @@ const loadState = Promise.all([
     return res.json();
   })
 ]).then(([terrainSheet, rockSheet, rockAuraSheet, pilotSheet, ship, armParts, experimentArt, animationMap]) => {
+  const startupExperiment = startupExperimentId ? findExperimentByIdentifier(startupExperimentId) : null;
+  if (startupExperiment) {
+    currentExperimentId = startupExperiment.id;
+  }
+
   state.images.terrainSheet = terrainSheet;
   state.images.rockSheet = rockSheet;
   state.images.rockAuraSheet = rockAuraSheet;
@@ -397,21 +440,20 @@ const loadState = Promise.all([
   resetArmState(true);
   state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
+  activeZone = getCurrentExperiment();
   setStatus("Arrow keys fly the ship. Space deploys the arm. WASD moves the arm head.");
+  renderAiBriefing();
   renderCaptureHud();
   updateHullHud();
   updateFieldHud({ tier: "clear" });
   invalidateWorldLayer();
   invalidateActorLayer();
 
-  if (startupExperimentId) {
-    const initialExperiment = findExperimentByIdentifier(startupExperimentId);
-    if (initialExperiment) {
-      openExperiment(initialExperiment);
-      activeZone = initialExperiment;
-      hudFocusExperimentId = initialExperiment.id;
-      renderCaptureHud();
-    }
+  if (startupExperiment) {
+    openExperiment(startupExperiment);
+    activeZone = startupExperiment;
+    hudFocusExperimentId = startupExperiment.id;
+    renderCaptureHud();
   }
 });
 
@@ -447,6 +489,7 @@ overlayFrame.addEventListener("load", () => {
   if (overlayOpen) {
     experimentFrameReady = true;
     setStatus(`${overlayTitle.textContent} ready in the experiment window.`);
+    renderAiBriefing();
     renderCaptureHud();
   }
 });
@@ -494,6 +537,15 @@ function update(dtMs) {
   const priorArmHeadX = arm.headWorldX;
   const priorArmHeadY = arm.headWorldY;
   let changed = false;
+
+  const currentExperiment = getCurrentExperiment();
+  if ((activeZone?.id || null) !== currentExperiment.id) {
+    activeZone = currentExperiment;
+    hudFocusExperimentId = currentExperiment.id;
+    renderAiBriefing();
+    renderCaptureHud();
+    refreshWorldLayer();
+  }
 
   if (!player.alive) {
     deathTimerMs -= dtMs;
@@ -568,26 +620,18 @@ function update(dtMs) {
     return;
   }
 
-  const nextZone = getFocusedExperiment();
-  if ((nextZone?.id || null) !== (activeZone?.id || null)) {
-    activeZone = nextZone;
-    if (activeZone) {
-      hudFocusExperimentId = activeZone.id;
-    }
-    renderCaptureHud();
-  } else {
-    activeZone = nextZone;
-  }
-
-  if (!overlayOpen && !activeZone && postMoveInfluence.warningLevel > 0.38) {
+  if (!overlayOpen && postMoveInfluence.warningLevel > 0.38) {
     setStatus("Localized dark-sector pull rising. Keep clear of the dense core.");
-  } else if (!overlayOpen && !activeZone && postMoveInfluence.warningLevel > 0.14) {
+  } else if (!overlayOpen && postMoveInfluence.warningLevel > 0.14) {
     setStatus("Dust and stones are drifting wrong here. Controls feel unstable.");
   } else if (!overlayOpen && activeZone) {
     setStatus(describeExperimentStation(activeZone));
   } else {
     setExplorationStatus();
   }
+
+  renderAiBriefing();
+  renderCaptureHud();
 
   changed =
     changed ||
@@ -633,6 +677,115 @@ function renderLoading() {
   ctx.fillStyle = "#f2e5c6";
   ctx.font = "24px Georgia";
   ctx.fillText("Loading ship proof of concept...", 28, 60);
+}
+
+function getCurrentExperiment() {
+  return findExperimentByIdentifier(currentExperimentId) || EXPERIMENTS[0];
+}
+
+function getCurrentExperimentIndex() {
+  return EXPERIMENTS.findIndex((experiment) => experiment.id === getCurrentExperiment().id);
+}
+
+function setCurrentExperiment(experimentId) {
+  if (!experimentId || experimentId === currentExperimentId) {
+    return;
+  }
+  currentExperimentId = experimentId;
+  activeZone = getCurrentExperiment();
+  hudFocusExperimentId = activeZone.id;
+  refreshWorldLayer();
+  renderAiBriefing();
+  renderCaptureHud();
+  invalidateActorLayer();
+}
+
+function advanceCurrentExperiment() {
+  const currentIndex = getCurrentExperimentIndex();
+  if (currentIndex < 0 || currentIndex >= EXPERIMENTS.length - 1) {
+    return false;
+  }
+  setCurrentExperiment(EXPERIMENTS[currentIndex + 1].id);
+  return true;
+}
+
+function refreshWorldLayer() {
+  if (!assetsReady) {
+    return;
+  }
+  state.worldLayer = buildWorldLayer();
+  invalidateWorldLayer();
+}
+
+function getExperimentZone() {
+  return FIELD_CHAMBER_ZONE;
+}
+
+function isCurrentChamberFocused() {
+  return Boolean(getZoneAtPoint(player.x, player.y));
+}
+
+function getCurrentRequiredObject(experiment) {
+  return state.experimentObjects.find((object) => object.experimentId === experiment.id && !object.delivered) || null;
+}
+
+function getInvestigationTask(experiment) {
+  const nextObject = getCurrentRequiredObject(experiment);
+  if (overlayOpen && activeZone?.id === experiment.id) {
+    return experimentFrameReady
+      ? `Run ${experiment.title} in the live window, then capture the evidence for the AI.`
+      : `Linking ${experiment.title} into the live window now. Hold position and prepare to capture evidence.`;
+  }
+  if (nextObject) {
+    return `Retrieve ${nextObject.name} (${nextObject.formula}) and deposit it in the experimental chamber.`;
+  }
+  if (!isCurrentChamberFocused()) {
+    return `Return to the experimental chamber and dock over the pad to begin ${experiment.title}.`;
+  }
+  return `Press Enter to begin ${experiment.title} in the live experiment window.`;
+}
+
+function getInvestigationStatus(experiment) {
+  const record = state.captures[experiment.id];
+  if (overlayOpen && activeZone?.id === experiment.id) {
+    return experimentFrameReady ? "Live window linked" : "Chamber link in progress";
+  }
+  if (record.count > 0) {
+    return "Correction recorded";
+  }
+  if (isExperimentReady(experiment)) {
+    return isCurrentChamberFocused() ? "Chamber primed" : "Chamber staged";
+  }
+  return "Assumption unresolved";
+}
+
+function renderAiBriefing() {
+  const experiment = getCurrentExperiment();
+  const briefing = EXPERIMENT_BRIEFINGS[experiment.id];
+  const stageIndex = getCurrentExperimentIndex() + 1;
+  const deliveredCount = getDeliveredCount(experiment);
+  const captureCount = state.captures[experiment.id]?.count || 0;
+  const signature = [
+    experiment.id,
+    overlayOpen ? "open" : "closed",
+    experimentFrameReady ? "frame-ready" : "frame-pending",
+    deliveredCount,
+    captureCount,
+    isCurrentChamberFocused() ? "focused" : "field"
+  ].join("|");
+
+  if (signature === lastAiBriefingSignature) {
+    return;
+  }
+  lastAiBriefingSignature = signature;
+
+  aiBriefingTitle.textContent = experiment.title;
+  aiBriefingStage.textContent = `Investigation ${stageIndex}/${EXPERIMENTS.length}`;
+  aiBriefingStatus.textContent = getInvestigationStatus(experiment);
+  aiBriefingAssumption.textContent = briefing?.assumption || "Model uncertainty active.";
+  aiBriefingTask.textContent = getInvestigationTask(experiment);
+  aiBriefingEvidence.textContent = briefing?.evidence?.join(" • ") || "Capture the critical evidence from this run.";
+  experimentPlaceholder.textContent = `Current chamber task: ${getInvestigationTask(experiment)}`;
 }
 
 function buildBackgroundLayer() {
@@ -1049,44 +1202,43 @@ function mixSeed(row, col, salt) {
 
 function drawExperimentStationsBase(layerCtx) {
   layerCtx.save();
+  const experiment = getCurrentExperiment();
+  const zone = getExperimentZone(experiment);
+  const { x, y, w, h } = zone;
+  const px = x * TILE_SIZE;
+  const py = y * TILE_SIZE;
+  const padWidth = w * TILE_SIZE;
+  const padHeight = h * TILE_SIZE;
+  const preview = state.images.experimentArt?.[experiment.previewKey];
 
-  for (const experiment of EXPERIMENTS) {
-    const { x, y, w, h } = experiment.zone;
-    const px = x * TILE_SIZE;
-    const py = y * TILE_SIZE;
-    const padWidth = w * TILE_SIZE;
-    const padHeight = h * TILE_SIZE;
-    const preview = state.images.experimentArt?.[experiment.previewKey];
+  layerCtx.fillStyle = "rgba(14, 24, 31, 0.58)";
+  layerCtx.fillRect(px + 4, py + 4, padWidth - 8, padHeight - 8);
+  layerCtx.strokeStyle = "rgba(126, 197, 213, 0.52)";
+  layerCtx.lineWidth = 2;
+  layerCtx.strokeRect(px + 3, py + 3, padWidth - 6, padHeight - 6);
 
-    layerCtx.fillStyle = "rgba(14, 24, 31, 0.58)";
-    layerCtx.fillRect(px + 4, py + 4, padWidth - 8, padHeight - 8);
-    layerCtx.strokeStyle = "rgba(126, 197, 213, 0.52)";
-    layerCtx.lineWidth = 2;
-    layerCtx.strokeRect(px + 3, py + 3, padWidth - 6, padHeight - 6);
-
-    if (preview) {
-      const previewScale = Math.min((padWidth - 18) / preview.width, (padHeight - 18) / preview.height);
-      const drawWidth = preview.width * previewScale;
-      const drawHeight = preview.height * previewScale;
-      layerCtx.globalAlpha = 0.9;
-      layerCtx.drawImage(
-        preview,
-        px + (padWidth - drawWidth) / 2,
-        py + (padHeight - drawHeight) / 2 + 3,
-        drawWidth,
-        drawHeight
-      );
-      layerCtx.globalAlpha = 1;
-    }
-
-    layerCtx.fillStyle = "rgba(10, 16, 22, 0.72)";
-    layerCtx.fillRect(px + 6, py + 6, padWidth - 12, 16);
-    layerCtx.fillStyle = "#d7f7ff";
-    layerCtx.font = "bold 11px Georgia";
-    layerCtx.textAlign = "center";
-    layerCtx.textBaseline = "middle";
-    layerCtx.fillText(experiment.label, px + padWidth / 2, py + 14);
+  if (preview) {
+    const previewScale = Math.min((padWidth - 18) / preview.width, (padHeight - 18) / preview.height);
+    const drawWidth = preview.width * previewScale;
+    const drawHeight = preview.height * previewScale;
+    layerCtx.globalAlpha = 0.9;
+    layerCtx.drawImage(
+      preview,
+      px + (padWidth - drawWidth) / 2,
+      py + (padHeight - drawHeight) / 2 + 3,
+      drawWidth,
+      drawHeight
+    );
+    layerCtx.globalAlpha = 1;
   }
+
+  layerCtx.fillStyle = "rgba(10, 16, 22, 0.72)";
+  layerCtx.fillRect(px + 6, py + 6, padWidth - 12, 16);
+  layerCtx.fillStyle = "#d7f7ff";
+  layerCtx.font = "bold 11px Georgia";
+  layerCtx.textAlign = "center";
+  layerCtx.textBaseline = "middle";
+  layerCtx.fillText(`${experiment.label} CHAMBER`, px + padWidth / 2, py + 14);
 
   layerCtx.restore();
 }
@@ -1096,10 +1248,11 @@ function drawActiveExperimentZone() {
     return;
   }
 
-  const { x, y, w, h } = activeZone.zone;
+  const { x, y, w, h } = getExperimentZone(activeZone);
   const px = x * TILE_SIZE;
   const py = y * TILE_SIZE;
   const ready = isExperimentReady(activeZone);
+  const focused = isCurrentChamberFocused();
   ctx.save();
   ctx.lineWidth = 2;
   ctx.strokeStyle = ready ? "rgba(175, 255, 178, 0.88)" : "rgba(255, 236, 160, 0.88)";
@@ -1114,7 +1267,11 @@ function drawActiveExperimentZone() {
   ctx.font = "10px Georgia";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(ready ? "Press Enter to begin" : `Placed ${progress}/${activeZone.requirements.length}`, px + (w * TILE_SIZE) / 2, py + (h * TILE_SIZE) - 15);
+  ctx.fillText(
+    ready ? (focused ? "Press Enter to begin" : "Return to chamber") : `Placed ${progress}/${activeZone.requirements.length}`,
+    px + (w * TILE_SIZE) / 2,
+    py + (h * TILE_SIZE) - 15
+  );
   ctx.restore();
 }
 
@@ -1387,6 +1544,7 @@ function openExperiment(experiment) {
   overlayOpen = true;
   experimentFrameReady = false;
   hudFocusExperimentId = experiment.id;
+  activeZone = experiment;
   player.vx = 0;
   player.vy = 0;
   player.thrusting = false;
@@ -1397,6 +1555,7 @@ function openExperiment(experiment) {
   if (overlayFrame.src !== new URL(url, window.location.origin).toString()) {
     overlayFrame.src = url;
   }
+  renderAiBriefing();
   renderCaptureHud();
   invalidateActorLayer();
 }
@@ -1407,14 +1566,20 @@ function closeExperimentFrame() {
 }
 
 function closeOverlay() {
+  const completedExperiment = activeZone && state.captures[activeZone.id]?.count > 0 ? activeZone : null;
   overlayOpen = false;
   experimentWindow.classList.remove("is-active");
   closeExperimentFrame();
   overlayTitle.textContent = "Standby Window";
+  if (completedExperiment && completedExperiment.id === currentExperimentId) {
+    advanceCurrentExperiment();
+  }
+  activeZone = getCurrentExperiment();
+  renderAiBriefing();
   if (activeZone) {
     setStatus(describeExperimentStation(activeZone));
   } else {
-    setStatus("Return to the field. Deliver objects, then press Enter on a ready station.");
+    setStatus("Return to the field. Stage the next investigation in the chamber.");
   }
   renderCaptureHud();
   invalidateActorLayer();
@@ -1443,7 +1608,7 @@ function respawn() {
   player.angle = 0;
   player.thrusting = false;
   impactCooldownMs = 0;
-  activeZone = null;
+  activeZone = getCurrentExperiment();
   rearmZoneId = null;
   deathMessage = "Field integrity lost. Repositioning ship...";
   for (const object of state.experimentObjects) {
@@ -1455,7 +1620,8 @@ function respawn() {
   resetArmState(true);
   updateHullHud();
   updateFieldHud({ tier: "clear" });
-  setStatus("Ship reset. Deploy the arm with Space and deliver experiment objects.");
+  renderAiBriefing();
+  setStatus("Ship reset. Deploy the arm with Space and continue the current investigation.");
   renderCaptureHud();
   invalidateActorLayer();
 }
@@ -1524,31 +1690,22 @@ function isExperimentReady(experiment) {
 }
 
 function getFocusedExperiment() {
-  if (overlayOpen && activeZone) {
-    return activeZone;
-  }
-  const shipFocus = getZoneAtPoint(player.x, player.y);
-  if (shipFocus) {
-    return shipFocus;
-  }
-  if (arm.extension > 0.12) {
-    return getZoneAtPoint(arm.headWorldX, arm.headWorldY);
-  }
-  return null;
+  return getCurrentExperiment();
 }
 
 function describeExperimentStation(experiment) {
-  const delivered = getDeliveredCount(experiment);
   if (isExperimentReady(experiment)) {
-    return `${experiment.title} ready. Press Enter to open the experiment view.`;
+    return isCurrentChamberFocused()
+      ? `${experiment.title} ready. Press Enter to open the experiment view.`
+      : `${experiment.title} staged. Return to the chamber to begin the experiment.`;
   }
 
-  const nextObject = state.experimentObjects.find((object) => object.experimentId === experiment.id && !object.delivered);
+  const nextObject = getCurrentRequiredObject(experiment);
   if (nextObject) {
-    return `${experiment.title}: place ${nextObject.name} (${nextObject.formula}) on the station pad.`;
+    return `${experiment.title}: retrieve ${nextObject.name} (${nextObject.formula}) and place it in the chamber.`;
   }
 
-  return `${experiment.title}: place the required objects on the station pad.`;
+  return `${experiment.title}: stage the chamber for the active investigation.`;
 }
 
 function tryStartExperimentFromField() {
@@ -1557,6 +1714,10 @@ function tryStartExperimentFromField() {
   }
   if (!isExperimentReady(activeZone)) {
     setStatus(describeExperimentStation(activeZone));
+    return;
+  }
+  if (!isCurrentChamberFocused()) {
+    setStatus(`Return to the ${activeZone.label} chamber pad, then press Enter.`);
     return;
   }
   openExperiment(activeZone);
@@ -1572,6 +1733,7 @@ function toggleArmDeployment() {
   } else {
     setStatus("Arm deployed. Guide the claw with WASD.");
   }
+  renderAiBriefing();
   invalidateActorLayer();
 }
 
@@ -1757,9 +1919,10 @@ function sampleArmTrailPoints() {
 function autoLatchNearestObject() {
   let bestObject = null;
   let bestDistance = Infinity;
+  const currentExperiment = getCurrentExperiment();
 
   for (const object of state.experimentObjects) {
-    if (object.delivered) {
+    if (object.delivered || object.experimentId !== currentExperiment.id) {
       continue;
     }
     const dx = object.x - arm.headWorldX;
@@ -1781,11 +1944,11 @@ function autoLatchNearestObject() {
 
 function deliverCarriedObjectIfPossible(object) {
   const experiment = findExperimentByIdentifier(object.experimentId);
-  if (!experiment) {
+  if (!experiment || experiment.id !== getCurrentExperiment().id) {
     return false;
   }
 
-  const zone = experiment.zone;
+  const zone = getExperimentZone(experiment);
   const tileX = Math.floor(arm.headWorldX / TILE_SIZE);
   const tileY = Math.floor(arm.headWorldY / TILE_SIZE);
   if (tileX < zone.x || tileX >= zone.x + zone.w || tileY < zone.y || tileY >= zone.y + zone.h) {
@@ -1798,6 +1961,7 @@ function deliverCarriedObjectIfPossible(object) {
   object.y = slot.y;
   arm.carryingId = null;
   hudFocusExperimentId = experiment.id;
+  renderAiBriefing();
   renderCaptureHud();
   setStatus(`${object.name} placed on ${experiment.title}. ${getDeliveredCount(experiment)}/${experiment.requirements.length} ready.`);
   return true;
@@ -1812,6 +1976,7 @@ function failArm(message) {
   arm.carryingId = null;
   arm.deployed = false;
   setStatus(message);
+  renderAiBriefing();
 }
 
 function getCarriedObject() {
@@ -1819,7 +1984,7 @@ function getCarriedObject() {
 }
 
 function getExperimentSlotPosition(experiment, slotIndex) {
-  const { x, y, w, h } = experiment.zone;
+  const { x, y, w, h } = getExperimentZone(experiment);
   const count = experiment.requirements.length;
   const centerX = (x + w / 2) * TILE_SIZE;
   const baseY = (y + h) * TILE_SIZE - 18;
@@ -1834,6 +1999,9 @@ function drawExperimentObjects() {
   ctx.save();
   ctx.imageSmoothingEnabled = false;
   for (const object of state.experimentObjects) {
+    if (object.experimentId !== getCurrentExperiment().id) {
+      continue;
+    }
     drawExperimentObject(object);
   }
   ctx.restore();
@@ -1990,10 +2158,9 @@ function createBlobGrid(blobs) {
 function getZoneAtPoint(x, y) {
   const tileX = Math.floor(x / TILE_SIZE);
   const tileY = Math.floor(y / TILE_SIZE);
-  return EXPERIMENTS.find((experiment) => {
-    const zone = experiment.zone;
-    return tileX >= zone.x && tileX < zone.x + zone.w && tileY >= zone.y && tileY < zone.y + zone.h;
-  }) || null;
+  const experiment = getCurrentExperiment();
+  const zone = getExperimentZone(experiment);
+  return tileX >= zone.x && tileX < zone.x + zone.w && tileY >= zone.y && tileY < zone.y + zone.h ? experiment : null;
 }
 
 function findExperimentByIdentifier(identifier) {
@@ -2029,15 +2196,31 @@ function captureEvidence() {
   record.lastCapturedAt = Date.now();
   hudFocusExperimentId = activeZone.id;
 
-  setStatus(`${activeZone.title} evidence captured into the side log.`);
+  setStatus(`${activeZone.title} evidence captured. Collapse the window to brief the next investigation.`);
   renderCaptureHud();
+  renderAiBriefing();
 }
 
 function renderCaptureHud() {
+  const currentExperiment = getCurrentExperiment();
   const focusExperiment = getHudFocusExperiment();
   const focusRecord = focusExperiment ? state.captures[focusExperiment.id] : null;
   const activeRecord = activeZone ? state.captures[activeZone.id] : null;
   const canCapture = Boolean(activeZone && overlayOpen && experimentFrameReady && player.alive);
+  const signature = [
+    currentExperiment.id,
+    activeZone?.id || "none",
+    overlayOpen ? "open" : "closed",
+    experimentFrameReady ? "frame-ready" : "frame-pending",
+    canCapture ? "capture-ready" : "capture-off",
+    getDeliveredCount(currentExperiment),
+    ...EXPERIMENTS.map((experiment) => `${experiment.id}:${state.captures[experiment.id].count}:${state.captures[experiment.id].delta ?? "na"}`)
+  ].join("|");
+
+  if (signature === lastCaptureHudSignature) {
+    return;
+  }
+  lastCaptureHudSignature = signature;
 
   captureButton.disabled = !canCapture;
   captureButton.textContent = canCapture ? `Capture ${activeZone.label}` : "Capture Evidence";
@@ -2045,16 +2228,16 @@ function renderCaptureHud() {
   if (activeZone) {
     captureActiveTitle.textContent = activeZone.title;
     captureActiveCopy.textContent = experimentFrameReady
-      ? "Temporary hook: run the live experiment, then record that result here."
+      ? "Run the live experiment, then capture the evidence that will let you correct the AI."
       : isExperimentReady(activeZone)
-        ? "Experiment window is loading. Capture arms as soon as the live view is ready."
-        : "This station still needs its required objects before the experiment can start.";
+        ? "Experiment window is loading. Capture will arm as soon as the live view is ready."
+        : "The current investigation still needs its required objects staged in the chamber.";
   } else if (focusExperiment && focusRecord && focusRecord.count > 0) {
     captureActiveTitle.textContent = `${focusExperiment.title} log`;
     captureActiveCopy.textContent = "No live station selected. The latest recorded evidence stays visible here until you focus another station.";
   } else {
-    captureActiveTitle.textContent = "No active station";
-    captureActiveCopy.textContent = "Focus a field station, deliver its objects, then run the experiment and capture the result.";
+    captureActiveTitle.textContent = "No active investigation";
+    captureActiveCopy.textContent = "Stage the current investigation in the chamber, run it, then capture the result.";
   }
 
   const displayRecord = activeZone ? activeRecord : focusRecord;
@@ -2072,13 +2255,15 @@ function renderCaptureHud() {
 
   for (const experiment of EXPERIMENTS) {
     const record = state.captures[experiment.id];
-    const isActive = activeZone && activeZone.id === experiment.id;
+    const isActive = currentExperiment && currentExperiment.id === experiment.id;
     const refs = state.capturesUi[experiment.id];
     let stateCopy = "Awaiting first capture.";
     if (isActive && canCapture) {
       stateCopy = "Window live. Capture ready.";
     } else if (isActive && overlayOpen && !experimentFrameReady) {
       stateCopy = "Window loading.";
+    } else if (isActive && !record.count) {
+      stateCopy = isExperimentReady(experiment) ? "Current investigation: staged." : "Current investigation: gather objects.";
     } else if (record.count > 0) {
       stateCopy = "Recorded in side log.";
     }
@@ -2220,7 +2405,9 @@ function sampleAnomalyInfluence(x, y) {
 }
 
 function setExplorationStatus() {
-  if (!activeZone && !overlayOpen) {
+  if (!overlayOpen && activeZone) {
+    setStatus(describeExperimentStation(activeZone));
+  } else if (!overlayOpen) {
     setStatus("Arrow keys fly the ship. Space deploys the arm. WASD moves the arm head.");
   }
 }
