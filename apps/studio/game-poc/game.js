@@ -512,8 +512,7 @@ function update(dtMs) {
   player.vy += anomalyInfluence.pullY * dt;
 
   const speed = Math.hypot(player.vx, player.vy);
-  const armChanged = updateArm(dtMs);
-  if (input.mag > 0 || speed > MOTION_EPSILON || armChanged) {
+  if (input.mag > 0 || speed > MOTION_EPSILON) {
     visualTimeMs += dtMs;
   }
   if (speed > maxSpeed) {
@@ -533,6 +532,10 @@ function update(dtMs) {
   }
 
   resolvePlayerMovement(dt);
+  const armChanged = updateArm(dtMs);
+  if (armChanged) {
+    visualTimeMs += dtMs;
+  }
 
   const postMoveInfluence = sampleAnomalyInfluence(player.x, player.y);
   updateFieldHud(postMoveInfluence);
@@ -1820,6 +1823,7 @@ function drawExperimentObject(object) {
   const selected = activeZone?.id === object.experimentId;
   const x = object.x;
   const y = object.y;
+  const shortName = object.name.length > 12 ? `${object.name.slice(0, 12)}.` : object.name;
 
   if (object.kind === "ice") {
     drawSpriteImage(state.images.experimentArt.iceCube, x, y, 22, 22);
@@ -1834,9 +1838,15 @@ function drawExperimentObject(object) {
   }
 
   ctx.fillStyle = object.delivered ? "rgba(185, 255, 205, 0.88)" : selected ? "rgba(255, 244, 184, 0.92)" : "rgba(14, 18, 24, 0.88)";
-  ctx.fillRect(Math.round(x - 24), Math.round(y + 15), 48, 16);
+  ctx.fillRect(Math.round(x - 28), Math.round(y - 24), 56, 12);
   ctx.fillStyle = object.delivered ? "#133222" : "#f5f5f5";
   ctx.font = "8px Georgia";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(shortName, Math.round(x), Math.round(y - 18));
+  ctx.fillStyle = object.delivered ? "rgba(185, 255, 205, 0.88)" : selected ? "rgba(255, 244, 184, 0.92)" : "rgba(14, 18, 24, 0.88)";
+  ctx.fillRect(Math.round(x - 24), Math.round(y + 15), 48, 16);
+  ctx.fillStyle = object.delivered ? "#133222" : "#f5f5f5";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(object.formula, Math.round(x), Math.round(y + 23));
@@ -2021,7 +2031,7 @@ function renderCaptureHud() {
         : "This station still needs its required objects before the experiment can start.";
   } else if (focusExperiment && focusRecord && focusRecord.count > 0) {
     captureActiveTitle.textContent = `${focusExperiment.title} log`;
-    captureActiveCopy.textContent = "No live zone selected. The latest recorded evidence stays visible here until you arm another zone.";
+    captureActiveCopy.textContent = "No live station selected. The latest recorded evidence stays visible here until you focus another station.";
   } else {
     captureActiveTitle.textContent = "No active station";
     captureActiveCopy.textContent = "Focus a field station, deliver its objects, then run the experiment and capture the result.";
