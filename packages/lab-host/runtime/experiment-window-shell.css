@@ -525,6 +525,10 @@ body.rainbow-experiment-window--embed .custom-stage {
   height: 100%;
 }
 
+.custom-stage__fx {
+  pointer-events: none;
+}
+
 .custom-stage--steel [id^="steel-zone-hit-"] {
   cursor: grab;
   touch-action: none;

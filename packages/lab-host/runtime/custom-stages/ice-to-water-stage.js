@@ -16,7 +16,7 @@
       '    <div>',
       '      <p class="custom-stage__eyebrow">Reality-First Melt Stage</p>',
       '      <h3 class="custom-stage__title">Ice to water</h3>',
-      '      <p class="custom-stage__caption">Measure the beaker, start the melt, and watch the cubes round off, slump, shed runoff, and disappear into the rising water.</p>',
+      '      <p class="custom-stage__caption">Click the scale to measure, click the beaker to start the melt, and watch the cubes round off, slump, shed runoff, and disappear into the rising water.</p>',
       '    </div>',
       '    <div class="custom-stage__meta">',
       '      <div class="custom-stage__clock">',
@@ -149,6 +149,24 @@
       '          <path d="M385 148C398 310 404 476 407 618" fill="none" stroke="#ffffff" stroke-opacity="0.48" stroke-width="12" stroke-linecap="round"/>',
       '          <path d="M614 148C603 314 598 480 594 618" fill="none" stroke="#e5eff6" stroke-opacity="0.32" stroke-width="7" stroke-linecap="round"/>',
       '        </g>',
+      '        <g id="ice-scale-hit-zone" opacity="0" pointer-events="none">',
+      '          <ellipse id="ice-scale-hit-ring" cx="500" cy="708" rx="208" ry="86" fill="#fff7dc" fill-opacity="0.2" stroke="#ffd166" stroke-width="6" stroke-opacity="0.86" stroke-dasharray="16 12"/>',
+      '          <ellipse cx="500" cy="708" rx="188" ry="68" fill="#fff6d0" fill-opacity="0.14" stroke="#fffef6" stroke-width="3" stroke-opacity="0.64"/>',
+      '          <g id="ice-scale-hit-label" transform="translate(382 598)">',
+      '            <rect x="0" y="0" width="236" height="54" rx="18" fill="#fffdf6" fill-opacity="0.97" stroke="#d6b46c" stroke-width="3"/>',
+      '            <text x="118" y="34" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#5f4a20">Click scale to weigh</text>',
+      '          </g>',
+      '          <ellipse id="ice-scale-hit-target" cx="500" cy="708" rx="228" ry="96" fill="#ffffff" fill-opacity="0.001" pointer-events="all"/>',
+      '        </g>',
+      '        <g id="ice-beaker-hit-zone" opacity="0" pointer-events="none">',
+      '          <rect id="ice-beaker-hit-ring" x="314" y="112" width="372" height="562" rx="104" fill="#fff5c6" fill-opacity="0.14" stroke="#f4b85d" stroke-width="6" stroke-opacity="0.82" stroke-dasharray="16 12"/>',
+      '          <rect x="336" y="138" width="328" height="512" rx="88" fill="#fffced" fill-opacity="0.08" stroke="#fffef6" stroke-width="3" stroke-opacity="0.52"/>',
+      '          <g id="ice-beaker-hit-label" transform="translate(364 72)">',
+      '            <rect x="0" y="0" width="272" height="54" rx="18" fill="#fffdf6" fill-opacity="0.97" stroke="#d8a559" stroke-width="3"/>',
+      '            <text x="136" y="34" text-anchor="middle" font-family="Georgia, serif" font-size="24" fill="#71411d">Click beaker to melt</text>',
+      '          </g>',
+      '          <rect id="ice-beaker-hit-target" x="300" y="104" width="400" height="578" rx="112" fill="#ffffff" fill-opacity="0.001" pointer-events="all"/>',
+      '        </g>',
       '      </svg>',
       '      <canvas class="custom-stage__fx" aria-hidden="true"></canvas>',
       '    </div>',
@@ -180,7 +198,11 @@
       afterMeasured: false,
       clockSeconds: 0,
       meltTimeline: null,
-      massTween: null
+      massTween: null,
+      cueTweens: {
+        scale: null,
+        beaker: null
+      }
     };
 
     if (!container || !host || !gsap) {
@@ -197,10 +219,16 @@
     refs.after = container.querySelector("[data-ice-after]");
     refs.reset = container.querySelector("[data-ice-reset]");
     refs.scaleAssembly = container.querySelector("#ice-scale-assembly");
+    refs.scaleHitZone = container.querySelector("#ice-scale-hit-zone");
+    refs.scaleHitRing = container.querySelector("#ice-scale-hit-ring");
+    refs.scaleHitLabel = container.querySelector("#ice-scale-hit-label");
     refs.readout = container.querySelector("[data-ice-scale-readout]");
     refs.tray = container.querySelector("#ice-scale-tray");
     refs.scaleBody = container.querySelector("#ice-scale-body");
     refs.beaker = container.querySelector("#ice-beaker-assembly");
+    refs.beakerHitZone = container.querySelector("#ice-beaker-hit-zone");
+    refs.beakerHitRing = container.querySelector("#ice-beaker-hit-ring");
+    refs.beakerHitLabel = container.querySelector("#ice-beaker-hit-label");
     refs.beakerShadow = container.querySelector("#ice-beaker-shadow");
     refs.waterFill = container.querySelector("#ice-water-fill");
     refs.waterDepth = container.querySelector("#ice-water-depth");
@@ -299,17 +327,72 @@
       });
     }
 
+    function stopCueTween(key) {
+      if (state.cueTweens[key]) {
+        state.cueTweens[key].kill();
+        state.cueTweens[key] = null;
+      }
+    }
+
+    function setCueState(key, active) {
+      var zone = refs[key + "HitZone"];
+      var ring = refs[key + "HitRing"];
+      var label = refs[key + "HitLabel"];
+      var liveTarget = key === "scale" ? refs.scaleAssembly : refs.beaker;
+      var pointer = active ? "pointer" : "default";
+
+      if (!zone || !ring || !label) {
+        return;
+      }
+
+      zone.style.pointerEvents = active ? "all" : "none";
+      zone.style.cursor = pointer;
+      if (liveTarget) {
+        liveTarget.style.cursor = pointer;
+      }
+
+      stopCueTween(key);
+      gsap.to(zone, {
+        opacity: active ? 1 : 0,
+        duration: active ? 0.35 : 0.2,
+        ease: active ? "sine.out" : "sine.in",
+        overwrite: "auto"
+      });
+      gsap.to(label, {
+        y: active ? 0 : 6,
+        duration: active ? 0.35 : 0.2,
+        ease: active ? "sine.out" : "sine.in",
+        overwrite: "auto"
+      });
+      gsap.set(ring, { transformOrigin: "50% 50%" });
+
+      if (active) {
+        state.cueTweens[key] = gsap.to(ring, {
+          scale: 1.03,
+          opacity: 0.96,
+          duration: 1.15,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut"
+        });
+      } else {
+        gsap.set(ring, { scale: 1, opacity: 0.82 });
+      }
+    }
+
     function syncButtons() {
+      var scaleActive;
+      var beakerActive;
+
       refs.before.disabled = state.arrivalRunning || state.beforeMeasured || state.meltRunning;
       refs.start.disabled = state.arrivalRunning || !state.beforeMeasured || state.meltRunning || state.meltCompleted;
       refs.after.disabled = state.arrivalRunning || !state.meltCompleted || state.afterMeasured || state.meltRunning;
       refs.reset.disabled = state.meltRunning;
-      if (refs.scaleAssembly) {
-        refs.scaleAssembly.style.cursor = (!refs.before.disabled || !refs.after.disabled) ? "pointer" : "default";
-      }
-      if (refs.beaker) {
-        refs.beaker.style.cursor = !refs.start.disabled ? "pointer" : "default";
-      }
+
+      scaleActive = !refs.before.disabled || !refs.after.disabled;
+      beakerActive = !refs.start.disabled;
+      setCueState("scale", scaleActive);
+      setCueState("beaker", beakerActive);
     }
 
     function syncEvidence(patch) {
@@ -822,7 +905,9 @@
     refs.after.addEventListener("click", handleMeasureAfter);
     refs.reset.addEventListener("click", resetScene);
     refs.scaleAssembly.addEventListener("click", handleScaleClick);
+    refs.scaleHitZone.addEventListener("click", handleScaleClick);
     refs.beaker.addEventListener("click", handleBeakerClick);
+    refs.beakerHitZone.addEventListener("click", handleBeakerClick);
     window.addEventListener("rainbow.labHost.command", handleHostCommand);
 
     resetScene();
@@ -855,8 +940,12 @@
       refs.after.removeEventListener("click", handleMeasureAfter);
       refs.reset.removeEventListener("click", resetScene);
       refs.scaleAssembly.removeEventListener("click", handleScaleClick);
+      refs.scaleHitZone.removeEventListener("click", handleScaleClick);
       refs.beaker.removeEventListener("click", handleBeakerClick);
+      refs.beakerHitZone.removeEventListener("click", handleBeakerClick);
       window.removeEventListener("rainbow.labHost.command", handleHostCommand);
+      stopCueTween("scale");
+      stopCueTween("beaker");
       container.innerHTML = "";
     };
   }
