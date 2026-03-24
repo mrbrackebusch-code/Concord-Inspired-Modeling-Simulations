@@ -10,7 +10,6 @@ const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
 const ARM_HEAD_SPEED = 132;
-const ARM_TURN_RESPONSE = 5.5;
 const ARM_SEGMENT_SPACING = 12;
 const ARM_RENDER_SEGMENT_LIMIT = 72;
 const ARM_HISTORY_STEP = 4;
@@ -1894,16 +1893,16 @@ function updateArm(dtMs) {
   const input = getArmInputVector();
   if (arm.deployed && arm.extension > 0.1) {
     if (input.mag > 0) {
-      arm.targetAngle = Math.atan2(input.y, input.x);
+      arm.aimAngle = Math.atan2(input.y, input.x);
+      arm.targetAngle = arm.aimAngle;
     }
-    arm.aimAngle = easeAngle(arm.aimAngle, arm.targetAngle, clamp(dt * ARM_TURN_RESPONSE, 0, 1));
     arm.headLocalX += Math.cos(arm.aimAngle) * ARM_HEAD_SPEED * dt;
     arm.headLocalY += Math.sin(arm.aimAngle) * ARM_HEAD_SPEED * dt;
   } else {
     arm.headLocalX = approach(arm.headLocalX, rest.x, dt * 220);
     arm.headLocalY = approach(arm.headLocalY, rest.y, dt * 220);
     arm.targetAngle = ARM_LAUNCH_ANGLE;
-    arm.aimAngle = easeAngle(arm.aimAngle, arm.targetAngle, clamp(dt * 8, 0, 1));
+    arm.aimAngle = ARM_LAUNCH_ANGLE;
   }
 
   if (arm.extension < 0.02 && !arm.deployed) {
@@ -1921,7 +1920,14 @@ function updateArm(dtMs) {
   }
 
   if (arm.extension > 0.22) {
-    if (circleIntersectsAnyRockMask(arm.headWorldX, arm.headWorldY, ARM_HEAD_RADIUS)) {
+    if (
+      arm.headWorldX < ARM_HEAD_RADIUS ||
+      arm.headWorldX > CANVAS_WIDTH - ARM_HEAD_RADIUS ||
+      arm.headWorldY < ARM_HEAD_RADIUS ||
+      arm.headWorldY > CANVAS_HEIGHT - ARM_HEAD_RADIUS
+    ) {
+      failArm("Arm tip hit the field boundary. Retraction triggered.");
+    } else if (circleIntersectsAnyRockMask(arm.headWorldX, arm.headWorldY, ARM_HEAD_RADIUS)) {
       failArm("Arm tip clipped a rock. Retraction triggered.");
     } else {
       const headField = sampleAnomalyInfluence(arm.headWorldX, arm.headWorldY);
