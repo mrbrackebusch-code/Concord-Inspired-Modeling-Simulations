@@ -292,6 +292,7 @@ const captureAfter = document.getElementById("capture-after");
 const captureDelta = document.getElementById("capture-delta");
 const captureCount = document.getElementById("capture-count");
 const zoneCaptureList = document.getElementById("zone-capture-list");
+const dataDrone = document.getElementById("data-drone");
 const aiBriefingAssumption = document.getElementById("ai-briefing-assumption");
 const droneBriefingCopy = document.getElementById("drone-briefing-copy");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
@@ -782,6 +783,7 @@ function renderAiBriefing() {
 
   aiBriefingAssumption.textContent = getInvestigationQuestion(experiment);
   droneBriefingCopy.textContent = getDronePrompt(experiment);
+  dataDrone?.classList.toggle("is-thinking", Boolean(droneBriefingCopy.textContent.trim()));
   experimentPlaceholderText.textContent = "Chamber optics waking up...";
 }
 

@@ -228,15 +228,7 @@ kbd {
 }
 
 .experiment-window__body::before {
-  content: "";
-  position: absolute;
-  inset: 0.8rem;
-  border-radius: 20px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 16%),
-    radial-gradient(circle at 50% 12%, rgba(255, 251, 240, 0.68), transparent 36%);
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 .chamber-shell {
@@ -272,16 +264,16 @@ kbd {
 
 .chamber-shell__platform {
   position: absolute;
-  left: 2.1rem;
-  right: 2.1rem;
-  bottom: 1.1rem;
-  height: 3.6rem;
-  border-radius: 1.4rem 1.4rem 1.8rem 1.8rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5rem;
+  border-radius: 0 0 22px 22px;
   background:
-    linear-gradient(180deg, rgba(145, 156, 145, 0.92), rgba(111, 123, 111, 0.96));
+    linear-gradient(180deg, rgba(170, 182, 168, 0.82), rgba(113, 126, 112, 0.94));
   box-shadow:
-    0 18px 22px rgba(0, 0, 0, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    0 -1px 0 rgba(80, 92, 80, 0.12);
 }
 
 .experiment-window__chrome {
@@ -444,6 +436,26 @@ kbd {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
+.data-drone__mouth {
+  position: absolute;
+  top: 35px;
+  left: 24px;
+  width: 12px;
+  height: 7px;
+  border-bottom: 2px solid #17322b;
+  border-radius: 0 0 999px 999px;
+  opacity: 0.9;
+}
+
+.data-drone.is-thinking .data-drone__mouth {
+  top: 33px;
+  left: 25px;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #17322b;
+  border-radius: 50%;
+}
+
 .data-drone__beam {
   position: absolute;
   top: 30px;
@@ -483,6 +495,14 @@ kbd {
   color: #31463f;
   font-size: 0.76rem;
   line-height: 1.28;
+}
+
+.data-drone__name {
+  margin: 0 0 0.2rem;
+  color: #5b7d72;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 @keyframes data-drone-hover {
@@ -544,7 +564,7 @@ kbd {
   left: 0.7rem;
   right: 0.7rem;
   top: clamp(10.6rem, 28%, 14rem);
-  bottom: 0.7rem;
+  bottom: 1.5rem;
   z-index: 1;
   overflow: hidden;
   border-radius: 0;
@@ -561,7 +581,7 @@ kbd {
   height: 100%;
   min-height: 0;
   border: 0;
-  border-radius: 24px 24px 20px 20px;
+  border-radius: 0;
 }
 
 .experiment-placeholder {
