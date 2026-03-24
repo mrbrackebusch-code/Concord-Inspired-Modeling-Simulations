@@ -17,39 +17,9 @@
         <p id="hud-field">Field clear</p>
       </header>
 
-      <section class="game-shell">
+        <section class="game-shell">
         <section class="play-column">
           <section class="canvas-frame">
-            <section class="ai-briefing" aria-live="polite" hidden>
-              <div class="ai-briefing__top">
-                <div>
-                  <p class="eyebrow">AI Channel</p>
-                  <h2 id="ai-briefing-title">Investigation link offline</h2>
-                </div>
-                <p id="ai-briefing-stage" class="ai-briefing__stage">Investigation 0/6</p>
-              </div>
-              <div class="ai-briefing__status-row">
-                <div class="ai-portrait" aria-hidden="true">
-                  <div class="ai-portrait__screen">?</div>
-                </div>
-                <div class="ai-briefing__status-copy">
-                  <p class="eyebrow">Model Status</p>
-                  <p id="ai-briefing-status" class="ai-briefing__status">Assumption unresolved</p>
-                </div>
-              </div>
-              <div class="ai-briefing__section">
-                <span class="ai-briefing__label">Assumption</span>
-                <p id="ai-briefing-assumption" class="ai-briefing__copy"></p>
-              </div>
-              <div class="ai-briefing__section">
-                <span class="ai-briefing__label">Current Task</span>
-                <p id="ai-briefing-task" class="ai-briefing__copy"></p>
-              </div>
-              <div class="ai-briefing__section">
-                <span class="ai-briefing__label">Evidence Needed</span>
-                <p id="ai-briefing-evidence" class="ai-briefing__copy"></p>
-              </div>
-            </section>
             <div class="canvas-stack" aria-label="Ship experiment proof of concept">
               <canvas id="world-canvas" width="896" height="576" aria-hidden="true"></canvas>
               <canvas id="actor-canvas" width="896" height="576" aria-hidden="true"></canvas>
@@ -64,10 +34,27 @@
               <p id="experiment-title" class="experiment-window__title">Experimental Chamber</p>
               <button id="close-overlay" class="close-button" type="button" aria-label="Hide live chamber">×</button>
             </div>
+            <section class="chamber-eye">
+              <div class="chamber-eye__lens" aria-hidden="true">
+                <div class="chamber-eye__iris">
+                  <div class="chamber-eye__pupil"></div>
+                </div>
+              </div>
+              <div class="chamber-eye__copy">
+                <div class="chamber-eye__meta">
+                  <p id="ai-briefing-stage" class="chamber-eye__stage">Investigation 0/6</p>
+                  <p id="ai-briefing-status" class="chamber-eye__status">Assumption unresolved</p>
+                </div>
+                <h2 id="ai-briefing-title" class="chamber-eye__title">Investigation link offline</h2>
+                <p id="ai-briefing-assumption" class="chamber-eye__assumption"></p>
+                <p id="ai-briefing-task" class="chamber-eye__task"></p>
+                <p id="ai-briefing-evidence" class="chamber-eye__evidence"></p>
+              </div>
+            </section>
             <div id="experiment-placeholder" class="experiment-placeholder">
               <div class="experiment-placeholder__copy">
                 <p class="experiment-placeholder__label">Chamber Standby</p>
-                <p class="experiment-placeholder__text">Stage the active investigation here. The live experiment will occupy this same chamber once the setup is ready.</p>
+                <p id="experiment-placeholder-text" class="experiment-placeholder__text">Stage the active investigation here. The live experiment will occupy this same chamber once the setup is ready.</p>
               </div>
             </div>
             <iframe

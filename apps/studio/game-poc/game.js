@@ -304,7 +304,7 @@ const worldCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("w
 const worldCtx = worldCanvas.getContext("2d");
 const actorCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("actor-canvas"));
 const ctx = actorCanvas.getContext("2d");
-const experimentPlaceholder = document.getElementById("experiment-placeholder");
+const experimentPlaceholderText = document.getElementById("experiment-placeholder-text");
 const statusPill = document.getElementById("status-pill");
 const experimentWindow = document.getElementById("experiment-window");
 const overlayTitle = document.getElementById("experiment-title");
@@ -785,7 +785,7 @@ function renderAiBriefing() {
   aiBriefingAssumption.textContent = briefing?.assumption || "Model uncertainty active.";
   aiBriefingTask.textContent = getInvestigationTask(experiment);
   aiBriefingEvidence.textContent = briefing?.evidence?.join(" • ") || "Capture the critical evidence from this run.";
-  experimentPlaceholder.textContent = `Current chamber task: ${getInvestigationTask(experiment)}`;
+  experimentPlaceholderText.textContent = getInvestigationTask(experiment);
 }
 
 function buildBackgroundLayer() {
