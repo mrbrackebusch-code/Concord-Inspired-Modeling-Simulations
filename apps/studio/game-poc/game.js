@@ -21,6 +21,7 @@ const ARM_LATCH_RADIUS = 18;
 const ARM_CARRY_LAG_SEGMENTS = 2;
 const ARM_LAUNCH_ANGLE = Math.PI / 2;
 const ARM_PATH_POINT_LIMIT = 1400;
+const SHIP_HANDOFF_RADIUS = 22;
 const MAX_HULL = 100;
 const FIELD_CHAMBER_ZONE = { x: 11, y: 7, w: 6, h: 3 };
 const TERRAIN_THEME = {
@@ -336,7 +337,8 @@ const player = {
   alive: true,
   hull: MAX_HULL,
   lastSafeX: spawnPoint.x,
-  lastSafeY: spawnPoint.y
+  lastSafeY: spawnPoint.y,
+  cargoId: null
 };
 const arm = {
   deployed: false,
@@ -577,6 +579,7 @@ function update(dtMs) {
 
   resolvePlayerMovement(dt);
   const armChanged = updateArm(dtMs);
+  const cargoChanged = updateShipCargo();
   if (armChanged) {
     visualTimeMs += dtMs;
   }
@@ -614,6 +617,7 @@ function update(dtMs) {
     Math.abs(arm.headWorldX - priorArmHeadX) > 0.01 ||
     Math.abs(arm.headWorldY - priorArmHeadY) > 0.01 ||
     armChanged ||
+    cargoChanged ||
     priorZoneId !== (activeZone?.id || null);
 
   if (changed) {
@@ -702,6 +706,17 @@ function getCurrentRequiredObject(experiment) {
   return state.experimentObjects.find((object) => object.experimentId === experiment.id && !object.delivered) || null;
 }
 
+function getShipCargoObject() {
+  return player.cargoId ? state.experimentObjects.find((object) => object.id === player.cargoId) || null : null;
+}
+
+function getShipCargoAnchor() {
+  return {
+    x: player.x,
+    y: player.y + 23
+  };
+}
+
 function getInvestigationTask(experiment) {
   const nextObject = getCurrentRequiredObject(experiment);
   if (overlayOpen && activeZone?.id === experiment.id) {
@@ -710,7 +725,9 @@ function getInvestigationTask(experiment) {
       : `Linking ${experiment.title} into the chamber now. Hold position and prepare to capture evidence.`;
   }
   if (nextObject) {
-    return `Retrieve ${nextObject.name} (${nextObject.formula}) and deposit it in the experimental chamber.`;
+    return player.cargoId === nextObject.id
+      ? `Bring ${nextObject.name} (${nextObject.formula}) back to the chamber and hand it in.`
+      : `Retrieve ${nextObject.name} (${nextObject.formula}), bring it back to the ship, then stage it in the chamber.`;
   }
   if (!isCurrentChamberFocused()) {
     return `Return to the experimental chamber and dock over the pad to begin ${experiment.title}.`;
@@ -749,12 +766,14 @@ function getDronePrompt(experiment) {
 
   if (nextObject) {
     if (experimentKey === "unit-01/lesson-01/mass-change/ice-to-water") {
-      return getDeliveredCount(experiment) > 0
-        ? "Bring the ice over here and drop it in."
+      return player.cargoId === nextObject.id
+        ? "Okay! Ice is on board. Bring it back to the chamber."
         : "I think there's ice outside somewhere...";
     }
 
-    return `Let's go get the ${nextObject.name.toLowerCase()}.`;
+    return player.cargoId === nextObject.id
+      ? `Nice, it's on the ship now. Let's hand it into the chamber.`
+      : `Let's go get the ${nextObject.name.toLowerCase()}.`;
   }
 
   if (!isCurrentChamberFocused()) {
@@ -1716,6 +1735,7 @@ function respawn() {
   player.vy = 0;
   player.angle = 0;
   player.thrusting = false;
+  player.cargoId = null;
   impactCooldownMs = 0;
   activeZone = getCurrentExperiment();
   rearmZoneId = null;
@@ -1811,7 +1831,9 @@ function describeExperimentStation(experiment) {
 
   const nextObject = getCurrentRequiredObject(experiment);
   if (nextObject) {
-    return `${experiment.title}: retrieve ${nextObject.name} (${nextObject.formula}) and place it in the chamber.`;
+    return player.cargoId === nextObject.id
+      ? `${experiment.title}: ${nextObject.name} is on board. Bring it back to the chamber.`
+      : `${experiment.title}: retrieve ${nextObject.name} (${nextObject.formula}) and hand it back to the ship.`;
   }
 
   return `${experiment.title}: stage the chamber for the active investigation.`;
@@ -1951,7 +1973,7 @@ function updateArm(dtMs) {
       const carryPoint = getArmCarryPoint();
       carried.x = carryPoint.x;
       carried.y = carryPoint.y;
-      deliverCarriedObjectIfPossible(carried);
+      tryHandoffArmToShip(carried);
     } else {
       arm.carryingId = null;
     }
@@ -2090,6 +2112,10 @@ function getArmCarryPoint(points = sampleArmTrailPoints()) {
 }
 
 function autoLatchNearestObject() {
+  if (player.cargoId) {
+    return;
+  }
+
   let bestObject = null;
   let bestDistance = Infinity;
   const currentExperiment = getCurrentExperiment();
@@ -2112,19 +2138,50 @@ function autoLatchNearestObject() {
   }
 
   arm.carryingId = bestObject.id;
-  setStatus(`${bestObject.name} is riding the arm. Bring it back cleanly.`);
+  setStatus(`${bestObject.name} latched. Bring it back to the ship for handoff.`);
 }
 
-function deliverCarriedObjectIfPossible(object) {
-  const experiment = findExperimentByIdentifier(object.experimentId);
-  if (!experiment || experiment.id !== getCurrentExperiment().id) {
+function updateShipCargo() {
+  const cargo = getShipCargoObject();
+  if (!cargo) {
     return false;
   }
 
-  const zone = getExperimentZone(experiment);
-  const tileX = Math.floor(object.x / TILE_SIZE);
-  const tileY = Math.floor(object.y / TILE_SIZE);
-  if (tileX < zone.x || tileX >= zone.x + zone.w || tileY < zone.y || tileY >= zone.y + zone.h) {
+  const anchor = getShipCargoAnchor();
+  const moved = Math.abs(cargo.x - anchor.x) > 0.01 || Math.abs(cargo.y - anchor.y) > 0.01;
+  cargo.x = anchor.x;
+  cargo.y = anchor.y;
+  if (deliverShipCargoIfPossible(cargo)) {
+    return true;
+  }
+  return moved;
+}
+
+function tryHandoffArmToShip(object) {
+  if (player.cargoId && player.cargoId !== object.id) {
+    return false;
+  }
+
+  const anchor = getShipCargoAnchor();
+  if (Math.hypot(object.x - anchor.x, object.y - anchor.y) > SHIP_HANDOFF_RADIUS) {
+    return false;
+  }
+
+  player.cargoId = object.id;
+  arm.carryingId = null;
+  resetArmState();
+  object.x = anchor.x;
+  object.y = anchor.y;
+  setStatus(`${object.name} secured aboard ship. Bring it to the chamber.`);
+  renderAiBriefing();
+  renderCaptureHud();
+  invalidateActorLayer();
+  return true;
+}
+
+function deliverShipCargoIfPossible(object) {
+  const experiment = findExperimentByIdentifier(object.experimentId);
+  if (!experiment || experiment.id !== getCurrentExperiment().id || !isCurrentChamberFocused()) {
     return false;
   }
 
@@ -2132,11 +2189,12 @@ function deliverCarriedObjectIfPossible(object) {
   object.delivered = true;
   object.x = slot.x;
   object.y = slot.y;
-  arm.carryingId = null;
+  player.cargoId = null;
   hudFocusExperimentId = experiment.id;
   renderAiBriefing();
   renderCaptureHud();
-  setStatus(`${object.name} placed on ${experiment.title}. ${getDeliveredCount(experiment)}/${experiment.requirements.length} ready.`);
+  setStatus(`${object.name} handed into ${experiment.title}. ${getDeliveredCount(experiment)}/${experiment.requirements.length} ready.`);
+  invalidateActorLayer();
   return true;
 }
 
@@ -2184,12 +2242,13 @@ function drawExperimentObjects() {
 
 function drawExperimentObject(object) {
   const selected = activeZone?.id === object.experimentId;
+  const securedOnShip = player.cargoId === object.id;
   const x = object.x;
   const y = object.y;
-  const shortName = object.name.length > 12 ? `${object.name.slice(0, 12)}.` : object.name;
   const capsuleTint = object.tint || getPickupTint(object);
 
-  drawPickupCapsuleShell(x, y, capsuleTint, selected, object.delivered);
+  drawPickupGlow(x, y, selected, object.delivered, securedOnShip);
+  drawPickupCapsuleShell(x, y, capsuleTint, selected, object.delivered, securedOnShip);
 
   if (object.kind === "ice") {
     drawSpriteImage(state.images.experimentArt.iceCube, x, y - 1, 19, 19);
@@ -2202,24 +2261,6 @@ function drawExperimentObject(object) {
   } else {
     drawCanisterPickup(x, y, object);
   }
-
-  const labelFill = object.delivered
-    ? "rgba(232, 249, 234, 0.96)"
-    : selected
-      ? "rgba(255, 247, 214, 0.97)"
-      : "rgba(248, 244, 232, 0.95)";
-  const labelStroke = object.delivered ? "rgba(90, 139, 102, 0.45)" : "rgba(126, 120, 98, 0.34)";
-  drawLabelPill(x, y - 28, 58, 13, labelFill, labelStroke);
-  ctx.fillStyle = "#203028";
-  ctx.font = "8px Georgia";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(shortName, Math.round(x), Math.round(y - 21));
-  drawLabelPill(x, y + 23, 46, 13, labelFill, labelStroke);
-  ctx.fillStyle = "#203028";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(object.formula, Math.round(x), Math.round(y + 23.5));
 }
 
 function drawSpriteImage(image, x, y, width, height) {
@@ -2242,7 +2283,27 @@ function getPickupTint(object) {
   return object.tint || "rgba(192, 223, 232, 0.95)";
 }
 
-function drawPickupCapsuleShell(x, y, tint, selected, delivered) {
+function drawPickupGlow(x, y, selected, delivered, secured) {
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  const glow = ctx.createRadialGradient(0, 0, 4, 0, 0, 26);
+  const inner = delivered
+    ? "rgba(166, 222, 172, 0.34)"
+    : secured
+      ? "rgba(255, 223, 155, 0.38)"
+      : selected
+        ? "rgba(255, 240, 176, 0.34)"
+        : "rgba(161, 221, 255, 0.28)";
+  glow.addColorStop(0, inner);
+  glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.ellipse(0, 2, 24, 21, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPickupCapsuleShell(x, y, tint, selected, delivered, secured) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
   ctx.fillStyle = "rgba(71, 84, 79, 0.18)";
@@ -2252,41 +2313,34 @@ function drawPickupCapsuleShell(x, y, tint, selected, delivered) {
 
   const shellFill = delivered
     ? "rgba(241, 249, 241, 0.96)"
+    : secured
+      ? "rgba(255, 249, 236, 0.98)"
     : selected
       ? "rgba(255, 251, 237, 0.97)"
       : "rgba(247, 244, 235, 0.95)";
-  const shellStroke = delivered ? "rgba(118, 156, 124, 0.42)" : "rgba(138, 142, 128, 0.34)";
+  const shellStroke = delivered
+    ? "rgba(118, 156, 124, 0.42)"
+    : secured
+      ? "rgba(181, 151, 87, 0.42)"
+      : "rgba(138, 142, 128, 0.34)";
 
   ctx.fillStyle = shellFill;
   ctx.strokeStyle = shellStroke;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.roundRect(-18, -15, 36, 30, 13);
+  ctx.roundRect(-17, -15, 34, 30, 15);
   ctx.fill();
   ctx.stroke();
 
   ctx.fillStyle = tint;
   ctx.beginPath();
-  ctx.roundRect(-13, -8, 26, 15, 8);
+  ctx.roundRect(-12, -7, 24, 14, 8);
   ctx.fill();
 
   ctx.strokeStyle = "rgba(255, 255, 255, 0.64)";
   ctx.beginPath();
   ctx.moveTo(-9, -7);
   ctx.lineTo(7, -7);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawLabelPill(x, y, width, height, fill, stroke) {
-  ctx.save();
-  ctx.translate(Math.round(x), Math.round(y));
-  ctx.fillStyle = fill;
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.roundRect(-width / 2, -height / 2, width, height, height / 2);
-  ctx.fill();
   ctx.stroke();
   ctx.restore();
 }
