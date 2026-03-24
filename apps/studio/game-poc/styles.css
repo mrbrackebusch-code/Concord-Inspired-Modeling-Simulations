@@ -1,11 +1,11 @@
 :root {
-  --bg: #09111d;
-  --panel: rgba(10, 22, 34, 0.82);
-  --panel-line: rgba(162, 190, 214, 0.22);
-  --ink: #e7f4ff;
-  --muted: #98b2c8;
-  --accent: #6de3ff;
-  --accent-strong: #12b8ff;
+  --bg: #f2ead7;
+  --panel: rgba(244, 237, 220, 0.92);
+  --panel-line: rgba(128, 146, 127, 0.28);
+  --ink: #334940;
+  --muted: #6f857b;
+  --accent: #76c2cd;
+  --accent-strong: #2ca3c3;
   --warning: #ff6b6b;
   --zone: rgba(109, 227, 255, 0.55);
 }
@@ -24,9 +24,9 @@ body {
   min-height: 100vh;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(18, 184, 255, 0.18), transparent 24%),
-    radial-gradient(circle at top right, rgba(109, 227, 255, 0.14), transparent 20%),
-    linear-gradient(180deg, #0d1626 0%, #08101a 100%);
+    radial-gradient(circle at top left, rgba(255, 248, 227, 0.9), transparent 28%),
+    radial-gradient(circle at top right, rgba(237, 224, 187, 0.62), transparent 24%),
+    linear-gradient(180deg, #f7f0df 0%, #e5d6b7 100%);
   color: var(--ink);
   font-family: Georgia, "Times New Roman", serif;
   overscroll-behavior: none;
@@ -49,15 +49,15 @@ body {
 .experiment-window {
   border: 1px solid var(--panel-line);
   border-radius: 24px;
-  background: rgba(10, 22, 34, 0.94);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+  background: rgba(244, 237, 220, 0.94);
+  box-shadow: 0 10px 24px rgba(79, 62, 40, 0.14);
 }
 
 .zone-hud,
 .capture-toolbar,
 .readout-card {
-  border: 1px solid rgba(162, 190, 214, 0.16);
-  background: rgba(13, 24, 38, 0.88);
+  border: 1px solid rgba(149, 163, 144, 0.18);
+  background: rgba(250, 246, 236, 0.88);
 }
 
 .top-bar {
@@ -175,8 +175,7 @@ kbd {
   aspect-ratio: 14 / 9;
   margin: 0 auto;
   border-radius: 18px;
-  background: #06101a;
-  image-rendering: pixelated;
+  background: #efe2c6;
 }
 
 #world-canvas,
@@ -196,10 +195,10 @@ kbd {
   right: 1.1rem;
   bottom: 1rem;
   padding: 0.42rem 0.72rem;
-  border: 1px solid rgba(109, 227, 255, 0.26);
+  border: 1px solid rgba(152, 173, 153, 0.36);
   border-radius: 999px;
-  background: rgba(7, 15, 24, 0.8);
-  color: var(--ink);
+  background: rgba(252, 248, 238, 0.9);
+  color: #3f5148;
   font-size: 0.85rem;
   line-height: 1.25;
   pointer-events: none;

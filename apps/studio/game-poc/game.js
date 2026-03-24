@@ -15,6 +15,8 @@ const ARM_RENDER_SEGMENT_LIMIT = 72;
 const ARM_HISTORY_STEP = 4;
 const ARM_EXTEND_SPEED = 4.8;
 const ARM_HEAD_RADIUS = 9;
+const ARM_SELF_HIT_RADIUS = 10;
+const ARM_SELF_HIT_SKIP_POINTS = 10;
 const ARM_LATCH_RADIUS = 18;
 const ARM_CARRY_LAG_SEGMENTS = 2;
 const ARM_LAUNCH_ANGLE = Math.PI / 2;
@@ -642,9 +644,9 @@ function renderActorLayer() {
 function renderLoading() {
   worldCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.fillStyle = "#2a2018";
+  ctx.fillStyle = "#d8c08f";
   ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  ctx.fillStyle = "#f2e5c6";
+  ctx.fillStyle = "#4e4030";
   ctx.font = "24px Georgia";
   ctx.fillText("Loading ship proof of concept...", 28, 60);
 }
@@ -796,9 +798,16 @@ function buildBackgroundLayer() {
   layer.height = CANVAS_HEIGHT;
   const layerCtx = layer.getContext("2d");
   const gradient = layerCtx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-  gradient.addColorStop(0, "#5b4632");
-  gradient.addColorStop(1, "#2a2018");
+  gradient.addColorStop(0, "#e7d7aa");
+  gradient.addColorStop(0.55, "#d7be88");
+  gradient.addColorStop(1, "#bc945f");
   layerCtx.fillStyle = gradient;
+  layerCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  const glow = layerCtx.createRadialGradient(CANVAS_WIDTH * 0.5, CANVAS_HEIGHT * 0.14, 10, CANVAS_WIDTH * 0.5, CANVAS_HEIGHT * 0.14, CANVAS_WIDTH * 0.72);
+  glow.addColorStop(0, "rgba(255, 247, 222, 0.36)");
+  glow.addColorStop(1, "rgba(255, 247, 222, 0)");
+  layerCtx.fillStyle = glow;
   layerCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   for (let i = 0; i < 140; i++) {
@@ -806,7 +815,7 @@ function buildBackgroundLayer() {
     const y = (mixSeed(i, 9, 17) % CANVAS_HEIGHT) | 0;
     const radius = 1 + (mixSeed(i, 5, 21) % 2);
     const alpha = 0.04 + ((mixSeed(i, 7, 33) % 40) / 255);
-    layerCtx.fillStyle = `rgba(34, 24, 16, ${alpha.toFixed(3)})`;
+    layerCtx.fillStyle = `rgba(144, 111, 63, ${alpha.toFixed(3)})`;
     layerCtx.beginPath();
     layerCtx.arc(x, y, radius, 0, Math.PI * 2);
     layerCtx.fill();
@@ -1926,6 +1935,8 @@ function updateArm(dtMs) {
       failArm("Arm tip hit the field boundary. Retraction triggered.");
     } else if (circleIntersectsAnyRockMask(arm.headWorldX, arm.headWorldY, ARM_HEAD_RADIUS)) {
       failArm("Arm tip clipped a rock. Retraction triggered.");
+    } else if (armHeadHitsOwnTrail()) {
+      failArm("Arm tip crossed its own trail. Retraction triggered.");
     } else {
       const headField = sampleAnomalyInfluence(arm.headWorldX, arm.headWorldY);
       if (headField.tier === "medium" || headField.tier === "lethal" || headField.tier === "core") {
@@ -2038,6 +2049,41 @@ function sampleArmTrailPoints() {
     .map((point) => ({ x: mount.x + point.x, y: mount.y + point.y }));
 }
 
+function armHeadHitsOwnTrail() {
+  if (arm.pathLocal.length < ARM_SELF_HIT_SKIP_POINTS + 4) {
+    return false;
+  }
+
+  const head = { x: arm.headLocalX, y: arm.headLocalY };
+  const lastBodyIndex = arm.pathLocal.length - 3;
+  for (let index = ARM_SELF_HIT_SKIP_POINTS; index < lastBodyIndex; index++) {
+    const start = arm.pathLocal[index];
+    const end = arm.pathLocal[index + 1];
+    if (!start || !end) {
+      break;
+    }
+    if (distancePointToSegment(head, start, end) <= ARM_SELF_HIT_RADIUS) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function distancePointToSegment(point, start, end) {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared === 0) {
+    return Math.hypot(point.x - start.x, point.y - start.y);
+  }
+
+  const t = clamp(((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared, 0, 1);
+  const closestX = start.x + dx * t;
+  const closestY = start.y + dy * t;
+  return Math.hypot(point.x - closestX, point.y - closestY);
+}
+
 function getArmCarryPoint(points = sampleArmTrailPoints()) {
   const carryIndex = clamp(points.length - 1 - ARM_CARRY_LAG_SEGMENTS, 0, points.length - 1);
   return points[carryIndex];
@@ -2096,10 +2142,16 @@ function deliverCarriedObjectIfPossible(object) {
 
 function failArm(message) {
   const carried = getCarriedObject();
+  if (carried) {
+    const carryPoint = getArmCarryPoint();
+    carried.x = carryPoint.x;
+    carried.y = carryPoint.y;
+  }
   arm.carryingId = null;
-  arm.deployed = false;
+  resetArmState();
   setStatus(carried ? `${message} ${carried.name} dropped in place.` : message);
   renderAiBriefing();
+  invalidateActorLayer();
 }
 
 function getCarriedObject() {
@@ -2120,7 +2172,7 @@ function getExperimentSlotPosition(experiment, slotIndex) {
 
 function drawExperimentObjects() {
   ctx.save();
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
   for (const object of state.experimentObjects) {
     if (object.experimentId !== getCurrentExperiment().id) {
       continue;
@@ -2270,7 +2322,7 @@ function drawArm() {
   }
 
   ctx.save();
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
   ctx.strokeStyle = "rgba(44, 54, 50, 0.2)";
   ctx.lineWidth = 6;
   ctx.lineCap = "round";
