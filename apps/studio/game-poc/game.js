@@ -10,15 +10,16 @@ const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
 const ARM_HEAD_SPEED = 132;
-const ARM_TURN_RESPONSE = 10;
-const ARM_MAX_REACH = 132;
+const ARM_TURN_RESPONSE = 5.5;
 const ARM_SEGMENT_SPACING = 12;
-const ARM_SEGMENT_COUNT = 11;
+const ARM_RENDER_SEGMENT_LIMIT = 72;
 const ARM_HISTORY_STEP = 4;
 const ARM_EXTEND_SPEED = 4.8;
 const ARM_HEAD_RADIUS = 9;
 const ARM_LATCH_RADIUS = 18;
 const ARM_CARRY_LAG_SEGMENTS = 2;
+const ARM_LAUNCH_ANGLE = Math.PI / 2;
+const ARM_PATH_POINT_LIMIT = 1400;
 const MAX_HULL = 100;
 const FIELD_CHAMBER_ZONE = { x: 11, y: 7, w: 6, h: 3 };
 const TERRAIN_THEME = {
@@ -1833,9 +1834,13 @@ function toggleArmDeployment() {
     setStatus("Arm retracting.");
   } else {
     if (!wasDeployed) {
-      const launchAngle = getShipFacingAngle();
-      arm.aimAngle = launchAngle;
-      arm.targetAngle = launchAngle;
+      const rest = getArmRestLocal();
+      arm.headLocalX = rest.x;
+      arm.headLocalY = rest.y;
+      arm.pathLocal = Array.from({ length: 8 }, () => ({ ...rest }));
+      arm.aimAngle = ARM_LAUNCH_ANGLE;
+      arm.targetAngle = ARM_LAUNCH_ANGLE;
+      arm.extension = 1;
     }
     setStatus("Arm deployed. Steer the claw with WASD and snake it through the pickup.");
   }
@@ -1847,33 +1852,29 @@ function getArmMountWorld() {
   const shipWidth = state.images.ship.width * SHIP_SCALE;
   const shipHeight = state.images.ship.height * SHIP_SCALE;
   return {
-    x: player.x + shipWidth * 0.24,
-    y: player.y + shipHeight * 0.06
+    x: player.x,
+    y: player.y + shipHeight * 0.2
   };
 }
 
 function getArmRestLocal() {
   return {
-    x: 12 + arm.extension * 30,
-    y: 2 - arm.extension * 3
+    x: 0,
+    y: 14
   };
-}
-
-function getShipFacingAngle() {
-  return player.angle - Math.PI / 2;
 }
 
 function resetArmState(force = false) {
   arm.deployed = false;
   arm.extension = 0;
-  const rest = { x: 12, y: 2 };
+  const rest = { x: 0, y: 14 };
   arm.headLocalX = rest.x;
   arm.headLocalY = rest.y;
-  arm.pathLocal = Array.from({ length: ARM_SEGMENT_COUNT * 2 }, () => ({ ...rest }));
+  arm.pathLocal = Array.from({ length: 8 }, () => ({ ...rest }));
   const mount = assetsReady ? getArmMountWorld() : { x: spawnPoint.x, y: spawnPoint.y };
   arm.headWorldX = mount.x + rest.x;
   arm.headWorldY = mount.y + rest.y;
-  arm.aimAngle = getShipFacingAngle();
+  arm.aimAngle = ARM_LAUNCH_ANGLE;
   arm.targetAngle = arm.aimAngle;
   if (force) {
     arm.carryingId = null;
@@ -1887,7 +1888,7 @@ function updateArm(dtMs) {
   const previousHeadY = arm.headLocalY;
   const previousAimAngle = arm.aimAngle;
   const targetExtension = arm.deployed && !overlayOpen && player.alive ? 1 : 0;
-  arm.extension = approach(arm.extension, targetExtension, dt * ARM_EXTEND_SPEED);
+  arm.extension = targetExtension > 0 ? 1 : approach(arm.extension, targetExtension, dt * ARM_EXTEND_SPEED);
 
   const rest = getArmRestLocal();
   const input = getArmInputVector();
@@ -1901,18 +1902,8 @@ function updateArm(dtMs) {
   } else {
     arm.headLocalX = approach(arm.headLocalX, rest.x, dt * 220);
     arm.headLocalY = approach(arm.headLocalY, rest.y, dt * 220);
-    arm.targetAngle = getShipFacingAngle();
+    arm.targetAngle = ARM_LAUNCH_ANGLE;
     arm.aimAngle = easeAngle(arm.aimAngle, arm.targetAngle, clamp(dt * 8, 0, 1));
-  }
-
-  const offsetX = arm.headLocalX - rest.x;
-  const offsetY = arm.headLocalY - rest.y;
-  const maxReach = ARM_MAX_REACH * (0.2 + arm.extension * 0.8);
-  const reach = Math.hypot(offsetX, offsetY);
-  if (reach > maxReach) {
-    const scale = maxReach / reach;
-    arm.headLocalX = rest.x + offsetX * scale;
-    arm.headLocalY = rest.y + offsetY * scale;
   }
 
   if (arm.extension < 0.02 && !arm.deployed) {
@@ -1987,7 +1978,7 @@ function pushArmHistoryPoint(point, rest) {
   }
 
   arm.pathLocal[0] = { ...point };
-  const maxPoints = ARM_SEGMENT_COUNT * 14;
+  const maxPoints = ARM_PATH_POINT_LIMIT;
   if (arm.pathLocal.length > maxPoints) {
     arm.pathLocal.length = maxPoints;
   }
@@ -2007,8 +1998,9 @@ function sampleArmTrailPoints() {
   const samples = [localPoints[0]];
   let accumulated = 0;
   let targetDistance = ARM_SEGMENT_SPACING;
+  const maxSamples = ARM_RENDER_SEGMENT_LIMIT + 1;
 
-  for (let index = 1; index < localPoints.length && samples.length < ARM_SEGMENT_COUNT + 1; index++) {
+  for (let index = 1; index < localPoints.length && samples.length < maxSamples; index++) {
     const prev = localPoints[index - 1];
     const next = localPoints[index];
     const segmentLength = Math.hypot(next.x - prev.x, next.y - prev.y);
@@ -2016,7 +2008,7 @@ function sampleArmTrailPoints() {
       continue;
     }
 
-    while (accumulated + segmentLength >= targetDistance && samples.length < ARM_SEGMENT_COUNT + 1) {
+    while (accumulated + segmentLength >= targetDistance && samples.length < maxSamples) {
       const t = (targetDistance - accumulated) / segmentLength;
       samples.push({
         x: prev.x + (next.x - prev.x) * t,
@@ -2028,12 +2020,17 @@ function sampleArmTrailPoints() {
     accumulated += segmentLength;
   }
 
-  while (samples.length < ARM_SEGMENT_COUNT + 1) {
-    samples.push({ x: 0, y: 0 });
+  const tail = localPoints[localPoints.length - 1];
+  if (samples.length < maxSamples && Math.hypot(samples[samples.length - 1].x - tail.x, samples[samples.length - 1].y - tail.y) > 0.5) {
+    samples.push({ ...tail });
+  }
+
+  while (samples.length < 2) {
+    samples.push({ ...tail });
   }
 
   return samples
-    .slice(0, ARM_SEGMENT_COUNT + 1)
+    .slice(0, maxSamples)
     .reverse()
     .map((point) => ({ x: mount.x + point.x, y: mount.y + point.y }));
 }
@@ -2281,13 +2278,6 @@ function drawArm() {
     ctx.lineTo(points[index].x, points[index].y);
   }
   ctx.stroke();
-
-  const base = points[0];
-  const baseAngle = Math.atan2(points[1].y - base.y, points[1].x - base.x);
-  const mountWidth = parts.baseMount.width * 0.074;
-  const mountHeight = parts.baseMount.height * 0.074;
-  ctx.drawImage(parts.baseMount, base.x - mountWidth * 0.9, base.y - mountHeight * 0.52, mountWidth, mountHeight);
-  drawArmPart(parts.socketCup, base.x + 4, base.y + 1, baseAngle + Math.PI / 2, 0.074);
 
   for (let index = 0; index < points.length - 1; index++) {
     const from = points[index];
