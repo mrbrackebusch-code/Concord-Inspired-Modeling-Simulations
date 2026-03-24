@@ -222,6 +222,7 @@
     refs.scaleHitZone = container.querySelector("#ice-scale-hit-zone");
     refs.scaleHitRing = container.querySelector("#ice-scale-hit-ring");
     refs.scaleHitLabel = container.querySelector("#ice-scale-hit-label");
+    refs.scaleHitTarget = container.querySelector("#ice-scale-hit-target");
     refs.readout = container.querySelector("[data-ice-scale-readout]");
     refs.tray = container.querySelector("#ice-scale-tray");
     refs.scaleBody = container.querySelector("#ice-scale-body");
@@ -229,6 +230,7 @@
     refs.beakerHitZone = container.querySelector("#ice-beaker-hit-zone");
     refs.beakerHitRing = container.querySelector("#ice-beaker-hit-ring");
     refs.beakerHitLabel = container.querySelector("#ice-beaker-hit-label");
+    refs.beakerHitTarget = container.querySelector("#ice-beaker-hit-target");
     refs.beakerShadow = container.querySelector("#ice-beaker-shadow");
     refs.waterFill = container.querySelector("#ice-water-fill");
     refs.waterDepth = container.querySelector("#ice-water-depth");
@@ -345,8 +347,12 @@
         return;
       }
 
-      zone.style.pointerEvents = active ? "all" : "none";
-      zone.style.cursor = pointer;
+      zone.style.pointerEvents = "none";
+      label.style.pointerEvents = "none";
+      if (refs[key + "HitTarget"]) {
+        refs[key + "HitTarget"].style.pointerEvents = active ? "all" : "none";
+        refs[key + "HitTarget"].style.cursor = pointer;
+      }
       if (liveTarget) {
         liveTarget.style.cursor = pointer;
       }
@@ -905,9 +911,9 @@
     refs.after.addEventListener("click", handleMeasureAfter);
     refs.reset.addEventListener("click", resetScene);
     refs.scaleAssembly.addEventListener("click", handleScaleClick);
-    refs.scaleHitZone.addEventListener("click", handleScaleClick);
+    refs.scaleHitTarget.addEventListener("click", handleScaleClick);
     refs.beaker.addEventListener("click", handleBeakerClick);
-    refs.beakerHitZone.addEventListener("click", handleBeakerClick);
+    refs.beakerHitTarget.addEventListener("click", handleBeakerClick);
     window.addEventListener("rainbow.labHost.command", handleHostCommand);
 
     resetScene();
@@ -940,9 +946,9 @@
       refs.after.removeEventListener("click", handleMeasureAfter);
       refs.reset.removeEventListener("click", resetScene);
       refs.scaleAssembly.removeEventListener("click", handleScaleClick);
-      refs.scaleHitZone.removeEventListener("click", handleScaleClick);
+      refs.scaleHitTarget.removeEventListener("click", handleScaleClick);
       refs.beaker.removeEventListener("click", handleBeakerClick);
-      refs.beakerHitZone.removeEventListener("click", handleBeakerClick);
+      refs.beakerHitTarget.removeEventListener("click", handleBeakerClick);
       window.removeEventListener("rainbow.labHost.command", handleHostCommand);
       stopCueTween("scale");
       stopCueTween("beaker");

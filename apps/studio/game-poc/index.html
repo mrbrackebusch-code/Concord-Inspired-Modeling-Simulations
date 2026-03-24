@@ -87,6 +87,20 @@
             <section id="conclusion-card" class="conclusion-card" hidden aria-live="polite">
               <p class="conclusion-card__eyebrow">Teach the model</p>
               <p class="conclusion-card__lead">Use DeeDee&apos;s saved data to finish the correction.</p>
+              <section class="model-panel" aria-label="Model revision">
+                <div class="model-panel__machine" aria-hidden="true">
+                  <div class="model-panel__halo"></div>
+                  <div id="model-panel-orbit" class="model-panel__orbit"></div>
+                  <div class="model-panel__core">
+                    <div class="model-panel__core-eye"></div>
+                  </div>
+                </div>
+                <div class="model-panel__copy">
+                  <p class="model-panel__eyebrow">Model under revision</p>
+                  <p id="model-statement-preview" class="model-panel__statement">Build a supported statement from the run.</p>
+                  <div id="model-statement-log" class="model-panel__log"></div>
+                </div>
+              </section>
               <div class="conclusion-card__row">
                 <span class="conclusion-card__label">Initial mass was:</span>
                 <div id="cer-slot-initial" class="cer-slot" data-cer-slot="initial">Drop mass token</div>

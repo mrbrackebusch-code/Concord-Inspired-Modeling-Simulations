@@ -289,6 +289,7 @@ const worldCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("w
 const worldCtx = worldCanvas.getContext("2d");
 const actorCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("actor-canvas"));
 const ctx = actorCanvas.getContext("2d");
+const gameShell = document.querySelector(".game-shell");
 const experimentPlaceholderText = document.getElementById("experiment-placeholder-text");
 const statusPill = document.getElementById("status-pill");
 const experimentWindow = document.getElementById("experiment-window");
@@ -319,6 +320,9 @@ const cerSlotFinal = document.getElementById("cer-slot-final");
 const cerConclusionSelect = document.getElementById("cer-conclusion-select");
 const cerSubmit = document.getElementById("cer-submit");
 const cerFeedback = document.getElementById("cer-feedback");
+const modelPanelOrbit = document.getElementById("model-panel-orbit");
+const modelStatementPreview = document.getElementById("model-statement-preview");
+const modelStatementLog = document.getElementById("model-statement-log");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
 
 const keys = new Set();
@@ -395,7 +399,8 @@ const state = {
   shipFrameCache: null,
   experimentObjects: [],
   captures: createCaptureState(),
-  evidenceProgress: createEvidenceProgress()
+  evidenceProgress: createEvidenceProgress(),
+  modelNotebook: []
 };
 
 initializeZoneCaptureCards();
@@ -984,6 +989,67 @@ function renderCerSlot(slotElement, token) {
   slotElement.appendChild(chip);
 }
 
+function buildIceCerStatement(progress) {
+  if (!progress) {
+    return "Build a supported statement from the run.";
+  }
+
+  const initialToken = getEvidenceTokenById(ICE_STAGE_ID, progress.cer.initialTokenId);
+  const finalToken = getEvidenceTokenById(ICE_STAGE_ID, progress.cer.finalTokenId);
+  const conclusionMap = {
+    increase: "increase",
+    decrease: "decrease",
+    stay: "stay the same"
+  };
+  const initialText = initialToken ? initialToken.shortLabel : "____";
+  const finalText = finalToken ? finalToken.shortLabel : "____";
+  const conclusionText = progress.cer.conclusion ? conclusionMap[progress.cer.conclusion] : "____";
+  return `Initial mass was ${initialText}. Final mass was ${finalText}. Melting ice caused the total mass to ${conclusionText}.`;
+}
+
+function renderModelPanel(progress) {
+  if (modelStatementPreview) {
+    modelStatementPreview.textContent = buildIceCerStatement(progress);
+  }
+
+  if (modelPanelOrbit) {
+    modelPanelOrbit.replaceChildren();
+    const tokens = progress?.tokens || [];
+    tokens.forEach((token, index) => {
+      const spark = document.createElement("span");
+      const angle = (Math.PI * 2 * index) / Math.max(tokens.length, 1);
+      const radius = token.kind === "process" ? 54 : 46;
+      spark.className = `model-panel__token${token.kind === "process" ? " model-panel__token--process" : ""}`;
+      spark.style.left = `${50 + Math.cos(angle - Math.PI / 2) * radius}px`;
+      spark.style.top = `${50 + Math.sin(angle - Math.PI / 2) * radius}px`;
+      spark.style.animationDelay = `${index * 0.18}s`;
+      spark.title = token.label;
+      modelPanelOrbit.appendChild(spark);
+    });
+  }
+
+  if (modelStatementLog) {
+    modelStatementLog.replaceChildren();
+    const relevantEntries = state.modelNotebook.filter((entry) => entry.experimentId === ICE_STAGE_ID);
+    if (!relevantEntries.length) {
+      return;
+    }
+
+    relevantEntries.slice(-2).forEach((entry) => {
+      const note = document.createElement("p");
+      note.className = "model-panel__log-entry";
+      note.textContent = entry.statement;
+      modelStatementLog.appendChild(note);
+    });
+  }
+}
+
+function syncPresentationMode(isThinking = false) {
+  gameShell?.classList.toggle("is-experimenting", overlayOpen);
+  gameShell?.classList.toggle("is-thinking", overlayOpen && isThinking);
+  experimentWindow?.classList.toggle("is-thinking", overlayOpen && isThinking);
+}
+
 function renderConclusionCard() {
   const experiment = getCurrentExperiment();
   const progress = getEvidenceProgress(experiment.id);
@@ -995,7 +1061,9 @@ function renderConclusionCard() {
   );
 
   conclusionCard.hidden = !showCard;
+  syncPresentationMode(showCard);
   if (!showCard || !progress) {
+    renderModelPanel(null);
     return;
   }
 
@@ -1008,6 +1076,7 @@ function renderConclusionCard() {
   cerFeedback.textContent = progress.cer.feedback;
   cerSubmit.disabled = progress.cer.submitted || !initialToken || !finalToken || !progress.cer.conclusion;
   cerSubmit.textContent = progress.cer.submitted ? "Correction stored" : "Teach the Eye";
+  renderModelPanel(progress);
 }
 
 function assignCerToken(slotName, tokenId) {
@@ -1106,12 +1175,19 @@ function submitCerCorrection() {
 
   progress.cer.submitted = true;
   progress.cer.feedback = "Correction stored. The chamber has enough evidence to retrain the model from this run.";
+  const completedStatement = buildIceCerStatement(progress);
   const record = state.captures[experiment.id];
   record.count = progress.tokens.length;
   record.before = initialToken.value;
   record.after = finalToken.value;
   record.delta = delta;
   record.lastCapturedAt = Date.now();
+  if (!state.modelNotebook.some((entry) => entry.experimentId === experiment.id && entry.statement === completedStatement)) {
+    state.modelNotebook.push({
+      experimentId: experiment.id,
+      statement: completedStatement
+    });
+  }
   setStatus(`${experiment.title} evidence locked in. Press Escape when you are ready to head back out.`);
   renderEvidenceInventory();
   renderConclusionCard();
@@ -2217,6 +2293,7 @@ function openExperiment(experiment) {
   experimentWindow.classList.add("is-active");
   setStatus(`Routing ${experiment.title} into the experiment chamber...`);
   loadExperimentFrame(experiment);
+  syncPresentationMode(false);
   renderAiBriefing();
   renderCaptureHud();
   renderEvidenceInventory();
@@ -2234,6 +2311,7 @@ function closeOverlay() {
   overlayOpen = false;
   experimentWindow.classList.remove("is-active");
   closeExperimentFrame();
+  syncPresentationMode(false);
   if (completedExperiment && completedExperiment.id === currentExperimentId) {
     advanceCurrentExperiment();
   }
