@@ -1915,9 +1915,6 @@ function updateArm(dtMs) {
   const mount = getArmMountWorld();
   arm.headWorldX = mount.x + arm.headLocalX;
   arm.headWorldY = mount.y + arm.headLocalY;
-  if (Math.hypot(arm.headLocalX - rest.x, arm.headLocalY - rest.y) > 0.01) {
-    arm.aimAngle = Math.atan2(arm.headLocalY - rest.y, arm.headLocalX - rest.x);
-  }
 
   if (arm.extension > 0.22) {
     if (
