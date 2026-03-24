@@ -1570,7 +1570,7 @@ function closeOverlay() {
   overlayOpen = false;
   experimentWindow.classList.remove("is-active");
   closeExperimentFrame();
-  overlayTitle.textContent = "Standby Window";
+  overlayTitle.textContent = "Experimental Chamber";
   if (completedExperiment && completedExperiment.id === currentExperimentId) {
     advanceCurrentExperiment();
   }

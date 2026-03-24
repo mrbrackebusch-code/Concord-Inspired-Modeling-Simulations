@@ -20,7 +20,7 @@
       <section class="game-shell">
         <section class="play-column">
           <section class="canvas-frame">
-            <section class="ai-briefing" aria-live="polite">
+            <section class="ai-briefing" aria-live="polite" hidden>
               <div class="ai-briefing__top">
                 <div>
                   <p class="eyebrow">AI Channel</p>
@@ -59,16 +59,16 @@
         </section>
 
         <aside id="experiment-window" class="experiment-window" aria-live="polite">
-          <div class="experiment-window__header">
-            <div>
-              <p class="eyebrow">Experiment View</p>
-              <h2 id="experiment-title">Standby Window</h2>
-            </div>
-            <button id="close-overlay" class="close-button" type="button">Collapse Window</button>
-          </div>
           <div class="experiment-window__body">
+            <div class="experiment-window__chrome">
+              <p id="experiment-title" class="experiment-window__title">Experimental Chamber</p>
+              <button id="close-overlay" class="close-button" type="button" aria-label="Hide live chamber">×</button>
+            </div>
             <div id="experiment-placeholder" class="experiment-placeholder">
-              Retrieve the current investigation objects, place them in the chamber, and press Enter while docked over the chamber to load the live experiment here.
+              <div class="experiment-placeholder__copy">
+                <p class="experiment-placeholder__label">Chamber Standby</p>
+                <p class="experiment-placeholder__text">Stage the active investigation here. The live experiment will occupy this same chamber once the setup is ready.</p>
+              </div>
             </div>
             <iframe
               id="experiment-frame"
@@ -77,17 +77,17 @@
               loading="lazy"
               referrerpolicy="no-referrer"
             ></iframe>
+            <button id="capture-evidence" class="capture-button capture-button--floating" type="button">Capture Evidence</button>
           </div>
-          <section class="experiment-hud">
+          <section class="experiment-hud" hidden>
             <div class="capture-toolbar">
               <div class="capture-toolbar__copy">
                 <p class="eyebrow">Capture</p>
-                <h3 id="capture-active-title">No active investigation</h3>
+                  <h3 id="capture-active-title">No active investigation</h3>
                 <p id="capture-active-copy" class="capture-copy">
                   Follow the AI task, stage the chamber, run the live experiment, then capture evidence from the active investigation.
                 </p>
               </div>
-              <button id="capture-evidence" class="capture-button" type="button">Capture Evidence</button>
             </div>
 
             <div class="capture-readouts">
