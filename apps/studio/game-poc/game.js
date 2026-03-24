@@ -307,7 +307,6 @@ const ctx = actorCanvas.getContext("2d");
 const experimentPlaceholderText = document.getElementById("experiment-placeholder-text");
 const statusPill = document.getElementById("status-pill");
 const experimentWindow = document.getElementById("experiment-window");
-const overlayTitle = document.getElementById("experiment-title");
 const overlayFrame = document.getElementById("experiment-frame");
 const closeOverlayButton = document.getElementById("close-overlay");
 const hullHud = document.getElementById("hud-hull");
@@ -336,6 +335,7 @@ const spawnPoint = { x: 14 * TILE_SIZE + TILE_SIZE / 2, y: 9 * TILE_SIZE + TILE_
 let assetsReady = false;
 let overlayOpen = false;
 let experimentFrameReady = false;
+let loadedExperimentId = "";
 let rearmZoneId = null;
 let activeZone = null;
 let visualTimeMs = 0;
@@ -448,13 +448,7 @@ const loadState = Promise.all([
   updateFieldHud({ tier: "clear" });
   invalidateWorldLayer();
   invalidateActorLayer();
-
-  if (startupExperiment) {
-    openExperiment(startupExperiment);
-    activeZone = startupExperiment;
-    hudFocusExperimentId = startupExperiment.id;
-    renderCaptureHud();
-  }
+  loadExperimentFrame(getCurrentExperiment());
 });
 
 document.addEventListener("keydown", (event) => {
@@ -486,12 +480,15 @@ document.addEventListener("keyup", (event) => {
 closeOverlayButton.addEventListener("click", closeOverlay);
 captureButton.addEventListener("click", captureEvidence);
 overlayFrame.addEventListener("load", () => {
-  if (overlayOpen) {
-    experimentFrameReady = true;
-    setStatus(`${overlayTitle.textContent} ready in the experiment window.`);
-    renderAiBriefing();
-    renderCaptureHud();
-  }
+  experimentFrameReady = true;
+  experimentWindow.classList.add("is-loaded");
+  configureHostedExperimentFrame();
+  const chamberExperiment = activeZone || getCurrentExperiment();
+  setStatus(overlayOpen
+    ? `${chamberExperiment.title} is live in the chamber.`
+    : `Chamber synchronized for ${chamberExperiment.title}.`);
+  renderAiBriefing();
+  renderCaptureHud();
 });
 
 requestFrame();
@@ -694,6 +691,7 @@ function setCurrentExperiment(experimentId) {
   currentExperimentId = experimentId;
   activeZone = getCurrentExperiment();
   hudFocusExperimentId = activeZone.id;
+  loadExperimentFrame(activeZone);
   refreshWorldLayer();
   renderAiBriefing();
   renderCaptureHud();
@@ -733,8 +731,8 @@ function getInvestigationTask(experiment) {
   const nextObject = getCurrentRequiredObject(experiment);
   if (overlayOpen && activeZone?.id === experiment.id) {
     return experimentFrameReady
-      ? `Run ${experiment.title} in the live window, then capture the evidence for the AI.`
-      : `Linking ${experiment.title} into the live window now. Hold position and prepare to capture evidence.`;
+      ? `Run ${experiment.title} in the chamber, then capture the evidence for the AI.`
+      : `Linking ${experiment.title} into the chamber now. Hold position and prepare to capture evidence.`;
   }
   if (nextObject) {
     return `Retrieve ${nextObject.name} (${nextObject.formula}) and deposit it in the experimental chamber.`;
@@ -742,13 +740,13 @@ function getInvestigationTask(experiment) {
   if (!isCurrentChamberFocused()) {
     return `Return to the experimental chamber and dock over the pad to begin ${experiment.title}.`;
   }
-  return `Press Enter to begin ${experiment.title} in the live experiment window.`;
+  return `Press Enter to begin ${experiment.title} in the chamber.`;
 }
 
 function getInvestigationStatus(experiment) {
   const record = state.captures[experiment.id];
   if (overlayOpen && activeZone?.id === experiment.id) {
-    return experimentFrameReady ? "Live window linked" : "Chamber link in progress";
+    return experimentFrameReady ? "Chamber live" : "Chamber link in progress";
   }
   if (record.count > 0) {
     return "Correction recorded";
@@ -1540,21 +1538,110 @@ function drawDeathOverlay() {
   ctx.fillText(deathMessage, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 }
 
+function buildHostedExperimentUrl(experiment) {
+  const params = new URLSearchParams({
+    experiment: experiment.id,
+    mode: "embed"
+  });
+  return `/apps/studio/experiment-window/index.html?${params.toString()}`;
+}
+
+function configureHostedExperimentFrame() {
+  let doc;
+  let overrideStyle;
+
+  try {
+    doc = overlayFrame.contentDocument;
+  } catch (error) {
+    return;
+  }
+
+  if (!doc) {
+    return;
+  }
+
+  overrideStyle = doc.getElementById("game-poc-host-override");
+  if (!overrideStyle) {
+    overrideStyle = doc.createElement("style");
+    overrideStyle.id = "game-poc-host-override";
+    overrideStyle.textContent = `
+      html, body {
+        background: transparent !important;
+      }
+
+      body.rainbow-experiment-window--embed .window-stage {
+        min-height: 100vh;
+        padding: 0 !important;
+        background: transparent !important;
+      }
+
+      body.rainbow-experiment-window--embed .window-stage__header,
+      body.rainbow-experiment-window--embed .custom-stage__toolbar,
+      body.rainbow-experiment-window--embed .custom-stage__footer {
+        display: none !important;
+      }
+
+      body.rainbow-experiment-window--embed #interactive-container,
+      body.rainbow-experiment-window--embed .custom-stage {
+        min-height: 100vh !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+
+      body.rainbow-experiment-window--embed .custom-stage__scene {
+        min-height: 100vh !important;
+        padding: 0 !important;
+      }
+
+      body.rainbow-experiment-window--embed .custom-stage__scene-frame {
+        width: 100% !important;
+        max-width: none !important;
+        height: 100vh !important;
+        aspect-ratio: auto !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+    `;
+    doc.head.appendChild(overrideStyle);
+  }
+}
+
+function loadExperimentFrame(experiment) {
+  if (!experiment) {
+    return;
+  }
+
+  const url = buildHostedExperimentUrl(experiment);
+  const absoluteUrl = new URL(url, window.location.origin).toString();
+
+  hudFocusExperimentId = experiment.id;
+  activeZone = experiment;
+  experimentFrameReady = false;
+  experimentWindow.classList.remove("is-loaded");
+
+  if (loadedExperimentId === experiment.id && overlayFrame.src === absoluteUrl && experimentWindow.classList.contains("is-loaded")) {
+    experimentFrameReady = true;
+    experimentWindow.classList.add("is-loaded");
+    return;
+  }
+
+  loadedExperimentId = experiment.id;
+  overlayFrame.src = url;
+}
+
 function openExperiment(experiment) {
   overlayOpen = true;
-  experimentFrameReady = false;
   hudFocusExperimentId = experiment.id;
   activeZone = experiment;
   player.vx = 0;
   player.vy = 0;
   player.thrusting = false;
   experimentWindow.classList.add("is-active");
-  overlayTitle.textContent = experiment.title;
-  setStatus(`Loading ${experiment.title} into the experiment window...`);
-  const url = `/vendor/lab/dist/embeddable.html#${experiment.interactiveUrl}`;
-  if (overlayFrame.src !== new URL(url, window.location.origin).toString()) {
-    overlayFrame.src = url;
-  }
+  setStatus(`Routing ${experiment.title} into the experiment chamber...`);
+  loadExperimentFrame(experiment);
   renderAiBriefing();
   renderCaptureHud();
   invalidateActorLayer();
@@ -1562,7 +1649,7 @@ function openExperiment(experiment) {
 
 function closeExperimentFrame() {
   experimentFrameReady = false;
-  overlayFrame.src = "about:blank";
+  experimentWindow.classList.remove("is-loaded");
 }
 
 function closeOverlay() {
@@ -1570,11 +1657,11 @@ function closeOverlay() {
   overlayOpen = false;
   experimentWindow.classList.remove("is-active");
   closeExperimentFrame();
-  overlayTitle.textContent = "Experimental Chamber";
   if (completedExperiment && completedExperiment.id === currentExperimentId) {
     advanceCurrentExperiment();
   }
   activeZone = getCurrentExperiment();
+  loadExperimentFrame(activeZone);
   renderAiBriefing();
   if (activeZone) {
     setStatus(describeExperimentStation(activeZone));
@@ -2196,7 +2283,7 @@ function captureEvidence() {
   record.lastCapturedAt = Date.now();
   hudFocusExperimentId = activeZone.id;
 
-  setStatus(`${activeZone.title} evidence captured. Collapse the window to brief the next investigation.`);
+  setStatus(`${activeZone.title} evidence captured. The chamber log is ready for the next correction step.`);
   renderCaptureHud();
   renderAiBriefing();
 }
@@ -2228,9 +2315,9 @@ function renderCaptureHud() {
   if (activeZone) {
     captureActiveTitle.textContent = activeZone.title;
     captureActiveCopy.textContent = experimentFrameReady
-      ? "Run the live experiment, then capture the evidence that will let you correct the AI."
+      ? "Run the chamber experiment, then capture the evidence that will let you correct the AI."
       : isExperimentReady(activeZone)
-        ? "Experiment window is loading. Capture will arm as soon as the live view is ready."
+        ? "The chamber is syncing now. Capture will arm as soon as the live stage is ready."
         : "The current investigation still needs its required objects staged in the chamber.";
   } else if (focusExperiment && focusRecord && focusRecord.count > 0) {
     captureActiveTitle.textContent = `${focusExperiment.title} log`;
@@ -2259,9 +2346,9 @@ function renderCaptureHud() {
     const refs = state.capturesUi[experiment.id];
     let stateCopy = "Awaiting first capture.";
     if (isActive && canCapture) {
-      stateCopy = "Window live. Capture ready.";
+      stateCopy = "Chamber live. Capture ready.";
     } else if (isActive && overlayOpen && !experimentFrameReady) {
-      stateCopy = "Window loading.";
+      stateCopy = "Chamber syncing.";
     } else if (isActive && !record.count) {
       stateCopy = isExperimentReady(experiment) ? "Current investigation: staged." : "Current investigation: gather objects.";
     } else if (record.count > 0) {

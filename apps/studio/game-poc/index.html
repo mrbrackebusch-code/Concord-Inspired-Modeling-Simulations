@@ -30,9 +30,11 @@
 
         <aside id="experiment-window" class="experiment-window" aria-live="polite">
           <div class="experiment-window__body">
-            <div class="experiment-window__chrome">
-              <p id="experiment-title" class="experiment-window__title">Experimental Chamber</p>
-              <button id="close-overlay" class="close-button" type="button" aria-label="Hide live chamber">×</button>
+            <div class="chamber-shell" aria-hidden="true">
+              <div class="chamber-shell__wall chamber-shell__wall--left"></div>
+              <div class="chamber-shell__wall chamber-shell__wall--right"></div>
+              <div class="chamber-shell__ceiling"></div>
+              <div class="chamber-shell__platform"></div>
             </div>
             <section class="chamber-eye">
               <div class="chamber-eye__lens" aria-hidden="true">
@@ -51,20 +53,28 @@
                 <p id="ai-briefing-evidence" class="chamber-eye__evidence"></p>
               </div>
             </section>
+            <div class="data-drone" aria-hidden="true">
+              <div class="data-drone__core"></div>
+              <div class="data-drone__ring"></div>
+              <div class="data-drone__beam"></div>
+            </div>
             <div id="experiment-placeholder" class="experiment-placeholder">
               <div class="experiment-placeholder__copy">
                 <p class="experiment-placeholder__label">Chamber Standby</p>
                 <p id="experiment-placeholder-text" class="experiment-placeholder__text">Stage the active investigation here. The live experiment will occupy this same chamber once the setup is ready.</p>
               </div>
             </div>
-            <iframe
-              id="experiment-frame"
-              class="experiment-frame"
-              title="Experiment view"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-            ></iframe>
-            <button id="capture-evidence" class="capture-button capture-button--floating" type="button">Capture Evidence</button>
+            <div class="chamber-stage-slot">
+              <iframe
+                id="experiment-frame"
+                class="experiment-frame"
+                title="Experiment view"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+              ></iframe>
+            </div>
+            <button id="close-overlay" class="close-button" type="button" aria-label="Hide live chamber" hidden>×</button>
+            <button id="capture-evidence" class="capture-button capture-button--floating" type="button" hidden>Capture Evidence</button>
           </div>
           <section class="experiment-hud" hidden>
             <div class="capture-toolbar">
