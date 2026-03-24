@@ -563,7 +563,7 @@ kbd {
   position: absolute;
   left: 0.7rem;
   right: 0.7rem;
-  top: clamp(10.6rem, 28%, 14rem);
+  top: 0.35rem;
   bottom: 1.5rem;
   z-index: 1;
   overflow: hidden;

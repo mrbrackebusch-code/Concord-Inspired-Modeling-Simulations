@@ -1591,17 +1591,26 @@ function configureHostedExperimentFrame() {
         box-shadow: none !important;
       }
 
+      body.rainbow-experiment-window--embed #interactive-container {
+        overflow: hidden !important;
+      }
+
       body.rainbow-experiment-window--embed .custom-stage__scene {
-        min-height: 100vh !important;
+        min-height: calc(100vh + 8rem) !important;
         padding: 0 !important;
+        display: grid !important;
+        align-content: end !important;
       }
 
       body.rainbow-experiment-window--embed .custom-stage__scene-frame {
         width: 100% !important;
         max-width: none !important;
         height: 100vh !important;
+        margin-top: -8rem !important;
         aspect-ratio: auto !important;
+        border: 0 !important;
         border-radius: 0 !important;
+        outline: none !important;
         background: transparent !important;
         box-shadow: none !important;
       }
