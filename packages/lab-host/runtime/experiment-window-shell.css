@@ -547,8 +547,9 @@ body.rainbow-experiment-window--embed .custom-stage {
 }
 
 .custom-stage__statusline {
-  color: #48626a;
-  font-size: 0.95rem;
+  color: #5a706e;
+  font-size: 0.82rem;
+  line-height: 1.2;
 }
 
 .custom-stage__controls {

@@ -152,19 +152,11 @@
       '        <g id="ice-scale-hit-zone" opacity="0" pointer-events="none">',
       '          <ellipse id="ice-scale-hit-ring" cx="500" cy="708" rx="208" ry="86" fill="#fff7dc" fill-opacity="0.2" stroke="#ffd166" stroke-width="6" stroke-opacity="0.86" stroke-dasharray="16 12"/>',
       '          <ellipse cx="500" cy="708" rx="188" ry="68" fill="#fff6d0" fill-opacity="0.14" stroke="#fffef6" stroke-width="3" stroke-opacity="0.64"/>',
-      '          <g id="ice-scale-hit-label" transform="translate(66 790)">',
-      '            <rect x="0" y="0" width="204" height="36" rx="14" fill="#fffdf6" fill-opacity="0.9" stroke="#d6b46c" stroke-width="2"/>',
-      '            <text x="102" y="24" text-anchor="middle" font-family="Georgia, serif" font-size="17" fill="#5f4a20">Scale: record mass</text>',
-      '          </g>',
       '          <ellipse id="ice-scale-hit-target" cx="500" cy="708" rx="228" ry="96" fill="#ffffff" fill-opacity="0.001" pointer-events="all"/>',
       '        </g>',
       '        <g id="ice-beaker-hit-zone" opacity="0" pointer-events="none">',
       '          <rect id="ice-beaker-hit-ring" x="314" y="112" width="372" height="562" rx="104" fill="#fff5c6" fill-opacity="0.14" stroke="#f4b85d" stroke-width="6" stroke-opacity="0.82" stroke-dasharray="16 12"/>',
       '          <rect x="336" y="138" width="328" height="512" rx="88" fill="#fffced" fill-opacity="0.08" stroke="#fffef6" stroke-width="3" stroke-opacity="0.52"/>',
-      '          <g id="ice-beaker-hit-label" transform="translate(66 790)">',
-      '            <rect x="0" y="0" width="200" height="36" rx="14" fill="#fffdf6" fill-opacity="0.9" stroke="#d8a559" stroke-width="2"/>',
-      '            <text x="100" y="24" text-anchor="middle" font-family="Georgia, serif" font-size="17" fill="#71411d">Beaker: start melt</text>',
-      '          </g>',
       '          <rect id="ice-beaker-hit-target" x="300" y="104" width="400" height="578" rx="112" fill="#ffffff" fill-opacity="0.001" pointer-events="all"/>',
       '        </g>',
       '      </svg>',
@@ -221,7 +213,6 @@
     refs.scaleAssembly = container.querySelector("#ice-scale-assembly");
     refs.scaleHitZone = container.querySelector("#ice-scale-hit-zone");
     refs.scaleHitRing = container.querySelector("#ice-scale-hit-ring");
-    refs.scaleHitLabel = container.querySelector("#ice-scale-hit-label");
     refs.scaleHitTarget = container.querySelector("#ice-scale-hit-target");
     refs.readout = container.querySelector("[data-ice-scale-readout]");
     refs.tray = container.querySelector("#ice-scale-tray");
@@ -229,7 +220,6 @@
     refs.beaker = container.querySelector("#ice-beaker-assembly");
     refs.beakerHitZone = container.querySelector("#ice-beaker-hit-zone");
     refs.beakerHitRing = container.querySelector("#ice-beaker-hit-ring");
-    refs.beakerHitLabel = container.querySelector("#ice-beaker-hit-label");
     refs.beakerHitTarget = container.querySelector("#ice-beaker-hit-target");
     refs.beakerShadow = container.querySelector("#ice-beaker-shadow");
     refs.waterFill = container.querySelector("#ice-water-fill");
@@ -339,16 +329,14 @@
     function setCueState(key, active) {
       var zone = refs[key + "HitZone"];
       var ring = refs[key + "HitRing"];
-      var label = refs[key + "HitLabel"];
       var liveTarget = key === "scale" ? refs.scaleAssembly : refs.beaker;
       var pointer = active ? "pointer" : "default";
 
-      if (!zone || !ring || !label) {
+      if (!zone || !ring) {
         return;
       }
 
       zone.style.pointerEvents = "none";
-      label.style.pointerEvents = "none";
       if (refs[key + "HitTarget"]) {
         refs[key + "HitTarget"].style.pointerEvents = active ? "all" : "none";
         refs[key + "HitTarget"].style.cursor = pointer;
@@ -360,12 +348,6 @@
       stopCueTween(key);
       gsap.to(zone, {
         opacity: active ? 1 : 0,
-        duration: active ? 0.35 : 0.2,
-        ease: active ? "sine.out" : "sine.in",
-        overwrite: "auto"
-      });
-      gsap.to(label, {
-        y: active ? 0 : 6,
         duration: active ? 0.35 : 0.2,
         ease: active ? "sine.out" : "sine.in",
         overwrite: "auto"
@@ -508,7 +490,7 @@
           state.arrivalTimeline = null;
           state.arrivalRunning = false;
           setProcedure("ready");
-          setStatus("Ice sample received. Measure the starting mass.");
+          setStatus("Scale: record the starting mass.");
           host.setStatus({ evidence: "Awaiting first measurement" });
           host.emit("ice.arrivalComplete", { experimentId: STAGE_ID });
           host.emit("ice.stageReady", { experimentId: STAGE_ID });
@@ -647,7 +629,7 @@
       setScaleReadout(MASS_VALUE);
       resetVisuals();
       setProcedure("beforeMeasured");
-      setStatus("Initial mass captured. Start the melt and watch the edges round off, runoff feed the beaker, and the cubes disappear into the water.");
+      setStatus("Beaker: start the melt.");
       setMeasuredEvidence();
       host.setStatus({
         interactive: "Custom stage ready",
@@ -670,7 +652,7 @@
       setClock(MELT_SECONDS * progress);
       setScaleReadout(MASS_VALUE);
       setProcedure("melting");
-      setStatus("Melting in progress. The cubes are softening, sloughing off runoff, and collapsing into the water.");
+      setStatus("Melting in progress. Watch the cubes soften and collapse into the water.");
       setMeltingEvidence();
       host.setStatus({
         interactive: "Custom stage ready",
@@ -693,7 +675,7 @@
       setClock(MELT_SECONDS);
       setScaleReadout(MASS_VALUE);
       setProcedure("done");
-      setStatus("Final mass recorded. Use the two mass readings to decide what changed and what stayed the same.");
+      setStatus("Use the mass readings to build the correction.");
       setFinalEvidence();
       host.setStatus({
         interactive: "Custom stage ready",
@@ -751,7 +733,7 @@
           state.meltCompleted = true;
           setClock(MELT_SECONDS);
           setProcedure("melted");
-          setStatus("The ice has finished melting. Measure the final mass.");
+          setStatus("Scale: record the final mass.");
           syncEvidence({
             currentMass: formatMass(MASS_VALUE),
             measurementStable: "Stable",
@@ -824,7 +806,7 @@
 
       state.beforeMeasured = true;
       syncButtons();
-      setStatus("Initial mass captured. Start the melt and watch the cubes round off, slump, and disappear into the water.");
+      setStatus("Beaker: start the melt.");
       setProcedure("beforeMeasured");
       pulseScale();
       host.emit("ice.massRecordedBefore", { mass: MASS_VALUE });
@@ -844,7 +826,7 @@
       state.meltRunning = true;
       syncButtons();
       setProcedure("melting");
-      setStatus("Melting in progress. Watch the corners soften, runoff feed the beaker, and the last rounded remnants give way.");
+      setStatus("Melting in progress. Watch the corners soften and the last rounded remnants give way.");
       setMeltingEvidence();
       host.emit("ice.meltStarted", { mass: MASS_VALUE });
       host.setStatus({ evidence: "Melting in progress" });
@@ -859,7 +841,7 @@
       state.afterMeasured = true;
       syncButtons();
       setProcedure("done");
-      setStatus("Final mass recorded. Compare the first and last mass readings before you decide what happened.");
+      setStatus("Use the two mass readings to decide what happened.");
       host.emit("ice.massRecordedAfter", { mass: MASS_VALUE });
       host.setStatus({ evidence: "Recording final mass" });
       pulseScale();
