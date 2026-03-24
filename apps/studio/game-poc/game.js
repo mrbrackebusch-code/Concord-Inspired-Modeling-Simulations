@@ -273,33 +273,6 @@ const CAPTURE_PRESETS = {
   "unit-01/lesson-01/mass-change/alka-seltzer": { before: 102.5, after: 100.8 }
 };
 
-const EXPERIMENT_BRIEFINGS = {
-  "unit-01/lesson-01/mass-change/ice-to-water": {
-    assumption: "Different visible properties may mean ice and liquid water are different substances.",
-    evidence: ["Mass before melt", "Visible melting in the chamber", "Mass after melt"]
-  },
-  "unit-01/lesson-01/mass-change/precipitate": {
-    assumption: "If two clear liquids produce a new solid, total mass may be lost or gained during the transformation.",
-    evidence: ["Mass before pour", "Clouding or solid formation", "Mass after reaction"]
-  },
-  "unit-01/lesson-01/mass-change/steel-wool-pulled-apart": {
-    assumption: "Pulling steel wool apart may create less matter because the sample changes shape and spread.",
-    evidence: ["Mass before pulling", "Visible separation of the same sample", "Mass after pulling"]
-  },
-  "unit-01/lesson-01/mass-change/sugar-dissolves": {
-    assumption: "When sugar disappears into water, some matter may be lost because the solid is no longer visible.",
-    evidence: ["Mass before dissolve", "Sugar becoming less visible", "Mass after dissolve"]
-  },
-  "unit-01/lesson-01/mass-change/steel-wool-burns": {
-    assumption: "Burning may destroy part of the steel wool instead of rearranging matter in the system.",
-    evidence: ["Mass before burning", "Visible burn process", "Mass after burning"]
-  },
-  "unit-01/lesson-01/mass-change/alka-seltzer": {
-    assumption: "Fizzing and escaping gas may make the total mass drop because matter appears to leave the sample.",
-    evidence: ["Mass before fizzing", "Visible bubbling or gas production", "Mass after reaction"]
-  }
-};
-
 const worldCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("world-canvas"));
 const worldCtx = worldCanvas.getContext("2d");
 const actorCanvas = /** @type {HTMLCanvasElement} */ (document.getElementById("actor-canvas"));
@@ -319,12 +292,8 @@ const captureAfter = document.getElementById("capture-after");
 const captureDelta = document.getElementById("capture-delta");
 const captureCount = document.getElementById("capture-count");
 const zoneCaptureList = document.getElementById("zone-capture-list");
-const aiBriefingTitle = document.getElementById("ai-briefing-title");
-const aiBriefingStage = document.getElementById("ai-briefing-stage");
-const aiBriefingStatus = document.getElementById("ai-briefing-status");
 const aiBriefingAssumption = document.getElementById("ai-briefing-assumption");
-const aiBriefingTask = document.getElementById("ai-briefing-task");
-const aiBriefingEvidence = document.getElementById("ai-briefing-evidence");
+const droneBriefingCopy = document.getElementById("drone-briefing-copy");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
 
 const keys = new Set();
@@ -743,24 +712,58 @@ function getInvestigationTask(experiment) {
   return `Press Enter to begin ${experiment.title} in the chamber.`;
 }
 
-function getInvestigationStatus(experiment) {
-  const record = state.captures[experiment.id];
+function getInvestigationQuestion(experiment) {
+  const questions = {
+    "unit-01/lesson-01/mass-change/ice-to-water": "What happens to mass when ice melts?",
+    "unit-01/lesson-01/mass-change/precipitate": "What happens to mass when two liquids make a new solid?",
+    "unit-01/lesson-01/mass-change/steel-wool-pulled-apart": "What happens to mass when steel wool gets pulled apart?",
+    "unit-01/lesson-01/mass-change/sugar-dissolves": "What happens to mass when sugar dissolves in water?",
+    "unit-01/lesson-01/mass-change/steel-wool-burns": "What happens to mass when steel wool burns?",
+    "unit-01/lesson-01/mass-change/alka-seltzer": "What happens to mass when Alka-Seltzer reacts in water?"
+  };
+
+  return questions[experiment.id] || "What happens to mass during this change?";
+}
+
+function getDronePrompt(experiment) {
+  const nextObject = getCurrentRequiredObject(experiment);
+  const experimentKey = experiment.id;
+
   if (overlayOpen && activeZone?.id === experiment.id) {
-    return experimentFrameReady ? "Chamber live" : "Chamber link in progress";
+    if (experimentKey === "unit-01/lesson-01/mass-change/ice-to-water") {
+      return experimentFrameReady
+        ? "Ice, ice! Watch the beaker and grab the good evidence."
+        : "Okay, okay... waking up the chamber.";
+    }
+
+    return experimentFrameReady
+      ? "Okay, okay... watch closely and catch the evidence."
+      : "Hold on... waking up the chamber.";
   }
-  if (record.count > 0) {
-    return "Correction recorded";
+
+  if (nextObject) {
+    if (experimentKey === "unit-01/lesson-01/mass-change/ice-to-water") {
+      return getDeliveredCount(experiment) > 0
+        ? "Bring the ice over here and drop it in."
+        : "I think there's ice outside somewhere...";
+    }
+
+    return `Let's go get the ${nextObject.name.toLowerCase()}.`;
   }
+
+  if (!isCurrentChamberFocused()) {
+    return "Bring it back to the chamber pad.";
+  }
+
   if (isExperimentReady(experiment)) {
-    return isCurrentChamberFocused() ? "Chamber primed" : "Chamber staged";
+    return "Ooh, it's ready. Press Enter.";
   }
-  return "Assumption unresolved";
+
+  return "We still need the setup pieces.";
 }
 
 function renderAiBriefing() {
   const experiment = getCurrentExperiment();
-  const briefing = EXPERIMENT_BRIEFINGS[experiment.id];
-  const stageIndex = getCurrentExperimentIndex() + 1;
   const deliveredCount = getDeliveredCount(experiment);
   const captureCount = state.captures[experiment.id]?.count || 0;
   const signature = [
@@ -777,13 +780,9 @@ function renderAiBriefing() {
   }
   lastAiBriefingSignature = signature;
 
-  aiBriefingTitle.textContent = experiment.title;
-  aiBriefingStage.textContent = `Investigation ${stageIndex}/${EXPERIMENTS.length}`;
-  aiBriefingStatus.textContent = getInvestigationStatus(experiment);
-  aiBriefingAssumption.textContent = briefing?.assumption || "Model uncertainty active.";
-  aiBriefingTask.textContent = getInvestigationTask(experiment);
-  aiBriefingEvidence.textContent = briefing?.evidence?.join(" • ") || "Capture the critical evidence from this run.";
-  experimentPlaceholderText.textContent = getInvestigationTask(experiment);
+  aiBriefingAssumption.textContent = getInvestigationQuestion(experiment);
+  droneBriefingCopy.textContent = getDronePrompt(experiment);
+  experimentPlaceholderText.textContent = "Chamber optics waking up...";
 }
 
 function buildBackgroundLayer() {
