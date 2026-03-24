@@ -9,15 +9,16 @@ const ROCK_MASK_ALPHA_THRESHOLD = 16;
 const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
-const ARM_HEAD_SPEED = 180;
+const ARM_HEAD_SPEED = 132;
 const ARM_TURN_RESPONSE = 10;
 const ARM_MAX_REACH = 132;
-const ARM_SEGMENT_SPACING = 15;
-const ARM_SEGMENT_COUNT = 8;
-const ARM_HISTORY_STEP = 6;
+const ARM_SEGMENT_SPACING = 12;
+const ARM_SEGMENT_COUNT = 11;
+const ARM_HISTORY_STEP = 4;
 const ARM_EXTEND_SPEED = 4.8;
 const ARM_HEAD_RADIUS = 9;
 const ARM_LATCH_RADIUS = 18;
+const ARM_CARRY_LAG_SEGMENTS = 2;
 const MAX_HULL = 100;
 const FIELD_CHAMBER_ZONE = { x: 11, y: 7, w: 6, h: 3 };
 const TERRAIN_THEME = {
@@ -413,7 +414,7 @@ const loadState = Promise.all([
   state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
   activeZone = getCurrentExperiment();
-  setStatus("Arrow keys fly the ship. Space deploys the arm. WASD steers the claw.");
+  setStatus("Arrow keys fly the ship. Space deploys the arm. WASD steers the claw. Thread through pickups and bring them back cleanly.");
   renderAiBriefing();
   renderCaptureHud();
   updateHullHud();
@@ -1836,7 +1837,7 @@ function toggleArmDeployment() {
       arm.aimAngle = launchAngle;
       arm.targetAngle = launchAngle;
     }
-    setStatus("Arm deployed. Steer the claw with WASD.");
+    setStatus("Arm deployed. Steer the claw with WASD and snake it through the pickup.");
   }
   renderAiBriefing();
   invalidateActorLayer();
@@ -1942,8 +1943,9 @@ function updateArm(dtMs) {
   if (arm.carryingId) {
     const carried = getCarriedObject();
     if (carried) {
-      carried.x = arm.headWorldX + Math.cos(arm.aimAngle || 0) * 12;
-      carried.y = arm.headWorldY + Math.sin(arm.aimAngle || 0) * 12;
+      const carryPoint = getArmCarryPoint();
+      carried.x = carryPoint.x;
+      carried.y = carryPoint.y;
       deliverCarriedObjectIfPossible(carried);
     } else {
       arm.carryingId = null;
@@ -2036,6 +2038,11 @@ function sampleArmTrailPoints() {
     .map((point) => ({ x: mount.x + point.x, y: mount.y + point.y }));
 }
 
+function getArmCarryPoint(points = sampleArmTrailPoints()) {
+  const carryIndex = clamp(points.length - 1 - ARM_CARRY_LAG_SEGMENTS, 0, points.length - 1);
+  return points[carryIndex];
+}
+
 function autoLatchNearestObject() {
   let bestObject = null;
   let bestDistance = Infinity;
@@ -2059,7 +2066,7 @@ function autoLatchNearestObject() {
   }
 
   arm.carryingId = bestObject.id;
-  setStatus(`${bestObject.name} latched to the claw.`);
+  setStatus(`${bestObject.name} is riding the arm. Bring it back cleanly.`);
 }
 
 function deliverCarriedObjectIfPossible(object) {
@@ -2069,8 +2076,8 @@ function deliverCarriedObjectIfPossible(object) {
   }
 
   const zone = getExperimentZone(experiment);
-  const tileX = Math.floor(arm.headWorldX / TILE_SIZE);
-  const tileY = Math.floor(arm.headWorldY / TILE_SIZE);
+  const tileX = Math.floor(object.x / TILE_SIZE);
+  const tileY = Math.floor(object.y / TILE_SIZE);
   if (tileX < zone.x || tileX >= zone.x + zone.w || tileY < zone.y || tileY >= zone.y + zone.h) {
     return false;
   }
@@ -2089,13 +2096,9 @@ function deliverCarriedObjectIfPossible(object) {
 
 function failArm(message) {
   const carried = getCarriedObject();
-  if (carried) {
-    carried.x = carried.sourceX;
-    carried.y = carried.sourceY;
-  }
   arm.carryingId = null;
   arm.deployed = false;
-  setStatus(message);
+  setStatus(carried ? `${message} ${carried.name} dropped in place.` : message);
   renderAiBriefing();
 }
 
@@ -2132,32 +2135,39 @@ function drawExperimentObject(object) {
   const x = object.x;
   const y = object.y;
   const shortName = object.name.length > 12 ? `${object.name.slice(0, 12)}.` : object.name;
+  const capsuleTint = object.tint || getPickupTint(object);
+
+  drawPickupCapsuleShell(x, y, capsuleTint, selected, object.delivered);
 
   if (object.kind === "ice") {
-    drawSpriteImage(state.images.experimentArt.iceCube, x, y, 22, 22);
+    drawSpriteImage(state.images.experimentArt.iceCube, x, y - 1, 19, 19);
   } else if (object.kind === "steel") {
-    drawSpriteImage(state.images.experimentArt.steelWool, x, y, 26, 20);
+    drawSpriteImage(state.images.experimentArt.steelWool, x, y, 20, 16);
   } else if (object.kind === "steel-burn") {
-    drawSpriteImage(state.images.experimentArt.steelWoolBurnable, x, y, 26, 22);
+    drawSpriteImage(state.images.experimentArt.steelWoolBurnable, x, y, 20, 17);
   } else if (object.kind === "tablet") {
-    drawSpriteImage(state.images.experimentArt.alkaTablet, x, y, 20, 16);
+    drawSpriteImage(state.images.experimentArt.alkaTablet, x, y, 15, 12);
   } else {
     drawCanisterPickup(x, y, object);
   }
 
-  ctx.fillStyle = object.delivered ? "rgba(185, 255, 205, 0.88)" : selected ? "rgba(255, 244, 184, 0.92)" : "rgba(14, 18, 24, 0.88)";
-  ctx.fillRect(Math.round(x - 28), Math.round(y - 24), 56, 12);
-  ctx.fillStyle = object.delivered ? "#133222" : "#f5f5f5";
+  const labelFill = object.delivered
+    ? "rgba(232, 249, 234, 0.96)"
+    : selected
+      ? "rgba(255, 247, 214, 0.97)"
+      : "rgba(248, 244, 232, 0.95)";
+  const labelStroke = object.delivered ? "rgba(90, 139, 102, 0.45)" : "rgba(126, 120, 98, 0.34)";
+  drawLabelPill(x, y - 28, 58, 13, labelFill, labelStroke);
+  ctx.fillStyle = "#203028";
   ctx.font = "8px Georgia";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(shortName, Math.round(x), Math.round(y - 18));
-  ctx.fillStyle = object.delivered ? "rgba(185, 255, 205, 0.88)" : selected ? "rgba(255, 244, 184, 0.92)" : "rgba(14, 18, 24, 0.88)";
-  ctx.fillRect(Math.round(x - 24), Math.round(y + 15), 48, 16);
-  ctx.fillStyle = object.delivered ? "#133222" : "#f5f5f5";
+  ctx.fillText(shortName, Math.round(x), Math.round(y - 21));
+  drawLabelPill(x, y + 23, 46, 13, labelFill, labelStroke);
+  ctx.fillStyle = "#203028";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(object.formula, Math.round(x), Math.round(y + 23));
+  ctx.fillText(object.formula, Math.round(x), Math.round(y + 23.5));
 }
 
 function drawSpriteImage(image, x, y, width, height) {
@@ -2167,21 +2177,84 @@ function drawSpriteImage(image, x, y, width, height) {
   ctx.drawImage(image, Math.round(x - width / 2), Math.round(y - height / 2), width, height);
 }
 
+function getPickupTint(object) {
+  if (object.kind === "ice") {
+    return "rgba(171, 226, 255, 0.95)";
+  }
+  if (object.kind === "steel" || object.kind === "steel-burn") {
+    return "rgba(214, 226, 230, 0.95)";
+  }
+  if (object.kind === "tablet") {
+    return "rgba(225, 242, 191, 0.95)";
+  }
+  return object.tint || "rgba(192, 223, 232, 0.95)";
+}
+
+function drawPickupCapsuleShell(x, y, tint, selected, delivered) {
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  ctx.fillStyle = "rgba(71, 84, 79, 0.18)";
+  ctx.beginPath();
+  ctx.ellipse(0, 15, 19, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  const shellFill = delivered
+    ? "rgba(241, 249, 241, 0.96)"
+    : selected
+      ? "rgba(255, 251, 237, 0.97)"
+      : "rgba(247, 244, 235, 0.95)";
+  const shellStroke = delivered ? "rgba(118, 156, 124, 0.42)" : "rgba(138, 142, 128, 0.34)";
+
+  ctx.fillStyle = shellFill;
+  ctx.strokeStyle = shellStroke;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(-18, -15, 36, 30, 13);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = tint;
+  ctx.beginPath();
+  ctx.roundRect(-13, -8, 26, 15, 8);
+  ctx.fill();
+
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.64)";
+  ctx.beginPath();
+  ctx.moveTo(-9, -7);
+  ctx.lineTo(7, -7);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawLabelPill(x, y, width, height, fill, stroke) {
+  ctx.save();
+  ctx.translate(Math.round(x), Math.round(y));
+  ctx.fillStyle = fill;
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(-width / 2, -height / 2, width, height, height / 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawCanisterPickup(x, y, object) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
-  ctx.fillStyle = "rgba(18, 28, 34, 0.92)";
-  ctx.fillRect(-13, -14, 26, 28);
-  ctx.strokeStyle = "rgba(208, 233, 242, 0.65)";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(-12.5, -13.5, 25, 27);
+  ctx.fillStyle = "rgba(248, 251, 248, 0.84)";
+  ctx.beginPath();
+  ctx.roundRect(-11, -9, 22, 18, 8);
+  ctx.fill();
   ctx.fillStyle = object.tint;
-  ctx.fillRect(-9, -8, 18, 11);
-  ctx.fillStyle = "#ecfaff";
-  ctx.font = "bold 8px Georgia";
+  ctx.beginPath();
+  ctx.roundRect(-9, -6, 18, 12, 6);
+  ctx.fill();
+  ctx.fillStyle = "#20413a";
+  ctx.font = "bold 7px Georgia";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(object.kind === "sugar" ? "C12" : object.name === "Water" ? "H2O" : "AQ", 0, 7);
+  ctx.fillText(object.kind === "sugar" ? "C12" : object.name === "Water" ? "H2O" : "AQ", 0, 1.5);
   ctx.restore();
 }
 
@@ -2198,13 +2271,23 @@ function drawArm() {
 
   ctx.save();
   ctx.imageSmoothingEnabled = false;
+  ctx.strokeStyle = "rgba(44, 54, 50, 0.2)";
+  ctx.lineWidth = 6;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
+  for (let index = 1; index < points.length; index++) {
+    ctx.lineTo(points[index].x, points[index].y);
+  }
+  ctx.stroke();
 
   const base = points[0];
   const baseAngle = Math.atan2(points[1].y - base.y, points[1].x - base.x);
-  const mountWidth = parts.baseMount.width * 0.08;
-  const mountHeight = parts.baseMount.height * 0.08;
+  const mountWidth = parts.baseMount.width * 0.074;
+  const mountHeight = parts.baseMount.height * 0.074;
   ctx.drawImage(parts.baseMount, base.x - mountWidth * 0.9, base.y - mountHeight * 0.52, mountWidth, mountHeight);
-  drawArmPart(parts.socketCup, base.x + 4, base.y + 1, baseAngle + Math.PI / 2, 0.08);
+  drawArmPart(parts.socketCup, base.x + 4, base.y + 1, baseAngle + Math.PI / 2, 0.074);
 
   for (let index = 0; index < points.length - 1; index++) {
     const from = points[index];
@@ -2212,10 +2295,10 @@ function drawArm() {
     const angle = Math.atan2(to.y - from.y, to.x - from.x);
     const midX = (from.x + to.x) / 2;
     const midY = (from.y + to.y) / 2;
-    drawArmPart(parts.connector, midX, midY, angle + Math.PI / 2, 0.065);
+    drawArmPart(parts.connector, midX, midY, angle + Math.PI / 2, 0.054);
     if (index < points.length - 2) {
       const jointImage = index % 2 === 0 ? parts.jointPlain : parts.jointStriped;
-      drawArmPart(jointImage, to.x, to.y, angle, 0.072);
+      drawArmPart(jointImage, to.x, to.y, angle, 0.064);
     }
   }
 
@@ -2223,7 +2306,7 @@ function drawArm() {
   const neck = points[points.length - 2];
   const headAngle = Math.atan2(head.y - neck.y, head.x - neck.x);
   const clawImage = arm.carryingId ? parts.clawClosed : parts.clawOpen;
-  drawArmPart(clawImage, head.x, head.y, headAngle, 0.074);
+  drawArmPart(clawImage, head.x, head.y, headAngle, 0.068);
   ctx.restore();
 }
 
@@ -2528,7 +2611,7 @@ function setExplorationStatus() {
   if (!overlayOpen && activeZone) {
     setStatus(describeExperimentStation(activeZone));
   } else if (!overlayOpen) {
-    setStatus("Arrow keys fly the ship. Space deploys the arm. WASD steers the claw.");
+    setStatus("Arrow keys fly the ship. Space deploys the arm. WASD steers the claw. Thread through pickups and bring them back cleanly.");
   }
 }
 
