@@ -31,59 +31,8 @@
             </div>
             <div id="status-pill" class="status-pill">Loading assets...</div>
           </section>
-        </section>
-
-        <aside id="experiment-window" class="experiment-window" aria-live="polite">
-          <div class="experiment-window__body">
-            <div class="chamber-shell" aria-hidden="true">
-              <div class="chamber-shell__wall chamber-shell__wall--left"></div>
-              <div class="chamber-shell__wall chamber-shell__wall--right"></div>
-              <div class="chamber-shell__ceiling"></div>
-              <div class="chamber-shell__platform"></div>
-            </div>
-            <section class="chamber-eye">
-              <div class="chamber-eye__lens" aria-hidden="true">
-                <div class="chamber-eye__iris">
-                  <div class="chamber-eye__pupil"></div>
-                </div>
-              </div>
-              <div class="chamber-eye__copy">
-                <p id="ai-briefing-assumption" class="chamber-eye__question">What happens to mass when ice melts?</p>
-              </div>
-            </section>
-            <div id="data-drone" class="data-drone" aria-label="Deedee, data drone">
-              <div class="data-drone__core"></div>
-              <div class="data-drone__ring"></div>
-              <div id="drone-token-bay" class="data-drone__token-bay" aria-hidden="true"></div>
-              <div class="data-drone__eyes" aria-hidden="true">
-                <span class="data-drone__eye"></span>
-                <span class="data-drone__eye"></span>
-              </div>
-              <div class="data-drone__mouth" aria-hidden="true"></div>
-              <div class="data-drone__beam"></div>
-              <div class="data-drone__copy">
-                <p class="data-drone__name">Deedee</p>
-                <p id="drone-briefing-copy" class="data-drone__text">I think there&apos;s ice outside somewhere...</p>
-              </div>
-              <div id="drone-token-stash" class="data-drone__token-stash" hidden></div>
-            </div>
-            <div id="evidence-flight-layer" class="evidence-flight-layer" aria-hidden="true"></div>
-            <div id="experiment-placeholder" class="experiment-placeholder">
-              <div class="experiment-placeholder__copy">
-                <p class="experiment-placeholder__label">Chamber Standby</p>
-                <p id="experiment-placeholder-text" class="experiment-placeholder__text">Stage the active investigation here. The live experiment will occupy this same chamber once the setup is ready.</p>
-              </div>
-            </div>
-            <div class="chamber-stage-slot">
-              <iframe
-                id="experiment-frame"
-                class="experiment-frame"
-                title="Experiment view"
-                loading="lazy"
-                referrerpolicy="no-referrer"
-              ></iframe>
-            </div>
-            <button id="close-overlay" class="close-button" type="button" aria-label="Hide live chamber" hidden>×</button>
+          <section id="thinking-layer" class="thinking-layer" aria-live="polite">
+            <div id="drone-token-stash" class="data-drone__token-stash thinking-layer__stash" hidden></div>
             <section id="conclusion-card" class="conclusion-card" hidden aria-live="polite">
               <p class="conclusion-card__eyebrow">Teach the model</p>
               <p class="conclusion-card__lead">Use DeeDee&apos;s saved data to finish the correction.</p>
@@ -121,6 +70,59 @@
               <button id="cer-submit" class="conclusion-card__submit" type="button" disabled>Teach the Eye</button>
               <p id="cer-feedback" class="conclusion-card__feedback">Gather the evidence, then use it here.</p>
             </section>
+          </section>
+        </section>
+
+        <aside id="experiment-window" class="experiment-window" aria-live="polite">
+          <div class="experiment-window__body">
+            <div class="chamber-shell" aria-hidden="true">
+              <div class="chamber-shell__wall chamber-shell__wall--left"></div>
+              <div class="chamber-shell__wall chamber-shell__wall--right"></div>
+              <div class="chamber-shell__ceiling"></div>
+              <div class="chamber-shell__platform"></div>
+            </div>
+            <section class="chamber-eye">
+              <div class="chamber-eye__lens" aria-hidden="true">
+                <div class="chamber-eye__iris">
+                  <div class="chamber-eye__pupil"></div>
+                </div>
+              </div>
+              <div class="chamber-eye__copy">
+                <p id="ai-briefing-assumption" class="chamber-eye__question">What happens to mass when ice melts?</p>
+              </div>
+            </section>
+            <div id="data-drone" class="data-drone" aria-label="Deedee, data drone">
+              <div class="data-drone__core"></div>
+              <div class="data-drone__ring"></div>
+              <div id="drone-token-bay" class="data-drone__token-bay" aria-hidden="true"></div>
+              <div class="data-drone__eyes" aria-hidden="true">
+                <span class="data-drone__eye"></span>
+                <span class="data-drone__eye"></span>
+              </div>
+              <div class="data-drone__mouth" aria-hidden="true"></div>
+              <div class="data-drone__beam"></div>
+              <div class="data-drone__copy">
+                <p class="data-drone__name">Deedee</p>
+                <p id="drone-briefing-copy" class="data-drone__text">I think there&apos;s ice outside somewhere...</p>
+              </div>
+            </div>
+            <div id="evidence-flight-layer" class="evidence-flight-layer" aria-hidden="true"></div>
+            <div id="experiment-placeholder" class="experiment-placeholder">
+              <div class="experiment-placeholder__copy">
+                <p class="experiment-placeholder__label">Chamber Standby</p>
+                <p id="experiment-placeholder-text" class="experiment-placeholder__text">Stage the active investigation here. The live experiment will occupy this same chamber once the setup is ready.</p>
+              </div>
+            </div>
+            <div class="chamber-stage-slot">
+              <iframe
+                id="experiment-frame"
+                class="experiment-frame"
+                title="Experiment view"
+                loading="lazy"
+                referrerpolicy="no-referrer"
+              ></iframe>
+            </div>
+            <button id="close-overlay" class="close-button" type="button" aria-label="Hide live chamber" hidden>×</button>
             <button id="capture-evidence" class="capture-button capture-button--floating" type="button" hidden>Capture Evidence</button>
           </div>
           <section class="experiment-hud" hidden>

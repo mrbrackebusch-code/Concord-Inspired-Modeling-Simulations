@@ -151,7 +151,7 @@ body {
 }
 
 .game-shell.is-thinking {
-  grid-template-columns: minmax(0, 1.65fr) minmax(520px, 1.12fr);
+  grid-template-columns: minmax(0, 2.18fr) minmax(360px, 0.88fr);
 }
 
 .play-column {
@@ -187,6 +187,28 @@ body {
 
 .game-shell.is-thinking .canvas-frame {
   filter: saturate(0.56) brightness(0.36);
+}
+
+.thinking-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+  padding: 1rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.game-shell.is-thinking .thinking-layer {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.game-shell.is-thinking .status-pill {
+  opacity: 0.1;
 }
 
 .eyebrow {
@@ -670,12 +692,6 @@ kbd {
   box-shadow: 0 10px 16px rgba(0, 0, 0, 0.08);
 }
 
-.experiment-window.is-thinking .data-drone__token-stash {
-  top: 5.35rem;
-  right: 0.85rem;
-  width: 15rem;
-}
-
 .data-drone__token-stash[hidden] {
   display: none !important;
 }
@@ -716,6 +732,29 @@ kbd {
 
 .data-token-chip:active {
   cursor: grabbing;
+}
+
+.thinking-layer__stash {
+  position: relative;
+  top: auto;
+  right: auto;
+  width: min(26rem, calc(100% - 1rem));
+  min-height: 3.25rem;
+  padding: 0.72rem 0.82rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid rgba(154, 170, 147, 0.24);
+  background: linear-gradient(180deg, rgba(255, 252, 245, 0.97), rgba(246, 248, 240, 0.94));
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.1);
+}
+
+.thinking-layer__stash::before {
+  content: "DeeDee's saved evidence";
+  display: block;
+  margin-bottom: 0.48rem;
+  color: #68887a;
+  font-size: 0.64rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .data-drone__copy::after {
@@ -969,11 +1008,11 @@ kbd {
 }
 
 .conclusion-card {
-  position: absolute;
-  left: 1.15rem;
-  right: 1.05rem;
-  bottom: 1.9rem;
-  z-index: 5;
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  z-index: 1;
   padding: 0.78rem 0.82rem 0.82rem;
   border-radius: 20px;
   border: 1px solid rgba(154, 170, 147, 0.24);
@@ -1007,11 +1046,12 @@ kbd {
   line-height: 1.3;
 }
 
-.experiment-window.is-thinking .conclusion-card {
-  top: 9.8rem;
-  bottom: 1.05rem;
-  left: 0.92rem;
-  right: 0.92rem;
+.thinking-layer .conclusion-card {
+  width: min(42rem, calc(100% - 1rem));
+  max-width: 100%;
+}
+
+.game-shell.is-thinking .thinking-layer .conclusion-card {
   padding: 1rem 1.05rem 1.1rem;
   background: linear-gradient(180deg, rgba(255, 252, 245, 0.985), rgba(243, 247, 240, 0.975));
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.16);
