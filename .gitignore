@@ -10,6 +10,7 @@ build/
 .tmp-steel-dom.html
 headless-test.png
 ice-to-water-direct-shot.png
+*[Dd]ump*
 *.log
 .tmp-server-*.txt
 context/Chemistry Modeling Consolidated/

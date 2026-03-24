@@ -7,20 +7,23 @@
       title: "Steel wool pulled apart",
       lesson: "Unit 1 Lesson 1",
       suite: "Mass & Change",
+      renderMode: "custom",
+      customStageId: "unit-01/lesson-01/mass-change/steel-wool-pulled-apart",
+      customStageScript: "/packages/lab-host/runtime/custom-stages/steel-wool-pulled-apart-stage.js",
       interactiveUrl: "/simulations/unit-01/lesson-01/mass-change/interactives/steel-wool-pulled-apart.json",
-      stageLabel: "Careful handling / sample integrity",
-      briefing: "Weigh the steel wool, pull part of it away from the tray, then return it before recording the run. The apparatus window should eventually track fragment loss and measurement integrity as first-class events.",
-      objectTray: ["Steel wool sample", "Balance tray", "Drag handle"],
+      stageLabel: "Same sample / larger volume",
+      briefing: "Weigh the compact steel wool, then pull the highlighted grab zones around the sample to fluff it into a much larger tangle before reweighing it. The point is to witness dramatic visible volume change without losing the sample or changing the measured mass.",
+      objectTray: ["Compact steel wool sample", "Balance tray", "Highlighted grab zones"],
       procedure: [
-        "Place the full sample on the tray",
-        "Note the stable starting mass",
-        "Pull part of the sample away",
-        "Return the sample to the tray",
-        "Record the run and compare repeated results"
+        "Place the compact sample on the tray",
+        "Record the initial mass",
+        "Pull the highlighted grab zones to fluff the sample",
+        "Let the same sample settle back on the tray",
+        "Record the final mass"
       ],
-      sharedVerbs: ["drag/drop", "click/grab", "press Record", "Reset"],
+      sharedVerbs: ["grab zone", "pull outward", "press Weigh", "Reset"],
       evidenceFields: ["current mass", "initial mass", "final mass", "delta mass", "before snapshot", "after snapshot"],
-      eventHooks: ["onObjectPlaced", "onMeasurementStable", "onMassRecorded", "onRunCompleted"],
+      eventHooks: ["onObjectPlaced", "onManipulationStarted", "onManipulationCompleted", "onMassRecorded"],
       mistakeFlags: ["fragmentLost", "measurementUnstable"]
     },
     {

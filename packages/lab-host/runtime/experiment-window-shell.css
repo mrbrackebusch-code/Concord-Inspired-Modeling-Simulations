@@ -416,6 +416,15 @@ body.rainbow-experiment-window--embed .custom-stage {
   grid-template-rows: auto 1fr auto;
 }
 
+.custom-stage--steel {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.92), transparent 28%),
+    radial-gradient(circle at 82% 14%, rgba(196, 173, 121, 0.18), transparent 24%),
+    linear-gradient(180deg, #f7f8f5 0%, #ebece5 100%);
+}
+
 .custom-stage__toolbar {
   display: flex;
   justify-content: space-between;
@@ -502,12 +511,27 @@ body.rainbow-experiment-window--embed .custom-stage {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42), 0 24px 60px rgba(12, 24, 28, 0.08);
 }
 
+.custom-stage--steel .custom-stage__scene-frame {
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.94), transparent 26%),
+    linear-gradient(180deg, #fdf9ee 0%, #f2ebda 100%);
+}
+
 .custom-stage__svg,
 .custom-stage__fx {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.custom-stage--steel [id^="steel-zone-hit-"] {
+  cursor: grab;
+  touch-action: none;
+}
+
+.custom-stage--steel [id^="steel-zone-hit-"]:active {
+  cursor: grabbing;
 }
 
 .custom-stage__footer {
