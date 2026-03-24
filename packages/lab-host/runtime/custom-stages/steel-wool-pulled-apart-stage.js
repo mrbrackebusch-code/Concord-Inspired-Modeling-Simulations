@@ -313,12 +313,9 @@
       var vector = zoneVector(zone);
       markup.push(
         '<g id="steel-zone-' + index + '" data-zone="' + index + '" opacity="0">',
-        '  <ellipse id="steel-zone-halo-' + index + '" cx="' + zone.base.x + '" cy="' + zone.base.y + '" rx="30" ry="20" fill="#fbf4cf" fill-opacity="0.28" transform="rotate(' + vector.angle.toFixed(1) + ' ' + zone.base.x + ' ' + zone.base.y + ')"/>',
-        '  <ellipse id="steel-zone-fill-' + index + '" cx="' + zone.base.x + '" cy="' + zone.base.y + '" rx="18" ry="12" fill="#f7edbb" fill-opacity="0.52" transform="rotate(' + vector.angle.toFixed(1) + ' ' + zone.base.x + ' ' + zone.base.y + ')"/>',
-        '  <path id="steel-zone-ring-' + index + '" d="' + zoneBracketPath(zone) + '" fill="none" stroke="#c9a33a" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.95"/>',
-        '  <path d="' + zoneAccentPath(zone, -14, -7, -2, 2, 13, 7) + '" fill="none" stroke="#fff9e2" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.92"/>',
-        '  <path d="' + zoneAccentPath(zone, -12, 9, 0, -2, 12, -6) + '" fill="none" stroke="#d9c06a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.92"/>',
-        '  <path d="' + zoneAccentPath(zone, -6, -13, 6, -2, 16, 3) + '" fill="none" stroke="#f2e5a8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.82"/>',
+        '  <path id="steel-zone-fill-' + index + '" d="' + zoneAccentPath(zone, -14, -7, -2, 2, 13, 7) + ' ' + zoneAccentPath(zone, -12, 9, 0, -2, 12, -6) + '" fill="none" stroke="#f0db88" stroke-width="6.4" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.54"/>',
+        '  <path id="steel-zone-ring-' + index + '" d="' + zoneAccentPath(zone, -10, -10, 1, -1, 16, 3) + ' ' + zoneAccentPath(zone, -8, 10, 3, 1, 14, -4) + '" fill="none" stroke="#fff7d1" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.96"/>',
+        '  <path d="' + zoneBracketPath(zone) + '" fill="none" stroke="#c9a33a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.74"/>',
         '  <circle id="steel-zone-hit-' + index + '" cx="' + zone.base.x + '" cy="' + zone.base.y + '" r="46" fill="#ffffff" fill-opacity="0.001" stroke="none"/>',
         '</g>'
       );
@@ -517,9 +514,6 @@
     refs.zoneGroups = PULL_ZONES.map(function(_, index) {
       return container.querySelector("#steel-zone-" + index);
     });
-    refs.zoneHalos = PULL_ZONES.map(function(_, index) {
-      return container.querySelector("#steel-zone-halo-" + index);
-    });
     refs.zoneFills = PULL_ZONES.map(function(_, index) {
       return container.querySelector("#steel-zone-fill-" + index);
     });
@@ -633,19 +627,16 @@
         var activeScale = state.dragging && state.dragZoneIndex === index ? mix(1.02, 1.16, state.activeDragProgress) : 1;
 
         gsap.set(refs.zoneGroups[index], {
-          opacity: isActive ? 0.9 : (isCompleted ? 0.14 : 0),
+          opacity: isActive ? 1 : (isCompleted ? 0.14 : 0),
           scaleX: (isCompleted ? 0.82 : 1) * activeScale,
           scaleY: (isCompleted ? 0.82 : 1) * activeScale,
           transformOrigin: PULL_ZONES[index].base.x + "px " + PULL_ZONES[index].base.y + "px"
         });
         gsap.set(refs.zoneFills[index], {
-          opacity: isActive ? 0.38 : 0.24
-        });
-        gsap.set(refs.zoneHalos[index], {
-          opacity: isActive ? 0.4 : (isCompleted ? 0.08 : 0)
+          opacity: isActive ? 0.74 : 0.32
         });
         gsap.set(refs.zoneRings[index], {
-          opacity: isActive ? 1 : 0.46
+          opacity: isActive ? 1 : 0.42
         });
       }
 

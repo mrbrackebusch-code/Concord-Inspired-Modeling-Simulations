@@ -2,37 +2,46 @@
 
 ## Purpose
 
-This note locks the immediate architectural shift for Unit 1 Lesson 1 and the simulations that follow it.
+This note locks the architectural direction for all experiment windows in this repository.
 
-The repository is no longer aiming only at "better standalone animations."
+The repository is no longer building isolated lesson widgets. It is building a reusable close-up experiment system that can sit inside:
 
-It is now aiming at a reusable **experiment-window system** that can eventually support:
+- studio authoring flows
+- game-hosted encounters
+- evidence capture workflows
+- later correction and model-building flows
 
-- apparatus simulations
-- evidence capture
-- model revision
-- AI-assisted writing and reflection
-- game progression
-- later MD2D-driven atom and molecule control
+The goal is not only "mount a simulation in a frame."
 
-The important constraint is that we are **not** building all of those layers at once.
+The goal is:
 
-We are building the right foundation now so later layers do not require a restart.
+- one reusable chamber host
+- one reusable evidence/event contract
+- many experiment-specific phenomena authored inside that host
+
+That is how the repo avoids restarting itself every time a new experiment or game layer appears.
 
 ## Immediate Decision
 
-The first production target is:
+The first production target is still:
 
 `six reusable Lesson 1 experiment windows for Mass & Change`
 
-These are the first real instances of a larger system, not one-off special cases.
+But their architectural role is now clearer.
 
-That means the current Lesson 1 work should be reinterpreted as:
+They are:
 
-- an apparatus layer now
-- a game-ready substrate later
+- the close-up scientific truth layer
+- the chamber the future game enters
+- the evidence source the later thinking/model layer consumes
 
-## The Correct Separation Of Responsibilities
+They are not:
+
+- disposable wrappers around `embeddable.html`
+- multi-panel dashboards
+- one-off bespoke scenes with no shared contract
+
+## Correct Layering
 
 ### 1. Phenomenon Layer
 
@@ -47,176 +56,213 @@ For Lesson 1 this includes:
 - sugar dissolving
 - Alka-Seltzer reacting
 
-In the current repo, these are authored as Concord Lab / MD2D interactives under:
+This layer is responsible for:
 
-- `simulations/unit-01/lesson-01/mass-change/`
-
-The phenomenon layer is responsible for:
-
-- object placement and motion
+- apparatus placement
 - visible process over time
-- measurement choreography
+- experiment-specific manipulation
 - procedural integrity rules
-- optional future particle/model views
+- experiment-specific evidence emergence
 
-### 2. Experiment Window Shell
+### 2. Chamber Host Layer
 
-This is the shared project-owned host around the phenomenon layer.
+This is the shared project-owned experiment chamber.
 
-It belongs in:
+It belongs primarily in:
 
-- `packages/lab-host/`
-- `apps/studio/` for launch surfaces
+- `packages/lab-host/runtime/experiment-window-shell.js`
+- `packages/lab-host/runtime/experiment-window-shell.css`
+- `apps/studio/experiment-window/`
 
-The shell is responsible for:
+This layer is responsible for:
 
-- mounting a Lab interactive
-- showing shared experiment-window chrome
-- providing shared regions and layout
-- exposing a stable host API for evidence, events, and later game systems
+- mounting a stage inside a shared host
+- shared chamber geometry and chrome
+- shared bridge/event/evidence plumbing
+- stable mode support such as `studio`, `embed`, and `game`
+- shared transition rules between live experiment and later thinking/revision surfaces
 
-The shell should own the reusable frame, not the simulation-specific choreography.
+### 3. Evidence And Moment Contract
 
-### 3. Evidence Contract
-
-This is the standard data surface that all experiment windows must eventually expose.
+This is the shared surface that later systems read.
 
 It is the bridge between:
 
-- the apparatus simulation
-- model-validation workflows
-- writing scaffolds
-- AI training interactions
-- game systems
+- the chamber
+- the game shell
+- the thinking/CER board
+- later model correction and AI training layers
 
 ### 4. Game Layer
 
-This does **not** ship now.
+This layer owns:
 
-It will later consume the same evidence and event contract for:
-
-- challenge logic
-- progression
-- revision loops
-- AI upgrade systems
-- scoring and optional gamification
-
-### 5. Model-Building And Writing Layer
-
-This also does **not** ship now.
-
-It will later consume the evidence contract for:
-
-- sentence frames
-- drag/drop explanation builders
-- revision prompts
-- observed-versus-modeled comparisons
-- live student-built model playback
-
-## What We Build Now
-
-The immediate scope is intentionally narrow.
-
-### Build now
-
-- a reusable experiment-window shell
-- a registry of Lesson 1 experiment-window definitions
-- a studio route that loads current interactives through the shell
-- a host-side event bridge API
-- a documented evidence and event contract
-- the first migration path away from naked `embeddable.html` redirects
-
-### Do not build now
-
-- narrative wrapper
-- RPG structure
-- unlock tree
-- scoring layer
-- AI writing assistant
-- revision grading logic
-- suit integrity timer
-- top-down world navigation
-- atom-control gameplay
-
-Those can only be added safely after the experiment-window layer is stable.
-
-## Experiment Window Regions
-
-Every experiment window should converge on the same shared layout:
-
-1. `Main apparatus stage`
-   The live experiment scene and direct manipulation area.
-2. `Object tray`
-   The materials or objects relevant to the current experiment.
-3. `Procedure rail`
-   Ordered steps with visible completion state.
-4. `Instrument / readout panel`
-   Mass readout, stability, trial state, boundary state.
-5. `Evidence tray`
-   Initial/final values, snapshots, event flags, later notes.
-6. `Briefing panel`
-   Context, operator prompt, or challenge framing.
-
-The first host implementation may contain placeholders where the current interactives have not yet exposed the needed hooks. That is acceptable.
-
-What is not acceptable is pretending those hooks already exist when they do not.
-
-## Zoom-Level Rule
-
-The current experiment-window build should be treated as a `zoomed-in platform view`.
-
-That means the Lesson 1 shell is not a disposable UI that will later be replaced by a game.
-
-It is the close-up view of the player's experiment platform, bench, or ship-mounted apparatus area.
-
-Later, a room-scale or mission-scale game layer can zoom out to show:
-
-- navigation
+- piloting
+- collection
 - hazards
-- supply collection
 - docking
-- route planning
+- chamber entry
+- mission pressure
 
-Then it can zoom back in to the same experiment-window substrate for the actual scientific procedure.
+It should read the shared host contract, not replace it.
 
-This rule matters because it keeps the present build relevant to the future game:
+### 5. Thinking / Model Layer
 
-- the close-up apparatus remains the source of experimental truth
-- the room-scale layer adds context and challenge
-- neither layer needs to be thrown away
+This layer owns:
 
-The close-up view should therefore be callable as a reusable host surface from the start.
+- evidence arrangement
+- claim/evidence/reasoning construction
+- model correction
+- readable model growth or revision state
 
-That means a future main game should be able to:
+It should consume captured evidence from the chamber rather than inventing a separate truth source.
 
-- open a specific experiment window
-- receive readiness and evidence updates
-- switch experiments
-- return to the room-scale layer
+## Chamber-First Rule
 
-without reimplementing the experiment shell.
+Every experiment window should now be treated as:
+
+`one chamber, one live scene, one evidence source`
+
+That means the shared chamber should not be authored as a farm of separate cards and panels.
+
+### The chamber should read as:
+
+- one continuous interior
+- open at the top when material enters from above
+- apparatus mounted low enough to feel grounded
+- side and bottom walls defining the space
+- actors such as the Eye/camera and DeeDee living in the same scene
+- bottom-rail cue text that supports the scene without covering it
+
+### The chamber should not read as:
+
+- a page of boxed widgets
+- a giant title card above the apparatus
+- a separate "simulation rectangle" floating inside a bigger panel
+- a dashboard where the scene is just one component among many
+
+The chamber is the thing.
+
+The interface should emerge from what is happening inside it.
+
+## Shared Chamber Surfaces
+
+Every experiment chamber should converge on the same reusable surfaces.
+
+### 1. Chamber Interior
+
+The physical scene volume.
+
+This is the background architecture of the chamber, not the experiment-specific process.
+
+### 2. Apparatus Zone
+
+The experiment-specific setup:
+
+- scale
+- beaker
+- tray
+- vial
+- reaction vessel
+- stretch frame
+- heat bay
+
+This is where the phenomenon-specific stage art and motion live.
+
+### 3. Actor Layer
+
+Shared in-world actors such as:
+
+- the Eye / camera
+- DeeDee the data drone
+
+These should feel like chamber inhabitants, not detached UI panels.
+
+### 4. Bottom Status Rail
+
+This is where action guidance belongs.
+
+Rule:
+
+- in-scene hotspot shows `where`
+- bottom rail shows `what`
+
+Do not float directive text in the middle of the apparatus scene.
+
+### 5. Evidence Bridge
+
+The chamber must be able to emit readable evidence and events to the host.
+
+### 6. Thinking Handoff Surface
+
+In `game` mode, the thinking/CER board should live outside the chamber on the game side.
+
+The chamber remains the evidence source.
+
+The thinking board becomes the interpretation surface.
+
+## Shared Phase Contract
+
+Future chambers should be authored against the same high-level phase grammar.
+
+1. `receive`
+   Material or apparatus enters the chamber.
+2. `stage`
+   The setup becomes ready for measurement or process.
+3. `measureBefore`
+   Initial evidence is gathered.
+4. `run`
+   The phenomenon unfolds visibly.
+5. `measureAfter`
+   Final evidence is gathered.
+6. `review`
+   The run is complete and evidence is available.
+7. `think`
+   The player builds the correction from gathered evidence.
+8. `install`
+   The completed correction is committed into the model.
+
+Not every experiment will use every phase in the same way.
+
+But if a future chamber completely ignores this grammar, it should be treated as suspicious.
 
 ## Shared Interaction Grammar
 
-The shell and its child experiments should converge on the same verbs:
+The shared verbs should stay narrow and reusable:
 
-- `drag/drop`
-- `snap into slot`
-- `click/grab`
-- `hold to stabilize`
+- `grab`
+- `place`
 - `Record`
 - `Run`
-- `Capture`
+- `Pour`
+- `Pull`
+- `Heat`
 - `Reset`
 
-Consistency here matters because later model-building, tutorials, and game systems should not have to relearn the control language for each experiment.
+The chamber may expose those through direct click targets or in-world apparatus cues, but the control language should stay stable.
 
-## Standard Host Event Contract
+## Shared Host Contract
 
-All experiment windows should eventually expose host-readable events such as:
+The host contract already has the correct direction.
+
+Registry metadata should continue to live in:
+
+- `packages/lab-host/runtime/experiment-window-registry.js`
+
+Bridge and state plumbing should continue to live in:
+
+- `packages/lab-host/runtime/experiment-window-shell.js`
+
+At minimum, chambers should keep exposing:
+
+- `procedure`
+- `evidence`
+- `status`
+- `events`
+
+And host-readable events such as:
 
 - `onObjectPlaced`
-- `onStepCompleted`
 - `onMeasurementStable`
 - `onMassRecorded`
 - `onRunStarted`
@@ -228,129 +274,120 @@ All experiment windows should eventually expose host-readable events such as:
 - `onMatterEntered`
 - `onEvidenceLocked`
 
-The first host implementation should provide the API and event stream even if only a few lifecycle events are emitted initially.
+If a later feature cannot read from this contract, it is too tightly coupled.
 
-## Standard Evidence Contract
+## Editability By Key Moments
 
-Each completed run should eventually be able to produce at least:
+The repository should now optimize for:
 
-- `experimentId`
-- `setupState`
-- `initialMass`
-- `finalMass`
-- `deltaMass`
-- `measurementStable`
-- `boundaryStatus`
-- `spillFlags`
-- `leakFlags`
-- `escapeFlags`
-- `beforeSnapshotId`
-- `afterSnapshotId`
-- `particleSnapshotIds`
-- `procedureCompletionState`
+`edit the key moments, not the whole chamber`
 
-This is the core bridge to later systems.
+That means a new or revised experiment should primarily be authored by editing:
 
-If a future feature cannot read from this contract, it is probably coupled too tightly to one simulation.
+- registry metadata
+- apparatus configuration
+- experiment-specific hit targets
+- moment timing and choreography
+- evidence source definitions
+- cue copy
+- CER prompt structure
+
+What should not happen:
+
+- each stage reimplements its own chamber shell
+- each stage invents its own evidence storage metaphor
+- each stage invents its own actor language from scratch
+- each experiment becomes a bespoke architecture instead of a bespoke phenomenon
+
+## Responsibility Split
+
+### The chamber host should own
+
+- chamber frame and geometry
+- shared actor slots and actor styling
+- bottom rail and cue placement rules
+- host bridge API
+- mode-specific layout decisions
+- shared transitions into thinking mode
+
+### The stage should own
+
+- apparatus art
+- experiment-specific process animation
+- experiment-specific click targets
+- experiment-specific cue copy
+- emitted evidence values and experiment events
+- phenomenon-specific timing and realism
+
+This is the main boundary that keeps the repo coherent.
+
+## Extraction Targets
+
+Before too many more experiments are deepened, shared behavior should be extracted from the current ice prototype into reusable utilities.
+
+Priority targets:
+
+- hotspot/cue helpers
+- Eye / DeeDee actor choreography helpers
+- evidence token storage and flight helpers
+- thinking-board / CER helpers
+- phase and moment helpers such as receive, measure, run, and install
+
+Those extractions do not all need to happen immediately.
+
+But they do need to become the plan, otherwise the repo will drift back into one-off stage logic.
 
 ## Phase Plan
 
-### Phase 1: Host Shell Foundation
+### Phase 1: Stabilize The Shared Chamber Contract
 
 Deliver:
 
-- project-owned experiment-window shell
-- experiment registry
-- studio launch through the shell
-- visible placeholders for procedure, evidence, and event streams
+- corrected docs
+- stable shared host contract
+- chamber-first layout rules
+- consistent cue grammar
 
-This phase is about structure, not full parity with the final game vision.
-
-### Phase 2: Evidence And Procedure Migration
+### Phase 2: Extract Reusable Chamber Helpers
 
 Deliver:
 
-- shared procedure-state updates
-- shared readout / stability / boundary outputs
-- per-experiment mistake detection and flags
-- before/after evidence capture surfaces
+- shared actor helpers
+- shared hotspot helpers
+- shared evidence token helpers
+- shared thinking-board helpers
 
-This phase makes the shell operational rather than decorative.
+This is the step that turns the ice prototype into a system.
 
-### Phase 3: Revision And Reflection Systems
-
-Deliver:
-
-- observed-versus-modeled comparison
-- evidence breakpoints
-- revision records
-- structured reflection prompts
-
-This phase turns the experiment windows into learning engines rather than just apparatus scenes.
-
-### Phase 4: Game Systems
+### Phase 3: Migrate Remaining Lesson 1 Experiments
 
 Deliver:
 
-- challenge framing
-- progression logic
-- optional scoring and badges
-- AI training interactions
-- tool upgrades and world-state consequences
+- all six experiments on the same chamber grammar
+- shared event/evidence contract across all six
+- shared thinking-board compatibility
 
-This phase sits on top of the experiment-window substrate rather than replacing it.
-
-For the specific one-ship / station-based game direction, read:
-
-- `docs/architecture/ship-station-gameplay-architecture.md`
-
-### Phase 5: MD2D Expansion For Microscopic Play
+### Phase 4: Expand Game Mode
 
 Deliver:
 
-- particle-level scenes where instructionally appropriate
-- atom / molecule manipulation
-- hybrid host overlays for richer effects and controls
-- tighter integration between macro evidence and MD2D model-space behavior
+- ship/world shell reading the same host contract
+- chamber entry and exit
+- evidence-to-thinking transition
+- model correction loop using captured evidence
 
-This phase is where the repo begins turning Lesson 1 foundations into deeper chemistry gameplay.
+### Phase 5: Later Microscopic Expansion
 
-## MD2D Role In This Architecture
+Deliver:
 
-MD2D is not only a future atom playground.
+- microscopic views where instructionally appropriate
+- MD2D-backed model-space interactions
+- shared linkage between macro evidence and model revision
 
-It has two roles:
+## Working Rule
 
-### Now
+The working rule for future work is:
 
-- serve as a macroscopic scene compositor for Lesson 1
-- keep Concord Lab compatibility
-- preserve direct-manipulation and timed process behavior
+`the chamber is reusable, the phenomenon is specific, and the learner edits the model by acting on evidence that came out of the chamber`
 
-### Later
-
-- support microscopic model views
-- support atom and molecule control where the curriculum actually wants it
-- feed the game layer with real model state rather than fake particle overlays
-
-The architecture should therefore preserve MD2D as a model core, even when the host shell becomes richer.
-
-## Working Rule For This Shift
-
-The rule for the next implementation passes is:
-
-`build the experiment window and contract first, then let later systems read from it`
-
-Do not skip to the game wrapper.
-
-Do not skip to AI writing.
-
-Do not skip to atom-control gameplay.
-
-Those become tractable only if the experiment layer is clean, reusable, and event-rich first.
-
-The ship-mode game should therefore be treated as:
-
-- a new host mode that reads the shared contract
-- a station and mission layer on top of the same experiment truth
-- not a replacement for the apparatus layer
+If a draft breaks that rule, it should be redesigned before more polish is added.
