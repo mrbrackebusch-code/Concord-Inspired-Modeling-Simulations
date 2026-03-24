@@ -24,6 +24,12 @@ const ARM_PATH_POINT_LIMIT = 1400;
 const SHIP_HANDOFF_RADIUS = 22;
 const ICE_STAGE_ID = "unit-01/lesson-01/mass-change/ice-to-water";
 const MAX_HULL = 100;
+const HULL_LEAK_PER_SECOND = 1.55;
+const EVIDENCE_SOURCE_POINTS = {
+  scale: { x: 0.55, y: 0.84 },
+  beaker: { x: 0.53, y: 0.58 }
+};
+const ICE_EVIDENCE_REQUIREMENT = 3;
 const FIELD_CHAMBER_ZONE = { x: 11, y: 7, w: 6, h: 3 };
 const TERRAIN_THEME = {
   ground: "sand",
@@ -289,6 +295,8 @@ const experimentWindow = document.getElementById("experiment-window");
 const overlayFrame = document.getElementById("experiment-frame");
 const closeOverlayButton = document.getElementById("close-overlay");
 const hullHud = document.getElementById("hud-hull");
+const hullHudLabel = document.getElementById("hud-hull-label");
+const hullHudFill = document.getElementById("hud-hull-fill");
 const fieldHud = document.getElementById("hud-field");
 const captureButton = document.getElementById("capture-evidence");
 const captureActiveTitle = document.getElementById("capture-active-title");
@@ -299,9 +307,18 @@ const captureDelta = document.getElementById("capture-delta");
 const captureCount = document.getElementById("capture-count");
 const zoneCaptureList = document.getElementById("zone-capture-list");
 const dataDrone = document.getElementById("data-drone");
+const droneTokenBay = document.getElementById("drone-token-bay");
+const droneTokenStash = document.getElementById("drone-token-stash");
 const chamberEye = document.querySelector(".chamber-eye");
 const aiBriefingAssumption = document.getElementById("ai-briefing-assumption");
 const droneBriefingCopy = document.getElementById("drone-briefing-copy");
+const evidenceFlightLayer = document.getElementById("evidence-flight-layer");
+const conclusionCard = document.getElementById("conclusion-card");
+const cerSlotInitial = document.getElementById("cer-slot-initial");
+const cerSlotFinal = document.getElementById("cer-slot-final");
+const cerConclusionSelect = document.getElementById("cer-conclusion-select");
+const cerSubmit = document.getElementById("cer-submit");
+const cerFeedback = document.getElementById("cer-feedback");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
 
 const keys = new Set();
@@ -329,6 +346,7 @@ let currentExperimentId = EXPERIMENTS[0].id;
 let lastAiBriefingSignature = "";
 let lastCaptureHudSignature = "";
 let experimentHostState = null;
+let nextEvidenceTokenId = 1;
 
 const player = {
   x: spawnPoint.x,
@@ -376,7 +394,8 @@ const state = {
   worldLayer: null,
   shipFrameCache: null,
   experimentObjects: [],
-  captures: createCaptureState()
+  captures: createCaptureState(),
+  evidenceProgress: createEvidenceProgress()
 };
 
 initializeZoneCaptureCards();
@@ -424,6 +443,8 @@ const loadState = Promise.all([
   setStatus("Arrow keys fly the ship. Space deploys the arm. WASD steers the claw. Thread through pickups and bring them back cleanly.");
   renderAiBriefing();
   renderCaptureHud();
+  renderEvidenceInventory();
+  renderConclusionCard();
   updateHullHud();
   updateFieldHud({ tier: "clear" });
   invalidateWorldLayer();
@@ -459,6 +480,18 @@ document.addEventListener("keyup", (event) => {
 
 closeOverlayButton.addEventListener("click", closeOverlay);
 captureButton.addEventListener("click", captureEvidence);
+droneTokenStash?.addEventListener("dragstart", handleEvidenceTokenDragStart);
+droneTokenStash?.addEventListener("dragend", handleEvidenceTokenDragEnd);
+conclusionCard?.addEventListener("dragstart", handleEvidenceTokenDragStart);
+conclusionCard?.addEventListener("dragend", handleEvidenceTokenDragEnd);
+cerSlotInitial?.addEventListener("dragover", handleCerSlotDragOver);
+cerSlotInitial?.addEventListener("dragleave", handleCerSlotDragLeave);
+cerSlotInitial?.addEventListener("drop", handleCerSlotDrop);
+cerSlotFinal?.addEventListener("dragover", handleCerSlotDragOver);
+cerSlotFinal?.addEventListener("dragleave", handleCerSlotDragLeave);
+cerSlotFinal?.addEventListener("drop", handleCerSlotDrop);
+cerConclusionSelect?.addEventListener("change", handleCerConclusionChange);
+cerSubmit?.addEventListener("click", submitCerCorrection);
 window.addEventListener("message", handleExperimentHostMessage);
 overlayFrame.addEventListener("load", () => {
   experimentFrameReady = true;
@@ -588,6 +621,11 @@ function update(dtMs) {
     visualTimeMs += dtMs;
   }
 
+  applyMissionHullLeak(dtMs);
+  if (!player.alive) {
+    return;
+  }
+
   const postMoveInfluence = sampleAnomalyInfluence(player.x, player.y);
   updateFieldHud(postMoveInfluence);
   applyAnomalyDamage(postMoveInfluence, dtMs);
@@ -678,6 +716,8 @@ function setCurrentExperiment(experimentId) {
   refreshWorldLayer();
   renderAiBriefing();
   renderCaptureHud();
+  renderEvidenceInventory();
+  renderConclusionCard();
   invalidateActorLayer();
 }
 
@@ -765,6 +805,320 @@ function getActiveExperimentHostState() {
     : null;
 }
 
+function getEvidenceProgress(experimentId = getCurrentExperiment().id) {
+  return experimentId ? state.evidenceProgress[experimentId] || null : null;
+}
+
+function resetEvidenceProgress(experimentId) {
+  const progress = getEvidenceProgress(experimentId);
+  if (!progress) {
+    return;
+  }
+  progress.tokens = [];
+  progress.cer.initialTokenId = null;
+  progress.cer.finalTokenId = null;
+  progress.cer.conclusion = "";
+  progress.cer.ready = false;
+  progress.cer.submitted = false;
+  progress.cer.feedback = "Gather the evidence, then use it here.";
+  renderEvidenceInventory();
+  renderConclusionCard();
+  renderAiBriefing();
+}
+
+function buildEvidenceToken(definition) {
+  return {
+    id: `token-${nextEvidenceTokenId++}`,
+    key: definition.key,
+    kind: definition.kind,
+    source: definition.source,
+    label: definition.label,
+    shortLabel: definition.shortLabel || definition.label,
+    value: typeof definition.value === "number" ? definition.value : null
+  };
+}
+
+function getEvidenceGoalCount(experimentId) {
+  return experimentId === ICE_STAGE_ID ? ICE_EVIDENCE_REQUIREMENT : 0;
+}
+
+function getEvidenceTokenById(experimentId, tokenId) {
+  return getEvidenceProgress(experimentId)?.tokens.find((token) => token.id === tokenId) || null;
+}
+
+function getCerAssignments(progress) {
+  return new Set([progress.cer.initialTokenId, progress.cer.finalTokenId].filter(Boolean));
+}
+
+function captureEvidenceToken(experimentId, definition) {
+  const progress = getEvidenceProgress(experimentId);
+  if (!progress || progress.tokens.some((token) => token.key === definition.key)) {
+    return;
+  }
+
+  const token = buildEvidenceToken(definition);
+  progress.tokens.push(token);
+  if (!progress.cer.ready && progress.tokens.length >= getEvidenceGoalCount(experimentId)) {
+    progress.cer.ready = true;
+    progress.cer.feedback = "The chamber has enough evidence. Drag the mass data into the correction.";
+  }
+
+  spawnEvidenceFlight(token);
+  flashModelCharge();
+  renderEvidenceInventory();
+  renderConclusionCard();
+  renderAiBriefing();
+}
+
+function flashModelCharge() {
+  chamberEye?.classList.add("is-collecting");
+  window.clearTimeout(flashModelCharge.timeoutId);
+  flashModelCharge.timeoutId = window.setTimeout(() => {
+    chamberEye?.classList.remove("is-collecting");
+  }, 620);
+}
+
+function getEvidenceSourcePoint(source) {
+  return EVIDENCE_SOURCE_POINTS[source] || { x: 0.54, y: 0.64 };
+}
+
+function spawnEvidenceFlight(token) {
+  const chamberBody = experimentWindow.querySelector(".experiment-window__body");
+  if (!evidenceFlightLayer || !chamberBody || !dataDrone) {
+    return;
+  }
+
+  const chamberRect = chamberBody.getBoundingClientRect();
+  const droneRect = dataDrone.getBoundingClientRect();
+  if (!chamberRect.width || !chamberRect.height || !droneRect.width || !droneRect.height) {
+    return;
+  }
+
+  const startPoint = getEvidenceSourcePoint(token.source);
+  const startX = chamberRect.width * startPoint.x;
+  const startY = chamberRect.height * startPoint.y;
+  const endX = (droneRect.left - chamberRect.left) + (droneRect.width / 2);
+  const endY = (droneRect.top - chamberRect.top) + (droneRect.height / 2);
+  const node = document.createElement("div");
+  node.className = `evidence-flight${token.kind === "process" ? " evidence-flight--process" : ""}`;
+  node.style.left = `${startX}px`;
+  node.style.top = `${startY}px`;
+  evidenceFlightLayer.appendChild(node);
+
+  node.animate([
+    { transform: "translate(-50%, -50%) scale(0.62)", opacity: 0.18, filter: "blur(4px)" },
+    { transform: "translate(-50%, -50%) scale(1.08)", opacity: 1, filter: "blur(0px)", offset: 0.22 },
+    { transform: `translate(${(endX - startX).toFixed(1)}px, ${(endY - startY).toFixed(1)}px) scale(0.54)`, opacity: 0.18, filter: "blur(2px)" }
+  ], {
+    duration: 980,
+    easing: "cubic-bezier(0.22, 1, 0.36, 1)"
+  }).finished.finally(() => {
+    node.remove();
+  });
+}
+
+function renderEvidenceInventory() {
+  const progress = getEvidenceProgress();
+  const goalCount = getEvidenceGoalCount(getCurrentExperiment().id);
+  const assignments = progress ? getCerAssignments(progress) : new Set();
+  const ratio = goalCount > 0 && progress ? clamp(progress.tokens.length / goalCount, 0, 1) : 0;
+  chamberEye?.style.setProperty("--model-progress", ratio.toFixed(3));
+
+  if (droneTokenBay) {
+    droneTokenBay.replaceChildren();
+    if (progress) {
+      progress.tokens.forEach((token, index) => {
+        const spark = document.createElement("span");
+        spark.className = `data-drone__token-spark${token.kind === "process" ? " data-drone__token-spark--process" : ""}`;
+        spark.style.left = `${10 + (index % 2) * 16 + index * 2}px`;
+        spark.style.top = `${12 + (index * 9) % 20}px`;
+        spark.style.animationDelay = `${index * 0.24}s`;
+        droneTokenBay.appendChild(spark);
+      });
+    }
+  }
+
+  if (droneTokenStash) {
+    droneTokenStash.replaceChildren();
+    const showStash = Boolean(progress && overlayOpen && activeZone?.id === ICE_STAGE_ID && progress.cer.ready && !progress.cer.submitted);
+    droneTokenStash.hidden = !showStash;
+    if (showStash && progress) {
+      const grid = document.createElement("div");
+      grid.className = "data-drone__token-grid";
+
+      progress.tokens.forEach((token) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "data-token-chip";
+        chip.dataset.tokenId = token.id;
+        chip.dataset.tokenKind = token.kind;
+        chip.draggable = true;
+        chip.textContent = token.shortLabel;
+        chip.classList.toggle("is-used", assignments.has(token.id));
+        grid.appendChild(chip);
+      });
+
+      droneTokenStash.appendChild(grid);
+    }
+  }
+}
+
+function renderCerSlot(slotElement, token) {
+  if (!slotElement) {
+    return;
+  }
+  slotElement.replaceChildren();
+  slotElement.classList.toggle("is-filled", Boolean(token));
+  if (!token) {
+    slotElement.textContent = "Drop mass token";
+    return;
+  }
+
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "data-token-chip";
+  chip.dataset.tokenId = token.id;
+  chip.dataset.tokenKind = token.kind;
+  chip.draggable = true;
+  chip.textContent = token.shortLabel;
+  slotElement.appendChild(chip);
+}
+
+function renderConclusionCard() {
+  const experiment = getCurrentExperiment();
+  const progress = getEvidenceProgress(experiment.id);
+  const showCard = Boolean(
+    progress &&
+    overlayOpen &&
+    experiment.id === ICE_STAGE_ID &&
+    progress.cer.ready
+  );
+
+  conclusionCard.hidden = !showCard;
+  if (!showCard || !progress) {
+    return;
+  }
+
+  const initialToken = getEvidenceTokenById(experiment.id, progress.cer.initialTokenId);
+  const finalToken = getEvidenceTokenById(experiment.id, progress.cer.finalTokenId);
+  renderCerSlot(cerSlotInitial, initialToken);
+  renderCerSlot(cerSlotFinal, finalToken);
+  cerConclusionSelect.value = progress.cer.conclusion;
+  cerConclusionSelect.disabled = progress.cer.submitted;
+  cerFeedback.textContent = progress.cer.feedback;
+  cerSubmit.disabled = progress.cer.submitted || !initialToken || !finalToken || !progress.cer.conclusion;
+  cerSubmit.textContent = progress.cer.submitted ? "Correction stored" : "Teach the Eye";
+}
+
+function assignCerToken(slotName, tokenId) {
+  const experiment = getCurrentExperiment();
+  const progress = getEvidenceProgress(experiment.id);
+  const token = getEvidenceTokenById(experiment.id, tokenId);
+  if (!progress || !token || token.kind !== "mass" || progress.cer.submitted) {
+    return;
+  }
+
+  if (slotName === "initial") {
+    progress.cer.initialTokenId = tokenId;
+    if (progress.cer.finalTokenId === tokenId) {
+      progress.cer.finalTokenId = null;
+    }
+  } else if (slotName === "final") {
+    progress.cer.finalTokenId = tokenId;
+    if (progress.cer.initialTokenId === tokenId) {
+      progress.cer.initialTokenId = null;
+    }
+  }
+
+  progress.cer.feedback = "Good. Now decide what the evidence says happened to the total mass.";
+  renderEvidenceInventory();
+  renderConclusionCard();
+}
+
+function handleEvidenceTokenDragStart(event) {
+  const chip = event.target instanceof Element ? event.target.closest(".data-token-chip") : null;
+  if (!chip || !event.dataTransfer) {
+    return;
+  }
+  event.dataTransfer.effectAllowed = "move";
+  event.dataTransfer.setData("text/plain", chip.dataset.tokenId || "");
+}
+
+function handleEvidenceTokenDragEnd() {
+  cerSlotInitial?.classList.remove("is-over");
+  cerSlotFinal?.classList.remove("is-over");
+}
+
+function handleCerSlotDragOver(event) {
+  const slot = event.currentTarget;
+  event.preventDefault();
+  slot.classList.add("is-over");
+}
+
+function handleCerSlotDragLeave(event) {
+  event.currentTarget.classList.remove("is-over");
+}
+
+function handleCerSlotDrop(event) {
+  event.preventDefault();
+  const slot = event.currentTarget;
+  slot.classList.remove("is-over");
+  const tokenId = event.dataTransfer?.getData("text/plain");
+  if (!tokenId) {
+    return;
+  }
+  assignCerToken(slot.dataset.cerSlot, tokenId);
+}
+
+function handleCerConclusionChange() {
+  const progress = getEvidenceProgress();
+  if (!progress) {
+    return;
+  }
+  progress.cer.conclusion = cerConclusionSelect.value;
+  progress.cer.feedback = progress.cer.conclusion
+    ? "Now compare the two mass readings and decide whether the run supports that choice."
+    : "Choose what happened to the total mass.";
+  renderConclusionCard();
+}
+
+function submitCerCorrection() {
+  const experiment = getCurrentExperiment();
+  const progress = getEvidenceProgress(experiment.id);
+  if (!progress || progress.cer.submitted) {
+    return;
+  }
+
+  const initialToken = getEvidenceTokenById(experiment.id, progress.cer.initialTokenId);
+  const finalToken = getEvidenceTokenById(experiment.id, progress.cer.finalTokenId);
+  if (!initialToken || !finalToken || !progress.cer.conclusion) {
+    return;
+  }
+
+  const delta = roundToTwo((finalToken.value || 0) - (initialToken.value || 0));
+  const correct = progress.cer.conclusion === "stay" && Math.abs(delta) < 0.05;
+
+  if (!correct) {
+    progress.cer.feedback = "That claim is not supported by the masses DeeDee stored. Compare the two mass tokens again.";
+    renderConclusionCard();
+    return;
+  }
+
+  progress.cer.submitted = true;
+  progress.cer.feedback = "Correction stored. The chamber has enough evidence to retrain the model from this run.";
+  const record = state.captures[experiment.id];
+  record.count = progress.tokens.length;
+  record.before = initialToken.value;
+  record.after = finalToken.value;
+  record.delta = delta;
+  record.lastCapturedAt = Date.now();
+  setStatus(`${experiment.title} evidence locked in. Press Escape when you are ready to head back out.`);
+  renderEvidenceInventory();
+  renderConclusionCard();
+  renderCaptureHud();
+  renderAiBriefing();
+}
+
 function getIceStageAction() {
   if (!overlayOpen || activeZone?.id !== ICE_STAGE_ID || !experimentFrameReady) {
     return null;
@@ -772,6 +1126,7 @@ function getIceStageAction() {
 
   const hostState = getActiveExperimentHostState();
   const defaultEye = "What happens to <span class=\"briefing-token briefing-token--active\">mass</span> when ice <span class=\"briefing-token\">melts</span>?";
+  const progress = getEvidenceProgress(ICE_STAGE_ID);
 
   if (!hostState) {
     return {
@@ -809,10 +1164,24 @@ function getIceStageAction() {
     };
   }
 
+  if (progress?.cer.submitted) {
+    return {
+      eyeHtml: "Use the run to correct how the model treats <span class=\"briefing-token briefing-token--active\">mass</span> during <span class=\"briefing-token briefing-token--warm\">melting</span>.",
+      droneHtml: "Nice. I saved the evidence and the correction is ready for the model."
+    };
+  }
+
+  if (progress?.cer.ready) {
+    return {
+      eyeHtml: "Use the stored <span class=\"briefing-token briefing-token--active\">mass</span> evidence to decide what happened during <span class=\"briefing-token briefing-token--warm\">melting</span>.",
+      droneHtml: "I saved the data! Drag the mass tokens into the correction so we can teach the Eye."
+    };
+  }
+
   if (procedure[4]?.status === "completed") {
     return {
       eyeHtml: defaultEye,
-      droneHtml: "Evidence collected! We can use this run to help correct the model."
+      droneHtml: "The run is complete. Let&rsquo;s turn the evidence into a correction."
     };
   }
 
@@ -881,6 +1250,7 @@ function renderAiBriefing() {
   const experiment = getCurrentExperiment();
   const deliveredCount = getDeliveredCount(experiment);
   const captureCount = state.captures[experiment.id]?.count || 0;
+  const progress = getEvidenceProgress(experiment.id);
   const hostState = getActiveExperimentHostState();
   const hostSignature = hostState
     ? `${hostState.status?.evidence || "na"}|${(hostState.procedure || []).map((step) => `${step.status}:${step.statusLabel}`).join("/")}`
@@ -892,7 +1262,8 @@ function renderAiBriefing() {
     deliveredCount,
     captureCount,
     isCurrentChamberFocused() ? "focused" : "field",
-    hostSignature
+    hostSignature,
+    progress ? `${progress.tokens.length}:${progress.cer.ready}:${progress.cer.submitted}:${progress.cer.initialTokenId || "na"}:${progress.cer.finalTokenId || "na"}:${progress.cer.conclusion || "na"}` : "progress-na"
   ].join("|");
 
   if (signature === lastAiBriefingSignature) {
@@ -927,6 +1298,31 @@ function handleExperimentHostMessage(event) {
     };
     renderAiBriefing();
     renderCaptureHud();
+    renderEvidenceInventory();
+    renderConclusionCard();
+    return;
+  }
+
+  if (data.type === "rainbow.labHost.event") {
+    handleExperimentHostEvent(data.experimentId, data.payload?.event || null);
+  }
+}
+
+function handleExperimentHostEvent(experimentId, hostEvent) {
+  if (!hostEvent || experimentId !== ICE_STAGE_ID) {
+    return;
+  }
+
+  switch (hostEvent.type) {
+    case "ice.arrivalStarted":
+      resetEvidenceProgress(ICE_STAGE_ID);
+      break;
+    case "ice.evidenceCaptured":
+      captureEvidenceToken(ICE_STAGE_ID, hostEvent.payload || {});
+      break;
+    case "ice.meltCompleted":
+      renderAiBriefing();
+      break;
   }
 }
 
@@ -1201,16 +1597,35 @@ function applyAnomalyDamage(influence, dtMs) {
   applyHullDamage(damage, influence.tier === "lethal" ? "Anomaly shear is stripping the hull" : "Anomaly field is damaging the ship");
 }
 
+function applyMissionHullLeak(dtMs) {
+  if (!shouldMissionHullLeak()) {
+    return;
+  }
+
+  const experiment = getCurrentExperiment();
+  const nextObject = getCurrentRequiredObject(experiment);
+  if (!nextObject && !player.cargoId) {
+    return;
+  }
+
+  applyHullDamage(HULL_LEAK_PER_SECOND * (dtMs / 1000), null);
+}
+
+function shouldMissionHullLeak() {
+  const experiment = getCurrentExperiment();
+  return Boolean(player.alive && !overlayOpen && experiment && !isExperimentReady(experiment));
+}
+
 function applyHullDamage(amount, message) {
   player.hull = clamp(player.hull - amount, 0, MAX_HULL);
   updateHullHud();
 
   if (player.hull <= 0) {
-    killPlayer(`${message}. Hull failure.`);
+    killPlayer(message ? `${message}. Hull failure.` : "Hull failure. The ship broke down before the sample reached the chamber.");
     return;
   }
 
-  if (!activeZone && !overlayOpen && message) {
+  if (!overlayOpen && message) {
     setStatus(`${message}.`);
   }
 }
@@ -1804,6 +2219,8 @@ function openExperiment(experiment) {
   loadExperimentFrame(experiment);
   renderAiBriefing();
   renderCaptureHud();
+  renderEvidenceInventory();
+  renderConclusionCard();
   invalidateActorLayer();
 }
 
@@ -1829,6 +2246,8 @@ function closeOverlay() {
     setStatus("Return to the field. Stage the next investigation in the chamber.");
   }
   renderCaptureHud();
+  renderEvidenceInventory();
+  renderConclusionCard();
   invalidateActorLayer();
 }
 
@@ -1871,6 +2290,8 @@ function respawn() {
   renderAiBriefing();
   setStatus("Ship reset. Deploy the arm with Space and continue the current investigation.");
   renderCaptureHud();
+  renderEvidenceInventory();
+  renderConclusionCard();
   invalidateActorLayer();
 }
 
@@ -2609,6 +3030,25 @@ function createCaptureState() {
   );
 }
 
+function createEvidenceProgress() {
+  return Object.fromEntries(
+    EXPERIMENTS.map((experiment) => [
+      experiment.id,
+      {
+        tokens: [],
+        cer: {
+          initialTokenId: null,
+          finalTokenId: null,
+          conclusion: "",
+          ready: false,
+          submitted: false,
+          feedback: "Gather the evidence, then use it here."
+        }
+      }
+    ])
+  );
+}
+
 function captureEvidence() {
   if (!activeZone || !overlayOpen || !experimentFrameReady || !player.alive) {
     return;
@@ -2992,7 +3432,13 @@ function setStatus(text) {
 }
 
 function updateHullHud() {
-  hullHud.textContent = `Hull ${Math.round(player.hull)}%`;
+  const percent = clamp(player.hull / MAX_HULL, 0, 1);
+  const rounded = Math.round(percent * 100);
+  hullHudLabel.textContent = `Hull ${rounded}%`;
+  hullHudFill.style.transform = `scaleX(${percent.toFixed(3)})`;
+  hullHud.classList.toggle("is-warning", percent <= 0.6 && percent > 0.35);
+  hullHud.classList.toggle("is-danger", percent <= 0.35 && percent > 0.18);
+  hullHud.classList.toggle("is-critical", percent <= 0.18);
 }
 
 function updateFieldHud(influence) {
@@ -3034,6 +3480,9 @@ function shouldContinueAnimating() {
     return true;
   }
   if (player.thrusting) {
+    return true;
+  }
+  if (shouldMissionHullLeak()) {
     return true;
   }
   return Math.abs(player.vx) > MOTION_EPSILON || Math.abs(player.vy) > MOTION_EPSILON;

@@ -316,6 +316,17 @@
       host.setEvidence(patch);
     }
 
+    function emitEvidenceToken(key, kind, source, label, shortLabel, value) {
+      host.emit("ice.evidenceCaptured", {
+        key: key,
+        kind: kind,
+        source: source,
+        label: label,
+        shortLabel: shortLabel,
+        value: value
+      });
+    }
+
     function pulseScale() {
       gsap.fromTo([refs.tray, refs.scaleBody], { y: 0 }, {
         y: 7,
@@ -593,7 +604,7 @@
       setClock(MELT_SECONDS);
       setScaleReadout(MASS_VALUE);
       setProcedure("done");
-      setStatus("Final mass recorded. The form changed from hard ice to liquid water, but the measured mass stayed the same.");
+      setStatus("Final mass recorded. Use the two mass readings to decide what changed and what stayed the same.");
       setFinalEvidence();
       host.setStatus({
         interactive: "Custom stage ready",
@@ -660,6 +671,7 @@
           });
           host.setStatus({ evidence: "Awaiting final measurement" });
           host.emit("ice.meltCompleted", { durationSeconds: MELT_SECONDS });
+          emitEvidenceToken("ice-process", "process", "beaker", "Ice melted into liquid water", "melted");
           syncButtons();
         }
       });
@@ -731,6 +743,7 @@
       animateMass(0, MASS_VALUE, 1.6, function() {
         setMeasuredEvidence();
         host.setStatus({ evidence: "Initial evidence recorded" });
+        emitEvidenceToken("ice-mass-before", "mass", "scale", formatMass(MASS_VALUE), formatMass(MASS_VALUE), MASS_VALUE);
       });
     }
 
@@ -757,13 +770,14 @@
       state.afterMeasured = true;
       syncButtons();
       setProcedure("done");
-      setStatus("Final mass recorded. The ice became liquid water, but the measured mass stayed the same.");
+      setStatus("Final mass recorded. Compare the first and last mass readings before you decide what happened.");
       host.emit("ice.massRecordedAfter", { mass: MASS_VALUE });
       host.setStatus({ evidence: "Recording final mass" });
       pulseScale();
       animateMass(MASS_VALUE - 0.08, MASS_VALUE, 1.35, function() {
         setFinalEvidence();
         host.setStatus({ evidence: "Final evidence recorded" });
+        emitEvidenceToken("ice-mass-after", "mass", "scale", formatMass(MASS_VALUE), formatMass(MASS_VALUE), MASS_VALUE);
         host.lockEvidence();
       });
     }

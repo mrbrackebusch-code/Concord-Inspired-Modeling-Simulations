@@ -13,7 +13,12 @@
         <p><strong>Ship</strong> arrow keys</p>
         <p><strong>Arm</strong> space + WASD steer</p>
         <p><strong>Enter</strong> begin ready experiment</p>
-        <p id="hud-hull">Hull 100%</p>
+        <div id="hud-hull" class="hud-meter" aria-live="polite">
+          <span id="hud-hull-label" class="hud-meter__label">Hull 100%</span>
+          <span class="hud-meter__track">
+            <span id="hud-hull-fill" class="hud-meter__fill"></span>
+          </span>
+        </div>
         <p id="hud-field">Field clear</p>
       </header>
 
@@ -49,6 +54,7 @@
             <div id="data-drone" class="data-drone" aria-label="Deedee, data drone">
               <div class="data-drone__core"></div>
               <div class="data-drone__ring"></div>
+              <div id="drone-token-bay" class="data-drone__token-bay" aria-hidden="true"></div>
               <div class="data-drone__eyes" aria-hidden="true">
                 <span class="data-drone__eye"></span>
                 <span class="data-drone__eye"></span>
@@ -59,7 +65,9 @@
                 <p class="data-drone__name">Deedee</p>
                 <p id="drone-briefing-copy" class="data-drone__text">I think there&apos;s ice outside somewhere...</p>
               </div>
+              <div id="drone-token-stash" class="data-drone__token-stash" hidden></div>
             </div>
+            <div id="evidence-flight-layer" class="evidence-flight-layer" aria-hidden="true"></div>
             <div id="experiment-placeholder" class="experiment-placeholder">
               <div class="experiment-placeholder__copy">
                 <p class="experiment-placeholder__label">Chamber Standby</p>
@@ -76,6 +84,29 @@
               ></iframe>
             </div>
             <button id="close-overlay" class="close-button" type="button" aria-label="Hide live chamber" hidden>×</button>
+            <section id="conclusion-card" class="conclusion-card" hidden aria-live="polite">
+              <p class="conclusion-card__eyebrow">Teach the model</p>
+              <p class="conclusion-card__lead">Use DeeDee&apos;s saved data to finish the correction.</p>
+              <div class="conclusion-card__row">
+                <span class="conclusion-card__label">Initial mass was:</span>
+                <div id="cer-slot-initial" class="cer-slot" data-cer-slot="initial">Drop mass token</div>
+              </div>
+              <div class="conclusion-card__row">
+                <span class="conclusion-card__label">Final mass was:</span>
+                <div id="cer-slot-final" class="cer-slot" data-cer-slot="final">Drop mass token</div>
+              </div>
+              <label class="conclusion-card__row conclusion-card__row--select" for="cer-conclusion-select">
+                <span class="conclusion-card__label">Melting ice caused the total mass to</span>
+                <select id="cer-conclusion-select" class="conclusion-card__select">
+                  <option value="">choose...</option>
+                  <option value="increase">increase</option>
+                  <option value="decrease">decrease</option>
+                  <option value="stay">stay the same</option>
+                </select>
+              </label>
+              <button id="cer-submit" class="conclusion-card__submit" type="button" disabled>Teach the Eye</button>
+              <p id="cer-feedback" class="conclusion-card__feedback">Gather the evidence, then use it here.</p>
+            </section>
             <button id="capture-evidence" class="capture-button capture-button--floating" type="button" hidden>Capture Evidence</button>
           </div>
           <section class="experiment-hud" hidden>
