@@ -10,6 +10,7 @@ const SHIP_SCALE = 0.17;
 const SHIP_FRAME_MS = 120;
 const SHIP_DIRECTIONS = ["North", "East", "South", "West"];
 const ARM_HEAD_SPEED = 180;
+const ARM_TURN_RESPONSE = 10;
 const ARM_MAX_REACH = 132;
 const ARM_SEGMENT_SPACING = 15;
 const ARM_SEGMENT_COUNT = 8;
@@ -343,7 +344,8 @@ const arm = {
   carryingId: null,
   headWorldX: spawnPoint.x,
   headWorldY: spawnPoint.y,
-  aimAngle: 0
+  aimAngle: 0,
+  targetAngle: 0
 };
 
 const state = {
@@ -411,7 +413,7 @@ const loadState = Promise.all([
   state.shipFrameCache = buildShipFrameCache();
   assetsReady = true;
   activeZone = getCurrentExperiment();
-  setStatus("Arrow keys fly the ship. Space deploys the arm. WASD moves the arm head.");
+  setStatus("Arrow keys fly the ship. Space deploys the arm. WASD steers the claw.");
   renderAiBriefing();
   renderCaptureHud();
   updateHullHud();
@@ -1824,11 +1826,17 @@ function toggleArmDeployment() {
   if (!assetsReady || overlayOpen || !player.alive) {
     return;
   }
+  const wasDeployed = arm.deployed;
   arm.deployed = !arm.deployed;
   if (!arm.deployed) {
     setStatus("Arm retracting.");
   } else {
-    setStatus("Arm deployed. Guide the claw with WASD.");
+    if (!wasDeployed) {
+      const launchAngle = getShipFacingAngle();
+      arm.aimAngle = launchAngle;
+      arm.targetAngle = launchAngle;
+    }
+    setStatus("Arm deployed. Steer the claw with WASD.");
   }
   renderAiBriefing();
   invalidateActorLayer();
@@ -1850,6 +1858,10 @@ function getArmRestLocal() {
   };
 }
 
+function getShipFacingAngle() {
+  return player.angle - Math.PI / 2;
+}
+
 function resetArmState(force = false) {
   arm.deployed = false;
   arm.extension = 0;
@@ -1860,7 +1872,8 @@ function resetArmState(force = false) {
   const mount = assetsReady ? getArmMountWorld() : { x: spawnPoint.x, y: spawnPoint.y };
   arm.headWorldX = mount.x + rest.x;
   arm.headWorldY = mount.y + rest.y;
-  arm.aimAngle = 0;
+  arm.aimAngle = getShipFacingAngle();
+  arm.targetAngle = arm.aimAngle;
   if (force) {
     arm.carryingId = null;
   }
@@ -1871,17 +1884,24 @@ function updateArm(dtMs) {
   const previousExtension = arm.extension;
   const previousHeadX = arm.headLocalX;
   const previousHeadY = arm.headLocalY;
+  const previousAimAngle = arm.aimAngle;
   const targetExtension = arm.deployed && !overlayOpen && player.alive ? 1 : 0;
   arm.extension = approach(arm.extension, targetExtension, dt * ARM_EXTEND_SPEED);
 
   const rest = getArmRestLocal();
   const input = getArmInputVector();
   if (arm.deployed && arm.extension > 0.1) {
-    arm.headLocalX += input.x * ARM_HEAD_SPEED * dt;
-    arm.headLocalY += input.y * ARM_HEAD_SPEED * dt;
+    if (input.mag > 0) {
+      arm.targetAngle = Math.atan2(input.y, input.x);
+    }
+    arm.aimAngle = easeAngle(arm.aimAngle, arm.targetAngle, clamp(dt * ARM_TURN_RESPONSE, 0, 1));
+    arm.headLocalX += Math.cos(arm.aimAngle) * ARM_HEAD_SPEED * dt;
+    arm.headLocalY += Math.sin(arm.aimAngle) * ARM_HEAD_SPEED * dt;
   } else {
     arm.headLocalX = approach(arm.headLocalX, rest.x, dt * 220);
     arm.headLocalY = approach(arm.headLocalY, rest.y, dt * 220);
+    arm.targetAngle = getShipFacingAngle();
+    arm.aimAngle = easeAngle(arm.aimAngle, arm.targetAngle, clamp(dt * 8, 0, 1));
   }
 
   const offsetX = arm.headLocalX - rest.x;
@@ -1904,7 +1924,9 @@ function updateArm(dtMs) {
   const mount = getArmMountWorld();
   arm.headWorldX = mount.x + arm.headLocalX;
   arm.headWorldY = mount.y + arm.headLocalY;
-  arm.aimAngle = Math.atan2(arm.headLocalY - rest.y, arm.headLocalX - rest.x);
+  if (Math.hypot(arm.headLocalX - rest.x, arm.headLocalY - rest.y) > 0.01) {
+    arm.aimAngle = Math.atan2(arm.headLocalY - rest.y, arm.headLocalX - rest.x);
+  }
 
   if (arm.extension > 0.22) {
     if (circleIntersectsAnyRockMask(arm.headWorldX, arm.headWorldY, ARM_HEAD_RADIUS)) {
@@ -1933,7 +1955,8 @@ function updateArm(dtMs) {
   return (
     Math.abs(previousExtension - arm.extension) > 0.0001 ||
     Math.abs(previousHeadX - arm.headLocalX) > 0.001 ||
-    Math.abs(previousHeadY - arm.headLocalY) > 0.001
+    Math.abs(previousHeadY - arm.headLocalY) > 0.001 ||
+    Math.abs(shortestAngleDelta(previousAimAngle, arm.aimAngle)) > 0.001
   );
 }
 
@@ -2505,7 +2528,7 @@ function setExplorationStatus() {
   if (!overlayOpen && activeZone) {
     setStatus(describeExperimentStation(activeZone));
   } else if (!overlayOpen) {
-    setStatus("Arrow keys fly the ship. Space deploys the arm. WASD moves the arm head.");
+    setStatus("Arrow keys fly the ship. Space deploys the arm. WASD steers the claw.");
   }
 }
 
