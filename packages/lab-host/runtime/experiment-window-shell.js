@@ -742,6 +742,11 @@
       case "rainbow.labHost.requestState":
         scheduleStateDispatch("parentRequest");
         break;
+      case "rainbow.labHost.command":
+        window.dispatchEvent(new CustomEvent("rainbow.labHost.command", {
+          detail: payload
+        }));
+        break;
       case "rainbow.labHost.focusStage":
         if (document.getElementById("interactive-container")) {
           document.getElementById("interactive-container").focus();

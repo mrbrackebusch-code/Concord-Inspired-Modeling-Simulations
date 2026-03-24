@@ -63,6 +63,19 @@
       '        </defs>',
       '        <rect x="160" y="74" width="680" height="648" rx="42" fill="#f9f3e7"/>',
       '        <path d="M196 176C248 122 333 98 434 104C538 110 626 145 692 128C730 118 760 102 790 78" fill="none" stroke="#fffdf6" stroke-opacity="0.88" stroke-width="26" stroke-linecap="round"/>',
+      '        <g id="ice-intake-beam" opacity="0">',
+      '          <path d="M500 76L500 340" fill="none" stroke="#d8f7ff" stroke-opacity="0.82" stroke-width="18" stroke-linecap="round"/>',
+      '          <path d="M474 82L474 330" fill="none" stroke="#ecfbff" stroke-opacity="0.42" stroke-width="8" stroke-linecap="round"/>',
+      '          <path d="M526 82L526 330" fill="none" stroke="#ecfbff" stroke-opacity="0.42" stroke-width="8" stroke-linecap="round"/>',
+      '          <ellipse cx="500" cy="330" rx="68" ry="16" fill="#e8fbff" fill-opacity="0.22"/>',
+      '        </g>',
+      '        <g id="ice-intake-capsule" opacity="0">',
+      '          <rect x="452" y="106" width="96" height="48" rx="24" fill="#fbfdff" fill-opacity="0.96" stroke="#9cb4bf" stroke-width="3"/>',
+      '          <rect x="466" y="116" width="68" height="28" rx="14" fill="#d8f1ff" fill-opacity="0.92"/>',
+      '          <path d="M486 129L500 120L514 129L500 138Z" fill="#ffffff" stroke="#88bede" stroke-width="2"/>',
+      '          <path d="M486 129V145L500 153V138Z" fill="#e6f6fe" stroke="#88bede" stroke-width="1.6"/>',
+      '          <path d="M514 129V145L500 153V138Z" fill="#c9e8f8" stroke="#88bede" stroke-width="1.6"/>',
+      '        </g>',
       '        <ellipse cx="500" cy="700" rx="190" ry="30" fill="#7d98aa" fill-opacity="0.14"/>',
       '        <g id="ice-scale-assembly">',
       '          <ellipse cx="500" cy="720" rx="176" ry="20" fill="#6d6d71" fill-opacity="0.22"/>',
@@ -159,6 +172,8 @@
     var gsap = window.gsap;
     var refs = {};
     var state = {
+      arrivalRunning: false,
+      arrivalTimeline: null,
       beforeMeasured: false,
       meltRunning: false,
       meltCompleted: false,
@@ -208,6 +223,8 @@
     refs.runoffA = container.querySelector("#ice-runoff-a");
     refs.runoffB = container.querySelector("#ice-runoff-b");
     refs.runoffC = container.querySelector("#ice-runoff-c");
+    refs.intakeBeam = container.querySelector("#ice-intake-beam");
+    refs.intakeCapsule = container.querySelector("#ice-intake-capsule");
 
     function setStatus(text) {
       refs.status.textContent = text;
@@ -226,7 +243,15 @@
     function setProcedure(phase) {
       var statuses;
 
-      if (phase === "ready") {
+      if (phase === "receiving") {
+        statuses = [
+          ["active", "Receiving ice sample"],
+          ["locked", "Measure after the sample arrives"],
+          ["locked", "Melting unlocks after weighing"],
+          ["planned", "Watch the melting process"],
+          ["planned", "Measure the final mass"]
+        ];
+      } else if (phase === "ready") {
         statuses = [
           ["completed", "Ice sample staged"],
           ["active", "Measure the initial mass"],
@@ -274,9 +299,9 @@
     }
 
     function syncButtons() {
-      refs.before.disabled = state.beforeMeasured || state.meltRunning;
-      refs.start.disabled = !state.beforeMeasured || state.meltRunning || state.meltCompleted;
-      refs.after.disabled = !state.meltCompleted || state.afterMeasured || state.meltRunning;
+      refs.before.disabled = state.arrivalRunning || state.beforeMeasured || state.meltRunning;
+      refs.start.disabled = state.arrivalRunning || !state.beforeMeasured || state.meltRunning || state.meltCompleted;
+      refs.after.disabled = state.arrivalRunning || !state.meltCompleted || state.afterMeasured || state.meltRunning;
       refs.reset.disabled = state.meltRunning;
     }
 
@@ -350,6 +375,86 @@
       [refs.runoffA, refs.runoffB, refs.runoffC].forEach(function(node) {
         gsap.set(node, { attr: { "stroke-opacity": 0 } });
       });
+      gsap.set(refs.intakeBeam, { opacity: 0, scaleY: 0.34, transformOrigin: "50% 0%" });
+      gsap.set(refs.intakeCapsule, { opacity: 0, x: 0, y: 0, scale: 1, transformOrigin: "50% 50%" });
+    }
+
+    function setIntroEmptyState() {
+      gsap.set(refs.cubeA, { opacity: 0, x: 0, y: 0, scale: 1, rotation: 0 });
+      gsap.set(refs.cubeB, { opacity: 0, x: 0, y: 0, scale: 1, rotation: 0 });
+      gsap.set(refs.cubeC, { opacity: 0, x: 0, y: 0, scale: 1, rotation: 0 });
+      gsap.set(refs.intakeCapsule, { opacity: 0, y: -220, scale: 0.86 });
+    }
+
+    function playArrivalSequence() {
+      var tl = gsap.timeline({
+        defaults: { ease: "sine.inOut" },
+        onComplete: function() {
+          state.arrivalTimeline = null;
+          state.arrivalRunning = false;
+          setProcedure("ready");
+          setStatus("Ice sample received. Measure the starting mass.");
+          host.setStatus({ evidence: "Awaiting first measurement" });
+          host.emit("ice.arrivalComplete", { experimentId: STAGE_ID });
+          host.emit("ice.stageReady", { experimentId: STAGE_ID });
+          syncButtons();
+        }
+      });
+
+      tl.to(refs.intakeBeam, {
+        opacity: 1,
+        scaleY: 1,
+        duration: 0.26
+      }, 0);
+      tl.to(refs.intakeBeam, {
+        opacity: 0.28,
+        duration: 0.22,
+        repeat: 3,
+        yoyo: true
+      }, 0.18);
+      tl.to(refs.intakeCapsule, {
+        opacity: 1,
+        duration: 0.12
+      }, 0.06);
+      tl.to(refs.intakeCapsule, {
+        y: 238,
+        scale: 1,
+        duration: 1.18,
+        ease: "power2.in"
+      }, 0.1);
+      tl.to(refs.intakeCapsule, {
+        opacity: 0,
+        scale: 1.08,
+        duration: 0.16,
+        ease: "power1.out"
+      }, 1.18);
+      tl.to([refs.cubeA, refs.cubeB, refs.cubeC], {
+        opacity: 1,
+        duration: 0.18,
+        stagger: 0.04
+      }, 1.18);
+      tl.fromTo(refs.beaker, {
+        y: -34
+      }, {
+        y: -20,
+        duration: 0.2,
+        yoyo: true,
+        repeat: 1,
+        ease: "power2.out"
+      }, 1.1);
+      tl.fromTo(refs.waterSurface, {
+        attr: { cy: 444, rx: 126, ry: 18 }
+      }, {
+        attr: { cy: 438, rx: 132, ry: 22 },
+        duration: 0.36,
+        ease: "power2.out"
+      }, 1.14);
+      tl.to(refs.intakeBeam, {
+        opacity: 0,
+        duration: 0.24
+      }, 1.24);
+      state.arrivalTimeline = tl;
+      return tl;
     }
 
     function setReadyEvidence() {
@@ -407,6 +512,11 @@
     }
 
     function applyBeforeMeasuredState() {
+      if (state.arrivalTimeline) {
+        state.arrivalTimeline.kill();
+        state.arrivalTimeline = null;
+      }
+      state.arrivalRunning = false;
       state.beforeMeasured = true;
       state.meltRunning = false;
       state.meltCompleted = false;
@@ -473,6 +583,10 @@
     }
 
     function resetScene() {
+      if (state.arrivalTimeline) {
+        state.arrivalTimeline.kill();
+        state.arrivalTimeline = null;
+      }
       if (state.massTween) {
         state.massTween.kill();
         state.massTween = null;
@@ -483,6 +597,7 @@
         state.meltTimeline = null;
       }
 
+      state.arrivalRunning = true;
       state.beforeMeasured = false;
       state.meltRunning = false;
       state.meltCompleted = false;
@@ -490,16 +605,18 @@
       setClock(0);
       setScaleReadout(0);
       resetVisuals();
-      setProcedure("ready");
-      setStatus("Weigh the setup to establish the starting mass.");
+      setIntroEmptyState();
+      setProcedure("receiving");
+      setStatus("Receiving the ice sample into the chamber.");
       syncButtons();
       host.setStatus({
         interactive: "Custom stage ready",
         model: "Ice animation stage",
-        evidence: "Awaiting first measurement"
+        evidence: "Receiving sample"
       });
       setReadyEvidence();
-      host.emit("ice.stageReady", { experimentId: STAGE_ID });
+      host.emit("ice.arrivalStarted", { experimentId: STAGE_ID });
+      playArrivalSequence();
     }
 
     function buildMeltTimeline() {
@@ -578,7 +695,7 @@
     }
 
     function handleMeasureBefore() {
-      if (state.beforeMeasured || state.meltRunning) {
+      if (state.arrivalRunning || state.beforeMeasured || state.meltRunning) {
         return;
       }
 
@@ -596,7 +713,7 @@
     }
 
     function handleStartMelt() {
-      if (!state.beforeMeasured || state.meltRunning || state.meltCompleted) {
+      if (state.arrivalRunning || !state.beforeMeasured || state.meltRunning || state.meltCompleted) {
         return;
       }
 
@@ -611,7 +728,7 @@
     }
 
     function handleMeasureAfter() {
-      if (!state.meltCompleted || state.afterMeasured || state.meltRunning) {
+      if (state.arrivalRunning || !state.meltCompleted || state.afterMeasured || state.meltRunning) {
         return;
       }
 
@@ -628,10 +745,30 @@
       });
     }
 
+    function handleHostCommand(event) {
+      var detail = event && event.detail ? event.detail : {};
+
+      switch (detail.command) {
+        case "ice.measureBefore":
+          handleMeasureBefore();
+          break;
+        case "ice.startMelt":
+          handleStartMelt();
+          break;
+        case "ice.measureAfter":
+          handleMeasureAfter();
+          break;
+        case "ice.reset":
+          resetScene();
+          break;
+      }
+    }
+
     refs.before.addEventListener("click", handleMeasureBefore);
     refs.start.addEventListener("click", handleStartMelt);
     refs.after.addEventListener("click", handleMeasureAfter);
     refs.reset.addEventListener("click", resetScene);
+    window.addEventListener("rainbow.labHost.command", handleHostCommand);
 
     resetScene();
 
@@ -649,6 +786,9 @@
     }());
 
     return function dispose() {
+      if (state.arrivalTimeline) {
+        state.arrivalTimeline.kill();
+      }
       if (state.massTween) {
         state.massTween.kill();
       }
@@ -659,6 +799,7 @@
       refs.start.removeEventListener("click", handleStartMelt);
       refs.after.removeEventListener("click", handleMeasureAfter);
       refs.reset.removeEventListener("click", resetScene);
+      window.removeEventListener("rainbow.labHost.command", handleHostCommand);
       container.innerHTML = "";
     };
   }

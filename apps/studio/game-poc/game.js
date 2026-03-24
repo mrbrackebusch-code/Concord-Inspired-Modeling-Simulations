@@ -22,6 +22,7 @@ const ARM_CARRY_LAG_SEGMENTS = 2;
 const ARM_LAUNCH_ANGLE = Math.PI / 2;
 const ARM_PATH_POINT_LIMIT = 1400;
 const SHIP_HANDOFF_RADIUS = 22;
+const ICE_STAGE_ID = "unit-01/lesson-01/mass-change/ice-to-water";
 const MAX_HULL = 100;
 const FIELD_CHAMBER_ZONE = { x: 11, y: 7, w: 6, h: 3 };
 const TERRAIN_THEME = {
@@ -326,6 +327,8 @@ let spaceHeld = false;
 let currentExperimentId = EXPERIMENTS[0].id;
 let lastAiBriefingSignature = "";
 let lastCaptureHudSignature = "";
+let experimentHostState = null;
+let droneMotionTimer = 0;
 
 const player = {
   x: spawnPoint.x,
@@ -456,6 +459,16 @@ document.addEventListener("keyup", (event) => {
 
 closeOverlayButton.addEventListener("click", closeOverlay);
 captureButton.addEventListener("click", captureEvidence);
+dataDrone?.setAttribute("role", "button");
+dataDrone?.setAttribute("tabindex", "0");
+dataDrone?.addEventListener("click", handleDataDroneClick);
+dataDrone?.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" || event.key === " ") {
+    event.preventDefault();
+    handleDataDroneClick();
+  }
+});
+window.addEventListener("message", handleExperimentHostMessage);
 overlayFrame.addEventListener("load", () => {
   experimentFrameReady = true;
   experimentWindow.classList.add("is-loaded");
@@ -748,6 +761,90 @@ function getInvestigationQuestion(experiment) {
   return questions[experiment.id] || "What happens to mass during this change?";
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function getActiveExperimentHostState() {
+  return experimentHostState && activeZone && experimentHostState.experimentId === activeZone.id
+    ? experimentHostState.state
+    : null;
+}
+
+function getIceStageAction() {
+  if (!overlayOpen || activeZone?.id !== ICE_STAGE_ID || !experimentFrameReady) {
+    return null;
+  }
+
+  const hostState = getActiveExperimentHostState();
+  const defaultEye = "What happens to <span class=\"briefing-token briefing-token--active\">mass</span> when ice <span class=\"briefing-token\">melts</span>?";
+
+  if (!hostState) {
+    return {
+      eyeHtml: defaultEye,
+      droneHtml: "Hold on... I&rsquo;m syncing the chamber.",
+      command: null,
+      mode: null
+    };
+  }
+
+  if ((hostState.status?.evidence || "") === "Receiving sample") {
+    return {
+      eyeHtml: defaultEye,
+      droneHtml: "Whoo-whoo-whoo... guiding the ice down into the chamber.",
+      command: null,
+      mode: null
+    };
+  }
+
+  const procedure = hostState.procedure || [];
+  if (procedure[1]?.status === "active") {
+    return {
+      eyeHtml: "What happens to <span class=\"briefing-token briefing-token--active\">mass</span> when ice melts?",
+      droneHtml: "I can help with <span class=\"briefing-token briefing-token--active\">weighing</span> the setup. Click me and I&rsquo;ll scan it.",
+      command: "ice.measureBefore",
+      mode: "scan"
+    };
+  }
+
+  if (procedure[2]?.status === "active") {
+    return {
+      eyeHtml: "What happens to mass when ice <span class=\"briefing-token briefing-token--warm\">melts</span>?",
+      droneHtml: "I can bring the <span class=\"briefing-token briefing-token--warm\">heat</span>. Click me and I&rsquo;ll start the melt.",
+      command: "ice.startMelt",
+      mode: "heat"
+    };
+  }
+
+  if (procedure[4]?.status === "active") {
+    return {
+      eyeHtml: "What happens to <span class=\"briefing-token briefing-token--active\">mass</span> after the ice has <span class=\"briefing-token briefing-token--warm\">melted</span>?",
+      droneHtml: "Want one more <span class=\"briefing-token briefing-token--active\">mass</span> reading? Click me and I&rsquo;ll scan the final setup.",
+      command: "ice.measureAfter",
+      mode: "scan"
+    };
+  }
+
+  if (procedure[4]?.status === "completed") {
+    return {
+      eyeHtml: defaultEye,
+      droneHtml: "Evidence collected! We can use this run to help correct the model.",
+      command: null,
+      mode: null
+    };
+  }
+
+  return {
+    eyeHtml: defaultEye,
+    droneHtml: "I&rsquo;m watching the chamber. Let&rsquo;s keep this run clean.",
+    command: null,
+    mode: null
+  };
+}
+
 function getDronePrompt(experiment) {
   const nextObject = getCurrentRequiredObject(experiment);
   const experimentKey = experiment.id;
@@ -787,17 +884,38 @@ function getDronePrompt(experiment) {
   return "We still need the setup pieces.";
 }
 
+function getInvestigationQuestionMarkup(experiment) {
+  const iceAction = getIceStageAction();
+  if (iceAction) {
+    return iceAction.eyeHtml;
+  }
+  return escapeHtml(getInvestigationQuestion(experiment));
+}
+
+function getDronePromptMarkup(experiment) {
+  const iceAction = getIceStageAction();
+  if (iceAction) {
+    return iceAction.droneHtml;
+  }
+  return escapeHtml(getDronePrompt(experiment));
+}
+
 function renderAiBriefing() {
   const experiment = getCurrentExperiment();
   const deliveredCount = getDeliveredCount(experiment);
   const captureCount = state.captures[experiment.id]?.count || 0;
+  const hostState = getActiveExperimentHostState();
+  const hostSignature = hostState
+    ? `${hostState.status?.evidence || "na"}|${(hostState.procedure || []).map((step) => `${step.status}:${step.statusLabel}`).join("/")}`
+    : "host-na";
   const signature = [
     experiment.id,
     overlayOpen ? "open" : "closed",
     experimentFrameReady ? "frame-ready" : "frame-pending",
     deliveredCount,
     captureCount,
-    isCurrentChamberFocused() ? "focused" : "field"
+    isCurrentChamberFocused() ? "focused" : "field",
+    hostSignature
   ].join("|");
 
   if (signature === lastAiBriefingSignature) {
@@ -805,10 +923,63 @@ function renderAiBriefing() {
   }
   lastAiBriefingSignature = signature;
 
-  aiBriefingAssumption.textContent = getInvestigationQuestion(experiment);
-  droneBriefingCopy.textContent = getDronePrompt(experiment);
-  dataDrone?.classList.toggle("is-thinking", Boolean(droneBriefingCopy.textContent.trim()));
+  aiBriefingAssumption.innerHTML = getInvestigationQuestionMarkup(experiment);
+  droneBriefingCopy.innerHTML = getDronePromptMarkup(experiment);
+  const iceAction = getIceStageAction();
+  dataDrone?.classList.toggle("is-thinking", Boolean(droneBriefingCopy.textContent.trim()) && !iceAction?.command);
+  dataDrone?.classList.toggle("is-actionable", Boolean(iceAction?.command));
   experimentPlaceholderText.textContent = "Chamber optics waking up...";
+}
+
+function handleExperimentHostMessage(event) {
+  const data = event.data;
+  if (!data || data.source !== "rainbow-lab-host") {
+    return;
+  }
+
+  if (data.type === "rainbow.labHost.ready" || data.type === "rainbow.labHost.state") {
+    experimentHostState = {
+      experimentId: data.experimentId,
+      state: data.payload?.state || null
+    };
+    renderAiBriefing();
+    renderCaptureHud();
+  }
+}
+
+function sendExperimentHostCommand(command) {
+  if (!overlayFrame.contentWindow || !command) {
+    return;
+  }
+
+  overlayFrame.contentWindow.postMessage({
+    source: "rainbow-game-host",
+    type: "rainbow.labHost.command",
+    payload: { command }
+  }, "*");
+}
+
+function pulseDroneMotion(mode) {
+  if (!dataDrone) {
+    return;
+  }
+
+  window.clearTimeout(droneMotionTimer);
+  dataDrone.classList.remove("is-scanning", "is-heating");
+  dataDrone.classList.add(mode === "heat" ? "is-heating" : "is-scanning");
+  droneMotionTimer = window.setTimeout(() => {
+    dataDrone.classList.remove("is-scanning", "is-heating");
+  }, mode === "heat" ? 1500 : 1200);
+}
+
+function handleDataDroneClick() {
+  const action = getIceStageAction();
+  if (!action?.command) {
+    return;
+  }
+
+  pulseDroneMotion(action.mode);
+  sendExperimentHostCommand(action.command);
 }
 
 function buildBackgroundLayer() {
@@ -1947,6 +2118,20 @@ function updateArm(dtMs) {
   arm.headWorldX = mount.x + arm.headLocalX;
   arm.headWorldY = mount.y + arm.headLocalY;
 
+  if (arm.carryingId) {
+    const carried = getCarriedObject();
+    if (carried) {
+      const carryPoint = getArmCarryPoint();
+      carried.x = carryPoint.x;
+      carried.y = carryPoint.y;
+      if (tryHandoffArmToShip(carried)) {
+        return true;
+      }
+    } else {
+      arm.carryingId = null;
+    }
+  }
+
   if (arm.extension > 0.22) {
     if (
       arm.headWorldX < ARM_HEAD_RADIUS ||
@@ -1967,17 +2152,7 @@ function updateArm(dtMs) {
     }
   }
 
-  if (arm.carryingId) {
-    const carried = getCarriedObject();
-    if (carried) {
-      const carryPoint = getArmCarryPoint();
-      carried.x = carryPoint.x;
-      carried.y = carryPoint.y;
-      tryHandoffArmToShip(carried);
-    } else {
-      arm.carryingId = null;
-    }
-  } else if (arm.deployed && arm.extension > 0.2) {
+  if (!arm.carryingId && arm.deployed && arm.extension > 0.2) {
     autoLatchNearestObject();
   }
 
@@ -2158,12 +2333,14 @@ function updateShipCargo() {
 }
 
 function tryHandoffArmToShip(object) {
+  const anchor = getShipCargoAnchor();
+  const objectDistance = Math.hypot(object.x - anchor.x, object.y - anchor.y);
+  const headDistance = Math.hypot(arm.headWorldX - anchor.x, arm.headWorldY - anchor.y);
+
   if (player.cargoId && player.cargoId !== object.id) {
     return false;
   }
-
-  const anchor = getShipCargoAnchor();
-  if (Math.hypot(object.x - anchor.x, object.y - anchor.y) > SHIP_HANDOFF_RADIUS) {
+  if (Math.min(objectDistance, headDistance) > SHIP_HANDOFF_RADIUS) {
     return false;
   }
 
