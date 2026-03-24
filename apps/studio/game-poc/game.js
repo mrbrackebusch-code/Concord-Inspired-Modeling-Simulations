@@ -299,6 +299,7 @@ const captureDelta = document.getElementById("capture-delta");
 const captureCount = document.getElementById("capture-count");
 const zoneCaptureList = document.getElementById("zone-capture-list");
 const dataDrone = document.getElementById("data-drone");
+const chamberEye = document.querySelector(".chamber-eye");
 const aiBriefingAssumption = document.getElementById("ai-briefing-assumption");
 const droneBriefingCopy = document.getElementById("drone-briefing-copy");
 const startupExperimentId = new URLSearchParams(window.location.search).get("experiment");
@@ -328,7 +329,6 @@ let currentExperimentId = EXPERIMENTS[0].id;
 let lastAiBriefingSignature = "";
 let lastCaptureHudSignature = "";
 let experimentHostState = null;
-let droneMotionTimer = 0;
 
 const player = {
   x: spawnPoint.x,
@@ -459,15 +459,6 @@ document.addEventListener("keyup", (event) => {
 
 closeOverlayButton.addEventListener("click", closeOverlay);
 captureButton.addEventListener("click", captureEvidence);
-dataDrone?.setAttribute("role", "button");
-dataDrone?.setAttribute("tabindex", "0");
-dataDrone?.addEventListener("click", handleDataDroneClick);
-dataDrone?.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" || event.key === " ") {
-    event.preventDefault();
-    handleDataDroneClick();
-  }
-});
 window.addEventListener("message", handleExperimentHostMessage);
 overlayFrame.addEventListener("load", () => {
   experimentFrameReady = true;
@@ -785,18 +776,14 @@ function getIceStageAction() {
   if (!hostState) {
     return {
       eyeHtml: defaultEye,
-      droneHtml: "Hold on... I&rsquo;m syncing the chamber.",
-      command: null,
-      mode: null
+      droneHtml: "Hold on... I&rsquo;m syncing the chamber."
     };
   }
 
   if ((hostState.status?.evidence || "") === "Receiving sample") {
     return {
       eyeHtml: defaultEye,
-      droneHtml: "Whoo-whoo-whoo... guiding the ice down into the chamber.",
-      command: null,
-      mode: null
+      droneHtml: "Whoo-whoo-whoo... guiding the ice down into the chamber."
     };
   }
 
@@ -804,44 +791,34 @@ function getIceStageAction() {
   if (procedure[1]?.status === "active") {
     return {
       eyeHtml: "What happens to <span class=\"briefing-token briefing-token--active\">mass</span> when ice melts?",
-      droneHtml: "I can help with <span class=\"briefing-token briefing-token--active\">weighing</span> the setup. Click me and I&rsquo;ll scan it.",
-      command: "ice.measureBefore",
-      mode: "scan"
+      droneHtml: "I can help with <span class=\"briefing-token briefing-token--active\">weighing</span> the setup. Click the scale and I&rsquo;ll record it."
     };
   }
 
   if (procedure[2]?.status === "active") {
     return {
       eyeHtml: "What happens to mass when ice <span class=\"briefing-token briefing-token--warm\">melts</span>?",
-      droneHtml: "I can bring the <span class=\"briefing-token briefing-token--warm\">heat</span>. Click me and I&rsquo;ll start the melt.",
-      command: "ice.startMelt",
-      mode: "heat"
+      droneHtml: "The setup is ready. Click the beaker when you want to start the melt."
     };
   }
 
   if (procedure[4]?.status === "active") {
     return {
       eyeHtml: "What happens to <span class=\"briefing-token briefing-token--active\">mass</span> after the ice has <span class=\"briefing-token briefing-token--warm\">melted</span>?",
-      droneHtml: "Want one more <span class=\"briefing-token briefing-token--active\">mass</span> reading? Click me and I&rsquo;ll scan the final setup.",
-      command: "ice.measureAfter",
-      mode: "scan"
+      droneHtml: "Oh wow, that looks different. I wonder what the <span class=\"briefing-token briefing-token--active\">mass</span> is now? Click the scale and let&rsquo;s find out."
     };
   }
 
   if (procedure[4]?.status === "completed") {
     return {
       eyeHtml: defaultEye,
-      droneHtml: "Evidence collected! We can use this run to help correct the model.",
-      command: null,
-      mode: null
+      droneHtml: "Evidence collected! We can use this run to help correct the model."
     };
   }
 
   return {
     eyeHtml: defaultEye,
-    droneHtml: "I&rsquo;m watching the chamber. Let&rsquo;s keep this run clean.",
-    command: null,
-    mode: null
+    droneHtml: "I&rsquo;m watching the chamber. Let&rsquo;s keep this run clean."
   };
 }
 
@@ -925,9 +902,15 @@ function renderAiBriefing() {
 
   aiBriefingAssumption.innerHTML = getInvestigationQuestionMarkup(experiment);
   droneBriefingCopy.innerHTML = getDronePromptMarkup(experiment);
-  const iceAction = getIceStageAction();
-  dataDrone?.classList.toggle("is-thinking", Boolean(droneBriefingCopy.textContent.trim()) && !iceAction?.command);
-  dataDrone?.classList.toggle("is-actionable", Boolean(iceAction?.command));
+  const hostStateEvidence = hostState?.status?.evidence || "";
+  const isReceivingSample = hostStateEvidence === "Receiving sample";
+  const isRecordingMass = hostStateEvidence === "Recording initial mass" || hostStateEvidence === "Recording final mass";
+  const isHeating = hostStateEvidence === "Melting in progress";
+  dataDrone?.classList.toggle("is-thinking", Boolean(droneBriefingCopy.textContent.trim()) && !isReceivingSample && !isRecordingMass && !isHeating);
+  dataDrone?.classList.toggle("is-orbiting", isReceivingSample);
+  dataDrone?.classList.toggle("is-scanning", isRecordingMass);
+  dataDrone?.classList.toggle("is-heating", isHeating);
+  chamberEye?.classList.toggle("is-tracking", isReceivingSample);
   experimentPlaceholderText.textContent = "Chamber optics waking up...";
 }
 
@@ -945,41 +928,6 @@ function handleExperimentHostMessage(event) {
     renderAiBriefing();
     renderCaptureHud();
   }
-}
-
-function sendExperimentHostCommand(command) {
-  if (!overlayFrame.contentWindow || !command) {
-    return;
-  }
-
-  overlayFrame.contentWindow.postMessage({
-    source: "rainbow-game-host",
-    type: "rainbow.labHost.command",
-    payload: { command }
-  }, "*");
-}
-
-function pulseDroneMotion(mode) {
-  if (!dataDrone) {
-    return;
-  }
-
-  window.clearTimeout(droneMotionTimer);
-  dataDrone.classList.remove("is-scanning", "is-heating");
-  dataDrone.classList.add(mode === "heat" ? "is-heating" : "is-scanning");
-  droneMotionTimer = window.setTimeout(() => {
-    dataDrone.classList.remove("is-scanning", "is-heating");
-  }, mode === "heat" ? 1500 : 1200);
-}
-
-function handleDataDroneClick() {
-  const action = getIceStageAction();
-  if (!action?.command) {
-    return;
-  }
-
-  pulseDroneMotion(action.mode);
-  sendExperimentHostCommand(action.command);
 }
 
 function buildBackgroundLayer() {

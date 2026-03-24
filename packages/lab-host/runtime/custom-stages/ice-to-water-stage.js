@@ -196,6 +196,7 @@
     refs.start = container.querySelector("[data-ice-start]");
     refs.after = container.querySelector("[data-ice-after]");
     refs.reset = container.querySelector("[data-ice-reset]");
+    refs.scaleAssembly = container.querySelector("#ice-scale-assembly");
     refs.readout = container.querySelector("[data-ice-scale-readout]");
     refs.tray = container.querySelector("#ice-scale-tray");
     refs.scaleBody = container.querySelector("#ice-scale-body");
@@ -303,6 +304,12 @@
       refs.start.disabled = state.arrivalRunning || !state.beforeMeasured || state.meltRunning || state.meltCompleted;
       refs.after.disabled = state.arrivalRunning || !state.meltCompleted || state.afterMeasured || state.meltRunning;
       refs.reset.disabled = state.meltRunning;
+      if (refs.scaleAssembly) {
+        refs.scaleAssembly.style.cursor = (!refs.before.disabled || !refs.after.disabled) ? "pointer" : "default";
+      }
+      if (refs.beaker) {
+        refs.beaker.style.cursor = !refs.start.disabled ? "pointer" : "default";
+      }
     }
 
     function syncEvidence(patch) {
@@ -312,17 +319,25 @@
     function pulseScale() {
       gsap.fromTo([refs.tray, refs.scaleBody], { y: 0 }, {
         y: 7,
-        duration: 0.18,
+        duration: 0.22,
         yoyo: true,
-        repeat: 1,
+        repeat: 2,
         ease: "power2.out"
       });
       gsap.fromTo(refs.beaker, { y: gsap.getProperty(refs.beaker, "y") }, {
         y: Number(gsap.getProperty(refs.beaker, "y")) + 5,
-        duration: 0.18,
+        duration: 0.22,
         yoyo: true,
-        repeat: 1,
+        repeat: 2,
         ease: "power2.out"
+      });
+      gsap.fromTo(refs.readout, { opacity: 0.55, scale: 0.96, transformOrigin: "50% 50%" }, {
+        opacity: 1,
+        scale: 1.04,
+        duration: 0.28,
+        yoyo: true,
+        repeat: 3,
+        ease: "sine.inOut"
       });
     }
 
@@ -404,55 +419,62 @@
       tl.to(refs.intakeBeam, {
         opacity: 1,
         scaleY: 1,
-        duration: 0.26
+        duration: 0.48
       }, 0);
       tl.to(refs.intakeBeam, {
-        opacity: 0.28,
-        duration: 0.22,
-        repeat: 3,
+        opacity: 0.34,
+        duration: 0.34,
+        repeat: 8,
         yoyo: true
-      }, 0.18);
+      }, 0.42);
       tl.to(refs.intakeCapsule, {
         opacity: 1,
-        duration: 0.12
-      }, 0.06);
+        duration: 0.18
+      }, 0.18);
+      tl.to(refs.intakeCapsule, {
+        x: 10,
+        duration: 0.45,
+        repeat: 6,
+        yoyo: true,
+        ease: "sine.inOut"
+      }, 0.34);
       tl.to(refs.intakeCapsule, {
         y: 238,
         scale: 1,
-        duration: 1.18,
-        ease: "power2.in"
-      }, 0.1);
+        duration: 3.1,
+        ease: "power2.inOut"
+      }, 0.24);
       tl.to(refs.intakeCapsule, {
         opacity: 0,
         scale: 1.08,
-        duration: 0.16,
+        duration: 0.24,
         ease: "power1.out"
-      }, 1.18);
+      }, 3.08);
       tl.to([refs.cubeA, refs.cubeB, refs.cubeC], {
         opacity: 1,
-        duration: 0.18,
+        duration: 0.28,
         stagger: 0.04
-      }, 1.18);
+      }, 3.08);
       tl.fromTo(refs.beaker, {
         y: -34
       }, {
         y: -20,
-        duration: 0.2,
+        duration: 0.3,
         yoyo: true,
         repeat: 1,
         ease: "power2.out"
-      }, 1.1);
+      }, 3.0);
       tl.fromTo(refs.waterSurface, {
         attr: { cy: 444, rx: 126, ry: 18 }
       }, {
         attr: { cy: 438, rx: 132, ry: 22 },
-        duration: 0.36,
+        duration: 0.46,
         ease: "power2.out"
-      }, 1.14);
+      }, 3.04);
       tl.to(refs.intakeBeam, {
         opacity: 0,
-        duration: 0.24
-      }, 1.24);
+        duration: 0.34
+      }, 3.16);
       state.arrivalTimeline = tl;
       return tl;
     }
@@ -706,7 +728,7 @@
       pulseScale();
       host.emit("ice.massRecordedBefore", { mass: MASS_VALUE });
       host.setStatus({ evidence: "Recording initial mass" });
-      animateMass(0, MASS_VALUE, 1, function() {
+      animateMass(0, MASS_VALUE, 1.6, function() {
         setMeasuredEvidence();
         host.setStatus({ evidence: "Initial evidence recorded" });
       });
@@ -737,12 +759,29 @@
       setProcedure("done");
       setStatus("Final mass recorded. The ice became liquid water, but the measured mass stayed the same.");
       host.emit("ice.massRecordedAfter", { mass: MASS_VALUE });
-      host.setStatus({ evidence: "Locking evidence" });
+      host.setStatus({ evidence: "Recording final mass" });
       pulseScale();
-      animateMass(MASS_VALUE - 0.08, MASS_VALUE, 0.65, function() {
+      animateMass(MASS_VALUE - 0.08, MASS_VALUE, 1.35, function() {
         setFinalEvidence();
+        host.setStatus({ evidence: "Final evidence recorded" });
         host.lockEvidence();
       });
+    }
+
+    function handleScaleClick() {
+      if (!state.beforeMeasured) {
+        handleMeasureBefore();
+        return;
+      }
+      if (state.meltCompleted && !state.afterMeasured && !state.meltRunning) {
+        handleMeasureAfter();
+      }
+    }
+
+    function handleBeakerClick() {
+      if (!state.arrivalRunning && state.beforeMeasured && !state.meltRunning && !state.meltCompleted) {
+        handleStartMelt();
+      }
     }
 
     function handleHostCommand(event) {
@@ -768,6 +807,8 @@
     refs.start.addEventListener("click", handleStartMelt);
     refs.after.addEventListener("click", handleMeasureAfter);
     refs.reset.addEventListener("click", resetScene);
+    refs.scaleAssembly.addEventListener("click", handleScaleClick);
+    refs.beaker.addEventListener("click", handleBeakerClick);
     window.addEventListener("rainbow.labHost.command", handleHostCommand);
 
     resetScene();
@@ -799,6 +840,8 @@
       refs.start.removeEventListener("click", handleStartMelt);
       refs.after.removeEventListener("click", handleMeasureAfter);
       refs.reset.removeEventListener("click", resetScene);
+      refs.scaleAssembly.removeEventListener("click", handleScaleClick);
+      refs.beaker.removeEventListener("click", handleBeakerClick);
       window.removeEventListener("rainbow.labHost.command", handleHostCommand);
       container.innerHTML = "";
     };
